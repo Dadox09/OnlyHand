@@ -24,7 +24,7 @@ async function ensureModel() {
     recognizer = await GestureRecognizer.createFromOptions(fileset, {
       baseOptions: {
         modelAssetPath: "/models/hand/gesture_recognizer.task",
-        delegate: "GPU",
+        delegate: "CPU",
       },
       runningMode: "VIDEO",
       numHands: 1,

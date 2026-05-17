@@ -10,6 +10,7 @@ export async function initCamera() {
   });
   video.srcObject = stream;
   await new Promise((res) => (video.onloadedmetadata = res));
+  await video.play();
   return stream;
 }
 
