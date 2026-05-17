@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OnlyHand — Game Hub</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>OnlyHand</h1>
+    <p class="subtitle">Hand-controlled game hub</p>
+  </header>
+
+  <main id="app">
+    <section id="webcam-section">
+      <video id="webcam" autoplay playsinline muted></video>
+      <canvas id="overlay"></canvas>
+      <div id="status">Initializing…</div>
+    </section>
+
+    <section id="menu-section">
+      <h2>Choose a game</h2>
+      <ul id="game-list"></ul>
+    </section>
+
+    <section id="game-section" hidden>
+      <div id="game-header">
+        <button id="back-btn">← Back</button>
+        <span id="game-title"></span>
+      </div>
+      <canvas id="game-canvas" width="800" height="500"></canvas>
+    </section>
+  </main>
+
+  <script type="module" src="js/hub.js"></script>
+</body>
+</html>
