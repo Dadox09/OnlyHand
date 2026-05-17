@@ -1,0 +1,71 @@
+import cv2
+import mediapipe as mp
+
+BaseOptions = mp.tasks.BaseOptions
+HandLandmarker = mp.tasks.vision.HandLandmarker
+HandLandmarkerOptions = mp.tasks.vision.HandLandmarkerOptions
+HandLandmarkerResult = mp.tasks.vision.HandLandmarkerResult
+VisionRunningMode = mp.tasks.vision.RunningMode
+
+latest_result = None
+
+def save_result(result: HandLandmarkerResult, _output_image: mp.Image, _timestamp_ms: int):
+    global latest_result
+    latest_result = result
+
+options = HandLandmarkerOptions(
+    base_options=BaseOptions(model_asset_path='model/hand_landmarker.task'),
+    running_mode=VisionRunningMode.LIVE_STREAM,
+    result_callback=save_result)
+
+vc = cv2.VideoCapture(0)
+timestamp = 0
+count = 0
+prev_finger_up = None
+
+with HandLandmarker.create_from_options(options) as landmarker:
+    while True:
+        rval, frame = vc.read()
+        if not rval:
+            break
+
+        # convert frame for mediapipe
+        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
+        landmarker.detect_async(mp_image, timestamp)
+        timestamp += 1
+
+        # read landmarks if available
+        if latest_result and latest_result.hand_landmarks:
+            landmarks = latest_result.hand_landmarks[0]  # first hand
+
+            for landmark in landmarks:
+                frame_width, frame_height = frame.shape[1], frame.shape[0]
+
+                px = int(landmark.x * frame_width)
+                py = int(landmark.y * frame_height) 
+
+                cv2.circle(frame, (px, py), 5, (0, 255, 0), -1)
+
+            tip = landmarks[8].y   # index finger tip
+            base = landmarks[6].y  # index finger base
+
+            finger_up = tip < base  # y=0 is top of screen
+
+            if prev_finger_up is not None:
+                if finger_up and not prev_finger_up:
+                    count = 1
+                elif not finger_up and prev_finger_up:
+                    count = 0
+            
+            prev_finger_up = finger_up
+
+        cv2.putText(frame, f"Count: {count}", (30, 50),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 255, 0), 3)
+        cv2.imshow("preview", frame)
+
+        if cv2.waitKey(20) == 27:  # ESC
+            break
+
+vc.release()
+cv2.destroyAllWindows()
