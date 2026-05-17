@@ -233,7 +233,6 @@ nav a:hover, nav a.active { color: var(--text); }
 
 .game-host-header {
   width: 100%;
-  max-width: 900px;
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -241,6 +240,20 @@ nav a:hover, nav a.active { color: var(--text); }
 }
 
 .game-host-header .title { font-size: 1.1rem; font-weight: 600; }
+
+.game-host-body {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+/* Webcam panel inside game host — fixed 240px wide */
+.game-webcam {
+  width: 240px;
+  flex-shrink: 0;
+  aspect-ratio: 4 / 3;
+  border-radius: 10px;
+}
 
 #game-canvas {
   background: #000;

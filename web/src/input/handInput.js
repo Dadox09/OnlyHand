@@ -1,7 +1,7 @@
-import { HandLandmarker, FilesetResolver } from "@mediapipe/tasks-vision";
+import { GestureRecognizer, FilesetResolver } from "@mediapipe/tasks-vision";
 
 // Singleton — model loaded once, shared across all games.
-let landmarker = null;
+let recognizer = null;
 let initPromise = null;
 const subscribers = new Set();
 let rafHandle = null;
@@ -13,16 +13,17 @@ export const handState = {
   y: 0.5,
   isDetected: false,
   landmarks: null,
+  gesture: null, // e.g. "Thumb_Up", "Open_Palm", "Closed_Fist", etc.
 };
 
 async function ensureModel() {
-  if (landmarker) return;
+  if (recognizer) return;
   if (initPromise) return initPromise;
   initPromise = (async () => {
     const fileset = await FilesetResolver.forVisionTasks("/wasm");
-    landmarker = await HandLandmarker.createFromOptions(fileset, {
+    recognizer = await GestureRecognizer.createFromOptions(fileset, {
       baseOptions: {
-        modelAssetPath: "/models/hand/hand_landmarker.task",
+        modelAssetPath: "/models/hand/gesture_recognizer.task",
         delegate: "GPU",
       },
       runningMode: "VIDEO",
@@ -39,7 +40,7 @@ function loop() {
   }
   if (video && video.readyState >= 2 && video.currentTime !== lastVideoTime) {
     lastVideoTime = video.currentTime;
-    const result = landmarker.detectForVideo(video, performance.now());
+    const result = recognizer.recognizeForVideo(video, performance.now());
     if (result.landmarks?.length > 0) {
       const lms = result.landmarks[0];
       const palm = lms[9];
@@ -47,9 +48,11 @@ function loop() {
       handState.y = palm.y;
       handState.isDetected = true;
       handState.landmarks = lms;
+      handState.gesture = result.gestures?.[0]?.[0]?.categoryName ?? null;
     } else {
       handState.isDetected = false;
       handState.landmarks = null;
+      handState.gesture = null;
     }
     for (const cb of subscribers) cb({ ...handState });
   }
@@ -66,7 +69,7 @@ export async function startHandInput(videoElement) {
 
 export function onHandUpdate(cb) {
   subscribers.add(cb);
-  if (rafHandle === null && landmarker && video) {
+  if (rafHandle === null && recognizer && video) {
     rafHandle = requestAnimationFrame(loop);
   }
   return () => subscribers.delete(cb);
