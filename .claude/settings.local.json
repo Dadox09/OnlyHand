@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(npm --version)",
-      "Bash(rtk npm *)",
-      "Bash(rtk ls *)"
-    ]
-  }
-}
