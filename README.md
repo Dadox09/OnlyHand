@@ -2,6 +2,8 @@
 
 Hand tracking platform — Python CLI demos + browser game hub, all powered by MediaPipe. No GPU required.
 
+![OnlyHand demo](images/demo.gif)
+
 ---
 
 ## What's inside
