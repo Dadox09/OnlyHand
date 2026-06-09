@@ -10,6 +10,23 @@
     <!-- Shared webcam: lives outside #app, persists across route changes -->
     <video id="webcam" autoplay playsinline muted hidden></video>
     <div id="app"></div>
+    <script>
+      /* Enable entrance animations only in live tabs: require TWO consecutive
+         rAF ticks before stamping data-oh-anim on <html>. */
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          document.documentElement.setAttribute("data-oh-anim", "");
+        });
+      });
+      /* Hard-settle fallback: throttled/offscreen tabs can fire rAF yet keep the
+         CSS animation clock frozen. If by 1.5s no animation has advanced, force
+         entrance end states so nothing is stuck at opacity 0. */
+      setTimeout(function () {
+        var anims = document.getAnimations ? document.getAnimations() : [];
+        var advanced = anims.some(function (a) { return a.currentTime && a.currentTime > 100; });
+        if (!advanced) document.documentElement.setAttribute("data-oh-settled", "");
+      }, 1500);
+    </script>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

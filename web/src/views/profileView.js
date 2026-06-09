@@ -1,6 +1,7 @@
 import { getProfile, updateProfile, updateSettings } from "../core/profile.js";
 import { getStats } from "../core/scores.js";
 import { games } from "../games/registry.js";
+import { icon } from "../core/icon.js";
 
 const AVATARS = ["🎮", "🤖", "👾", "🕹️", "🦾", "🧠", "🐉", "🦅", "🔥", "⚡"];
 
@@ -15,40 +16,48 @@ function render(app) {
 
   app.innerHTML = `
     <nav>
-      <a class="logo" href="#/">OnlyHand</a>
-      <a href="#/" class="btn">← Back</a>
+      <a class="logo" href="#/hub">ONLY<span class="lit">HAND</span></a>
+      <a href="#/hub" class="active">${icon("arrow-left", { size: 14 })} Back</a>
     </nav>
-    <div class="page" style="grid-template-columns:1fr">
-      <div class="profile-grid">
-        <div class="profile-header">
-          <button class="avatar-btn" id="avatar-btn" title="Change avatar">${profile.avatar}</button>
+    <div class="profile-wrap">
+      <div class="profile-grid oh-stagger">
+
+        <div class="profile-header oh-fade-up">
+          <button class="avatar lg selected" id="avatar-btn" title="Change avatar">${profile.avatar}</button>
           <div>
             <div class="form-row">
               <input class="input" id="name-input" value="${profile.name}" maxlength="24" />
-              <button class="btn btn-accent" id="save-name">Save</button>
+              <button class="btn btn-accent" id="save-name">${icon("check", { size: 15 })} Save</button>
             </div>
-            <p class="subtitle" style="margin-top:0.4rem">Playing since ${new Date(profile.createdAt).toLocaleDateString()}</p>
+            <p class="subtitle" style="margin-top:0.45rem">Playing since ${new Date(profile.createdAt).toLocaleDateString()}</p>
           </div>
         </div>
 
-        <div id="avatar-picker" hidden style="display:flex;gap:0.5rem;flex-wrap:wrap;padding:0.5rem 0">
-          ${AVATARS.map((e) => `<button class="avatar-btn" style="width:48px;height:48px;font-size:1.5rem" data-emoji="${e}">${e}</button>`).join("")}
+        <div class="avatar-picker oh-pop" id="avatar-picker" hidden>
+          ${AVATARS.map((e) => `<button class="avatar sm${e === profile.avatar ? " selected" : ""}" data-emoji="${e}">${e}</button>`).join("")}
         </div>
 
-        <h2 style="margin:0">Game Stats</h2>
-        <div class="stats-grid" id="stats-grid"></div>
+        <section class="oh-fade-up">
+          <h2 class="section-head">${icon("trophy", { size: 13 })} GAME STATS</h2>
+          <div class="stats-grid" id="stats-grid"></div>
+        </section>
 
-        <h2 style="margin:0">Settings</h2>
-        <div style="display:flex;flex-direction:column;gap:0.5rem">
-          <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer">
-            <input type="checkbox" id="mirror" ${profile.settings.mirrorWebcam ? "checked" : ""} />
-            Mirror webcam
-          </label>
-          <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer">
-            <input type="checkbox" id="landmarks" ${profile.settings.showLandmarks ? "checked" : ""} />
-            Show hand landmarks
-          </label>
-        </div>
+        <section class="oh-fade-up">
+          <h2 class="section-head">${icon("settings", { size: 13 })} SETTINGS</h2>
+          <div class="settings-list">
+            <label class="switch">
+              <input type="checkbox" id="mirror" ${profile.settings.mirrorWebcam ? "checked" : ""} />
+              <span class="track"><span class="knob"></span></span>
+              Mirror webcam
+            </label>
+            <label class="switch">
+              <input type="checkbox" id="landmarks" ${profile.settings.showLandmarks ? "checked" : ""} />
+              <span class="track"><span class="knob"></span></span>
+              Show hand landmarks
+            </label>
+          </div>
+        </section>
+
       </div>
     </div>
   `;
@@ -64,24 +73,21 @@ function render(app) {
          <div class="value">${s.best}</div>
          <div class="label">${s.plays} plays · total ${s.totalScore}</div>`
       : `<div class="label">${g.icon} ${g.name}</div>
-         <div style="color:var(--text-muted);font-size:0.85rem">Not played yet</div>`;
+         <div class="empty">Not played yet</div>`;
     grid.appendChild(card);
   }
 
   // Avatar picker
   const avatarBtn = app.querySelector("#avatar-btn");
   const picker = app.querySelector("#avatar-picker");
-  avatarBtn.addEventListener("click", () => {
-    picker.hidden = !picker.hidden;
-    picker.style.display = picker.hidden ? "none" : "flex";
-  });
+  avatarBtn.addEventListener("click", () => { picker.hidden = !picker.hidden; });
   picker.querySelectorAll("[data-emoji]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const emoji = btn.dataset.emoji;
       updateProfile({ avatar: emoji });
       avatarBtn.textContent = emoji;
+      picker.querySelectorAll("[data-emoji]").forEach((b) => b.classList.toggle("selected", b === btn));
       picker.hidden = true;
-      picker.style.display = "none";
     });
   });
 
