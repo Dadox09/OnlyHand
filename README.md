@@ -84,29 +84,43 @@ src/
 ├── core/
 │   ├── camera.js        # Singleton webcam stream
 │   ├── profile.js       # User profile (localStorage, schema-versioned)
-│   └── scores.js        # Per-game score persistence
+│   ├── scores.js        # Per-game score persistence + cloud submit
+│   ├── gameKit.js       # Shared game feel: particles, shake, countdown, WebAudio sfx, HiDPI canvas
+│   ├── handCursor.js    # Point with your hand, pinch to click (menus/overlays)
+│   ├── cardPreviews.js  # Animated mini-scenes on the hub cards
+│   ├── icon.js          # Lucide line-icon SVG builder
+│   └── backend.js       # Optional Supabase: anon auth + global leaderboard
 ├── input/
-│   └── handInput.js     # Singleton GestureRecognizer + subscriber pattern
+│   └── handInput.js     # Singleton GestureRecognizer, One-Euro filter, pinch detection
 ├── views/
+│   ├── onboarding.js    # Camera gate → pick your tag → how-to-play (first access)
 │   ├── menu.js          # Hub: webcam preview + game grid
 │   ├── profileView.js   # Profile editor, avatar picker, stats, settings
-│   └── gameHost.js      # Lazy-loads game module, manages lifecycle
+│   └── gameHost.js      # Game lifecycle, pause, Game Over + leaderboard overlay
 └── games/
     ├── registry.js      # { id, name, icon, description, requires, load() }
     ├── pong/            # Vertical paddle — hand y-position
-    ├── breakout/        # Horizontal paddle — hand x-position, 3 lives
-    ├── snake/           # Edge-zone steering → direction input
-    └── asteroids/       # Ship follows hand; Thumb_Up gesture restarts
+    ├── breakout/        # Horizontal paddle — power-ups, endless levels
+    ├── snake/           # Steer with hand offset from center
+    └── asteroids/       # Ship follows hand, auto-fire, pinch = rapid fire
 ```
+
+First access walks you through: enable camera → pick your player tag (name + avatar) →
+a 4-line how-to (point, pinch, pause) → the hub. Returning players land straight in.
 
 ### Games
 
 | Game | Control | Mechanic |
 |------|---------|---------|
-| **Pong** | Hand Y → paddle height | Classic Pong, 800×500 |
-| **Breakout** | Hand X → paddle position | 5 brick rows, angle on paddle hit |
-| **Snake** | Hand in edge zone → steer | Progressive speed, score = length |
-| **Asteroids** | Hand position → ship | Asteroids split, score = seconds survived |
+| **Pong** | Hand Y → paddle height | Speed ramps with a cap, particle + shake juice |
+| **Breakout** | Hand X → paddle position | Endless levels, power-ups (wide paddle, multiball) |
+| **Snake** | Hand offset from center → steer | Progressive speed, live steering compass |
+| **Asteroids** | Hand → ship · **pinch = rapid fire** | Auto-fires nearest rock, asteroids split, score = kills |
+
+All games share `core/gameKit.js`: synthesized WebAudio sfx (zero audio files), particles,
+screen shake, 3‑2‑1 countdown, HiDPI canvas, Orbitron HUD. ESC pauses; losing the hand for
+2 s auto-pauses, showing it again resumes. In menus and overlays a **hand cursor** appears:
+point at a button and pinch to click.
 
 ### Game contract
 
@@ -114,12 +128,19 @@ src/
 export default {
   async mount({ canvas, onHandUpdate, handState, onScore }) {
     // game setup
-    return { unmount() { /* cleanup */ } };
+    return { unmount() { /* cleanup */ }, pause() {}, resume() {} };
   }
 }
 ```
 
-Hand state: `{ x, y, isDetected, landmarks }` — normalized 0–1.
+Hand state: `{ x, y, isDetected, landmarks, gesture, pinch }` — x/y normalized 0–1,
+One-Euro filtered; `pinch` = thumb-index pinch with hysteresis.
+
+### Global leaderboard (optional)
+
+Plug in a free [Supabase](https://supabase.com) project and every run is submitted to a
+global per-game leaderboard (anonymous auth, RLS-guarded, rate-limited). Setup in
+[`supabase/README.md`](supabase/README.md) — without it the app stays 100% local.
 
 ### Adding a game
 
@@ -152,6 +173,7 @@ All pre-trained — no training pipeline in this repo.
 | Web ML inference | `@mediapipe/tasks-vision` 0.10.35 (WASM) |
 | Web bundler | Vite 5 |
 | Frontend | Vanilla JS (ES modules, no framework) |
+| Backend (optional) | [Supabase](https://supabase.com) — anonymous auth, Postgres + RLS leaderboard |
 
 ---
 
@@ -168,6 +190,7 @@ OnlyHand/
 │   │   ├── models/   # Static copy of models/ for browser
 │   │   └── wasm/     # MediaPipe Vision WASM binaries
 │   └── src/          # App source
+├── supabase/         # Backend schema (schema.sql) + setup guide
 ├── CLAUDE.md         # Dev guide
 └── REFERENCES.md     # Stack documentation links
 ```

@@ -1,6 +1,9 @@
 import { getProfile, saveProfile } from "./profile.js";
+import { submitScore } from "./backend.js";
 
 export function recordPlay(gameId, score, durationSeconds = 0) {
+  // Fire-and-forget cloud submit; local stats never wait on the network.
+  submitScore(gameId, score).catch(() => {});
   const p = getProfile();
   const prev = p.stats[gameId] ?? { best: 0, plays: 0, totalScore: 0, lastPlayed: null };
   p.stats[gameId] = {

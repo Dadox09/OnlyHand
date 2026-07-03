@@ -4,6 +4,8 @@ import { getBest } from "../core/scores.js";
 import { initCamera, getCameraVideo } from "../core/camera.js";
 import { startHandInput, onHandUpdate } from "../input/handInput.js";
 import { icon } from "../core/icon.js";
+import { startHandCursor, stopHandCursor } from "../core/handCursor.js";
+import { attachCardPreview, stopCardPreviews } from "../core/cardPreviews.js";
 
 let cleanup = null;
 
@@ -31,6 +33,7 @@ export async function mount(app) {
           <span class="oh-dot oh-live-dot"></span>
           <span class="live-label">TRACKING LIVE</span>
           <span class="live-meta">MediaPipe · 60 fps</span>
+          <span class="live-meta pinch-hint">${icon("hand", { size: 13 })} point with your hand · pinch to select</span>
         </div>
       </div>
 
@@ -87,7 +90,8 @@ export async function mount(app) {
     card.className = "game-card oh-fade-up";
     card.href = `#/games/${g.id}`;
     card.innerHTML = `
-      <div class="top">
+      <div class="card-preview-wrap">
+        <canvas class="card-preview"></canvas>
         <span class="icon">${g.icon}</span>
         <span class="play">${icon("play", { size: 18 })}</span>
       </div>
@@ -99,11 +103,16 @@ export async function mount(app) {
       </div>
     `;
     grid.appendChild(card);
+    attachCardPreview(card.querySelector(".card-preview"), g.id);
   }
+
+  startHandCursor();
 
   cleanup = () => {
     unsub();
     ro.disconnect();
+    stopHandCursor();
+    stopCardPreviews();
   };
 }
 

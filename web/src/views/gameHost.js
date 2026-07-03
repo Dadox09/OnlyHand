@@ -4,16 +4,27 @@ import { initCamera, getCameraVideo } from "../core/camera.js";
 import { startHandInput, onHandUpdate, handState } from "../input/handInput.js";
 import { recordPlay, getBest, getStats, getLeaderboard } from "../core/scores.js";
 import { icon } from "../core/icon.js";
+import { sfx } from "../core/gameKit.js";
+import { startHandCursor, stopHandCursor } from "../core/handCursor.js";
+import { isOnline, fetchLeaderboard, fetchMyRank } from "../core/backend.js";
 
 let meta = null;
 let activeGame = null;
 let unsubIndicator = null;
 let unsubLandmarks = null;
-let unsubRestart = null;
+let unsubPause = null;
 let ro = null;
 let startTime = 0;
-let restartPending = false;
 let appRef = null;
+let paused = false;
+let autoPaused = false;
+let handLostAt = null;
+
+const AUTO_PAUSE_MS = 2000; // hand gone this long → auto-pause
+
+// Leaderboard names come from other users — always escape before innerHTML.
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
 export async function mount(app, { params }) {
   meta = games.find((g) => g.id === params.id);
@@ -35,7 +46,7 @@ export async function mount(app, { params }) {
           </div>
           <div class="hint-bar">
             <span class="desc">${meta.description}</span>
-            <span class="esc">ESC — exit</span>
+            <span class="esc">ESC — pause</span>
           </div>
         </div>
         <div class="host-sidebar oh-fade-up" style="animation-delay:0.05s">
@@ -98,16 +109,71 @@ export async function mount(app, { params }) {
     ctx.shadowBlur = 0;
   });
 
+  // Auto-pause when the hand disappears mid-game, auto-resume on return.
+  unsubPause = onHandUpdate((s) => {
+    if (!activeGame) return;
+    if (!s.isDetected) {
+      if (handLostAt === null) handLostAt = Date.now();
+      else if (!paused && Date.now() - handLostAt > AUTO_PAUSE_MS) setPaused(true, true);
+    } else {
+      handLostAt = null;
+      if (paused && autoPaused) setPaused(false);
+    }
+  });
+
   await startGame(app);
 
   app.querySelector("#back-btn").addEventListener("click", () => navigate("/hub"));
   window.addEventListener("keydown", onKey);
 }
 
+function setPaused(on, auto = false) {
+  if (!activeGame || on === paused) return;
+  paused = on;
+  autoPaused = on && auto;
+  if (on) {
+    activeGame.pause?.();
+    sfx.pause();
+    showPauseOverlay(auto);
+    startHandCursor();
+  } else {
+    activeGame.resume?.();
+    sfx.resume();
+    document.getElementById("pause-overlay")?.remove();
+    stopHandCursor();
+  }
+}
+
+function showPauseOverlay(auto) {
+  const wrap = appRef?.querySelector("#canvas-wrap");
+  if (!wrap) return;
+  const overlay = document.createElement("div");
+  overlay.className = "go-overlay oh-pop";
+  overlay.id = "pause-overlay";
+  overlay.innerHTML = `
+    <div class="go-panel">
+      <div class="go-title">PAUSED</div>
+      <div class="go-best">${auto ? `${icon("hand", { size: 14 })} Hand lost — show it to resume` : "Take a breath"}</div>
+      <div class="go-actions">
+        <button class="btn btn-accent" id="resume-btn">${icon("play", { size: 15 })} Resume</button>
+        <button class="btn" id="pause-menu">${icon("arrow-left", { size: 15 })} Menu</button>
+      </div>
+      <div class="go-hint">${auto ? "" : "…or press ESC again"}</div>
+    </div>
+  `;
+  wrap.appendChild(overlay);
+  overlay.querySelector("#resume-btn").addEventListener("click", () => setPaused(false));
+  overlay.querySelector("#pause-menu").addEventListener("click", () => navigate("/hub"));
+}
+
 // (Re)mount the active game module on the canvas. The DOM Game Over overlay
 // owns the game-over moment, so we stop the game on its onScore signal.
 async function startGame(app) {
   clearGameOver();
+  paused = false;
+  autoPaused = false;
+  handLostAt = null;
+  document.getElementById("pause-overlay")?.remove();
   const canvas = app.querySelector("#game-canvas");
   startTime = Date.now();
   const module = await meta.load();
@@ -145,8 +211,8 @@ function showGameOver(app, score) {
         ${board.map((r, i) => `
           <div class="board-row${r.you ? " lead" : ""}">
             <span class="rank">${i + 1}</span>
-            <span class="av">${r.avatar}</span>
-            <span class="nm">${r.name}${r.you ? " (you)" : ""}</span>
+            <span class="av">${esc(r.avatar)}</span>
+            <span class="nm">${esc(r.name)}${r.you ? " (you)" : ""}</span>
             <span class="sc">${r.score}</span>
           </div>
         `).join("")}
@@ -155,7 +221,7 @@ function showGameOver(app, score) {
         <button class="btn btn-accent" id="play-again">${icon("rotate-ccw", { size: 15 })} Play again</button>
         <button class="btn" id="go-menu">${icon("arrow-left", { size: 15 })} Menu</button>
       </div>
-      <div class="go-hint">…or just show your hand to restart</div>
+      <div class="go-hint">${icon("hand", { size: 13 })} point with your hand · pinch to select</div>
     </div>
   `;
   wrap.appendChild(overlay);
@@ -163,36 +229,66 @@ function showGameOver(app, score) {
   overlay.querySelector("#play-again").addEventListener("click", () => startGame(app));
   overlay.querySelector("#go-menu").addEventListener("click", () => navigate("/hub"));
 
-  // Show your hand to restart — mirrors the in-game convention.
-  restartPending = false;
-  unsubRestart = onHandUpdate((s) => {
-    if (s.isDetected && !restartPending) {
-      restartPending = true;
-      setTimeout(() => {
-        if (document.getElementById("go-overlay")) startGame(app);
-      }, 800);
-    }
-  });
+  startHandCursor();
+
+  // Upgrade the house board to the global one when a backend is configured.
+  // Small delay so this run's submit (fired in recordPlay) is likely included.
+  if (isOnline()) {
+    const gameId = meta.id;
+    setTimeout(async () => {
+      const [rows, rank] = await Promise.all([
+        fetchLeaderboard(gameId, 5),
+        fetchMyRank(gameId),
+      ]);
+      const boardEl = document.querySelector("#go-overlay .board");
+      if (!rows?.length || !boardEl) return;
+      boardEl.innerHTML = `
+        <div class="board-head">${icon("trophy", { size: 13 })} TOP HANDS · GLOBAL</div>
+        ${rows.map((r, i) => `
+          <div class="board-row${r.you ? " lead" : ""}">
+            <span class="rank">${i + 1}</span>
+            <span class="av">${esc(r.avatar)}</span>
+            <span class="nm">${esc(r.name)}${r.you ? " (you)" : ""}</span>
+            <span class="sc">${r.score}</span>
+          </div>
+        `).join("")}
+        ${rank && !rows.some((r) => r.you) ? `
+          <div class="board-row lead">
+            <span class="rank">${rank.rank}</span>
+            <span class="av">…</span>
+            <span class="nm">(you)</span>
+            <span class="sc">${rank.best}</span>
+          </div>` : ""}
+      `;
+    }, 800);
+  }
 }
 
 function clearGameOver() {
-  unsubRestart?.();
-  unsubRestart = null;
-  restartPending = false;
   document.getElementById("go-overlay")?.remove();
+  stopHandCursor();
 }
 
 function onKey(e) {
-  if (e.key === "Escape") navigate("/hub");
+  if (e.key !== "Escape") return;
+  // During a game: ESC toggles pause. On game over (no active game): exit.
+  if (activeGame) setPaused(!paused);
+  else navigate("/hub");
 }
 
 export function unmount() {
   window.removeEventListener("keydown", onKey);
   clearGameOver();
+  document.getElementById("pause-overlay")?.remove();
+  paused = false;
+  autoPaused = false;
+  handLostAt = null;
   unsubIndicator?.();
   unsubLandmarks?.();
+  unsubPause?.();
   unsubIndicator = null;
   unsubLandmarks = null;
+  unsubPause = null;
   ro?.disconnect();
   ro = null;
   activeGame?.unmount?.();

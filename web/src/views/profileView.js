@@ -2,14 +2,19 @@ import { getProfile, updateProfile, updateSettings } from "../core/profile.js";
 import { getStats } from "../core/scores.js";
 import { games } from "../games/registry.js";
 import { icon } from "../core/icon.js";
+import { startHandCursor, stopHandCursor } from "../core/handCursor.js";
+import { syncProfile } from "../core/backend.js";
 
 const AVATARS = ["🎮", "🤖", "👾", "🕹️", "🦾", "🧠", "🐉", "🦅", "🔥", "⚡"];
 
 export function mount(app) {
   render(app);
+  startHandCursor();
 }
 
-export function unmount() {}
+export function unmount() {
+  stopHandCursor();
+}
 
 function render(app) {
   const profile = getProfile();
@@ -85,6 +90,7 @@ function render(app) {
     btn.addEventListener("click", () => {
       const emoji = btn.dataset.emoji;
       updateProfile({ avatar: emoji });
+      syncProfile().catch(() => {});
       avatarBtn.textContent = emoji;
       picker.querySelectorAll("[data-emoji]").forEach((b) => b.classList.toggle("selected", b === btn));
       picker.hidden = true;
@@ -94,7 +100,8 @@ function render(app) {
   // Name save
   app.querySelector("#save-name").addEventListener("click", () => {
     const name = app.querySelector("#name-input").value.trim() || "Player";
-    updateProfile({ name });
+    updateProfile({ name, named: true });
+    syncProfile().catch(() => {});
   });
 
   // Settings toggles

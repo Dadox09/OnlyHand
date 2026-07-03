@@ -736,3 +736,164 @@ nav a:not(.logo).active { color: var(--text); }
   margin-top: 0.9rem;
 }
 .onboard-privacy .ic { color: var(--accent); display: inline-flex; }
+
+/* ════════════════════════════════════════════════════════════════
+   Fase 2 — Hand cursor, card previews, CRT
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── Hand cursor (point with hand, pinch to click) ───────────── */
+.hand-cursor {
+  position: fixed;
+  top: 0; left: 0;
+  z-index: 1000;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.25s;
+  will-change: transform;
+}
+.hand-cursor.hidden { opacity: 0; }
+.hand-cursor .hc-ring {
+  position: absolute;
+  top: -18px; left: -18px;
+  width: 36px; height: 36px;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  box-shadow: var(--glow-accent-sm), inset 0 0 8px rgba(74, 222, 128, 0.25);
+  transition: transform 0.15s var(--ease-out), border-color 0.15s, box-shadow 0.15s;
+}
+.hand-cursor .hc-dot {
+  position: absolute;
+  top: -3px; left: -3px;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: var(--glow-accent-sm);
+  transition: background 0.15s;
+}
+.hand-cursor.hovering .hc-ring {
+  transform: scale(1.35);
+  border-color: var(--neon-cyan);
+  box-shadow: var(--glow-cyan);
+}
+.hand-cursor.hovering .hc-dot { background: var(--neon-cyan); }
+.hand-cursor.pinching .hc-ring { transform: scale(0.7); }
+.hand-cursor.clicked .hc-ring { animation: hc-pulse 0.35s var(--ease-out); }
+@keyframes hc-pulse {
+  0%   { transform: scale(0.7); }
+  50%  { transform: scale(1.6); border-color: var(--accent-hover); }
+  100% { transform: scale(1); }
+}
+
+/* Hand-hover: mimic :hover for elements targeted by the hand cursor */
+.hand-hover {
+  border-color: var(--accent) !important;
+  box-shadow: var(--glow-accent) !important;
+}
+.game-card.hand-hover {
+  background: var(--surface-hover);
+  transform: translateY(-2px);
+}
+.game-card.hand-hover .play { opacity: 1; transform: translateX(0); }
+.game-card.hand-hover .chip-best { color: var(--accent); }
+.btn.hand-hover { color: var(--text); }
+
+/* ── Pinch hint in the live row ──────────────────────────────── */
+.pinch-hint {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--text-muted);
+}
+
+/* ── Game card animated preview strip ────────────────────────── */
+.card-preview-wrap {
+  position: relative;
+  margin: -1rem -1.25rem 0.45rem;
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border);
+}
+.card-preview {
+  display: block;
+  width: 100%;
+  height: 86px;
+  object-fit: cover;
+  opacity: 0.85;
+  transition: opacity 0.2s;
+}
+.game-card:hover .card-preview,
+.game-card.hand-hover .card-preview { opacity: 1; }
+.card-preview-wrap .icon {
+  position: absolute;
+  left: 0.7rem; bottom: 0.45rem;
+  font-size: 1.5rem;
+  line-height: 1;
+  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.9));
+}
+.card-preview-wrap .play {
+  position: absolute;
+  right: 0.7rem; bottom: 0.55rem;
+  color: var(--accent);
+  display: inline-flex;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 0.2s, transform 0.2s var(--ease-out);
+  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.9));
+}
+
+/* ── CRT scanlines + vignette on game canvases ───────────────── */
+.canvas-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: var(--radius-box);
+  background:
+    radial-gradient(ellipse at center, transparent 62%, rgba(0, 0, 0, 0.28) 100%),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.028) 0 1px, transparent 1px 3px);
+}
+.go-overlay { z-index: 2; }
+
+/* ── Route transition ────────────────────────────────────────── */
+html[data-oh-anim] #app > * {
+  animation: oh-route-in 0.22s var(--ease-out) both;
+}
+@keyframes oh-route-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ── Onboarding: how-to-play list ────────────────────────────── */
+.onboard-list {
+  list-style: none;
+  margin: 0.4rem 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  text-align: left;
+  width: 100%;
+}
+.onboard-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-size: var(--text-body);
+  color: var(--text-muted);
+  line-height: var(--leading-body);
+}
+.onboard-list li b { color: var(--text); font-weight: var(--weight-medium); }
+.onboard-list .ic {
+  flex-shrink: 0;
+  width: 38px; height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-box);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--accent);
+  box-shadow: var(--glow-accent-sm);
+}
