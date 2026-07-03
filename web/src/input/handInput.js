@@ -39,6 +39,14 @@ function makeOneEuro({ minCutoff = 1.4, beta = 0.012, dCutoff = 1.0 } = {}) {
 let filterX = makeOneEuro();
 let filterY = makeOneEuro();
 
+// Map an inner "active box" of the camera frame to the full 0–1 range: the
+// hand reaches the edge of the play area / screen while still well inside the
+// frame, where tracking is reliable. EDGE_MARGIN = normalized distance from
+// the frame border that already counts as "fully at the edge".
+export const EDGE_MARGIN = 0.18;
+export const mapToActiveBox = (v) =>
+  Math.min(1, Math.max(0, (v - EDGE_MARGIN) / (1 - 2 * EDGE_MARGIN)));
+
 const PINCH_ON = 0.32;   // d(thumbTip, indexTip) / d(wrist, middleMCP) — hysteresis
 const PINCH_OFF = 0.42;
 

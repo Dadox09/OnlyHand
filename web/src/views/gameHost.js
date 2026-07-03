@@ -1,7 +1,7 @@
 import { games } from "../games/registry.js";
 import { navigate } from "../router.js";
 import { initCamera, getCameraVideo } from "../core/camera.js";
-import { startHandInput, onHandUpdate, handState } from "../input/handInput.js";
+import { startHandInput, onHandUpdate, handState, mapToActiveBox } from "../input/handInput.js";
 import { recordPlay, getBest, getStats, getLeaderboard } from "../core/scores.js";
 import { icon } from "../core/icon.js";
 import { sfx } from "../core/gameKit.js";
@@ -21,6 +21,12 @@ let autoPaused = false;
 let handLostAt = null;
 
 const AUTO_PAUSE_MS = 2000; // hand gone this long → auto-pause
+
+// In-game sensitivity: mapToActiveBox (see handInput.js) lets the hand reach
+// the play-area edge while still well inside the camera frame.
+const onGameHandUpdate = (cb) =>
+  onHandUpdate((s) =>
+    cb(s.isDetected ? { ...s, x: mapToActiveBox(s.x), y: mapToActiveBox(s.y) } : s));
 
 // Leaderboard names come from other users — always escape before innerHTML.
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) =>
@@ -179,7 +185,7 @@ async function startGame(app) {
   const module = await meta.load();
   activeGame = await module.default.mount({
     canvas,
-    onHandUpdate,
+    onHandUpdate: onGameHandUpdate,
     handState,
     onScore(score) {
       recordPlay(meta.id, score, Math.round((Date.now() - startTime) / 1000));
