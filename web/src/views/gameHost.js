@@ -188,18 +188,32 @@ async function startGame(app) {
     onHandUpdate: onGameHandUpdate,
     handState,
     onScore(score) {
-      recordPlay(meta.id, score, Math.round((Date.now() - startTime) / 1000));
+      const submitted = recordPlay(meta.id, score, Math.round((Date.now() - startTime) / 1000));
       activeGame?.unmount?.();
       activeGame = null;
-      showGameOver(app, score);
+      showGameOver(app, score, submitted);
     },
   });
 }
 
-function showGameOver(app, score) {
+const boardRows = (rows) => rows.map((r, i) => `
+  <div class="board-row${r.you ? " lead" : ""}">
+    <span class="rank">${i + 1}</span>
+    <span class="av">${esc(r.avatar)}</span>
+    <span class="nm">${esc(r.name)}${r.you ? " (you)" : ""}</span>
+    <span class="sc">${r.score}</span>
+  </div>
+`).join("");
+
+const houseBoard = (score) => `
+  <div class="board-head">${icon("trophy", { size: 13 })} TOP HANDS</div>
+  ${boardRows(getLeaderboard(meta.id, score))}
+`;
+
+function showGameOver(app, score, submitted) {
   const best = getBest(meta.id);
   const isRecord = score >= best && score > 0;
-  const board = getLeaderboard(meta.id, score);
+  const online = isOnline();
 
   const wrap = app.querySelector("#canvas-wrap");
   const overlay = document.createElement("div");
@@ -213,15 +227,10 @@ function showGameOver(app, score) {
         ${isRecord ? `${icon("zap", { size: 14 })} New personal best!` : `Personal best · ${best}`}
       </div>
       <div class="board">
-        <div class="board-head">${icon("trophy", { size: 13 })} TOP HANDS</div>
-        ${board.map((r, i) => `
-          <div class="board-row${r.you ? " lead" : ""}">
-            <span class="rank">${i + 1}</span>
-            <span class="av">${esc(r.avatar)}</span>
-            <span class="nm">${esc(r.name)}${r.you ? " (you)" : ""}</span>
-            <span class="sc">${r.score}</span>
-          </div>
-        `).join("")}
+        ${online ? `
+          <div class="board-head">${icon("trophy", { size: 13 })} TOP HANDS · GLOBAL</div>
+          <div class="board-row"><span class="rank">…</span><span class="nm">Loading…</span></div>
+        ` : houseBoard(score)}
       </div>
       <div class="go-actions">
         <button class="btn btn-accent" id="play-again">${icon("rotate-ccw", { size: 15 })} Play again</button>
@@ -237,27 +246,25 @@ function showGameOver(app, score) {
 
   startHandCursor();
 
-  // Upgrade the house board to the global one when a backend is configured.
-  // Small delay so this run's submit (fired in recordPlay) is likely included.
-  if (isOnline()) {
+  // Global board straight away: wait for this run's submit so the score is
+  // included, then fetch. House board only as offline/error fallback.
+  if (online) {
     const gameId = meta.id;
-    setTimeout(async () => {
+    (async () => {
+      await submitted;
       const [rows, rank] = await Promise.all([
         fetchLeaderboard(gameId, 5),
         fetchMyRank(gameId),
       ]);
-      const boardEl = document.querySelector("#go-overlay .board");
-      if (!rows?.length || !boardEl) return;
+      const boardEl = overlay.querySelector(".board");
+      if (!boardEl || !boardEl.isConnected) return;
+      if (!rows?.length) {
+        boardEl.innerHTML = houseBoard(score);
+        return;
+      }
       boardEl.innerHTML = `
         <div class="board-head">${icon("trophy", { size: 13 })} TOP HANDS · GLOBAL</div>
-        ${rows.map((r, i) => `
-          <div class="board-row${r.you ? " lead" : ""}">
-            <span class="rank">${i + 1}</span>
-            <span class="av">${esc(r.avatar)}</span>
-            <span class="nm">${esc(r.name)}${r.you ? " (you)" : ""}</span>
-            <span class="sc">${r.score}</span>
-          </div>
-        `).join("")}
+        ${boardRows(rows)}
         ${rank && !rows.some((r) => r.you) ? `
           <div class="board-row lead">
             <span class="rank">${rank.rank}</span>
@@ -266,7 +273,7 @@ function showGameOver(app, score) {
             <span class="sc">${rank.best}</span>
           </div>` : ""}
       `;
-    }, 800);
+    })();
   }
 }
 

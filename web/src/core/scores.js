@@ -2,8 +2,10 @@ import { getProfile, saveProfile } from "./profile.js";
 import { submitScore } from "./backend.js";
 
 export function recordPlay(gameId, score, durationSeconds = 0) {
-  // Fire-and-forget cloud submit; local stats never wait on the network.
-  submitScore(gameId, score).catch(() => {});
+  // Cloud submit runs in parallel; local stats never wait on the network.
+  // The promise is returned so callers can wait for it before fetching the
+  // global leaderboard (ensures this run's score is included).
+  const submitted = submitScore(gameId, score).catch(() => false);
   const p = getProfile();
   const prev = p.stats[gameId] ?? { best: 0, plays: 0, totalScore: 0, lastPlayed: null };
   p.stats[gameId] = {
@@ -14,6 +16,7 @@ export function recordPlay(gameId, score, durationSeconds = 0) {
   };
   p.totalPlaytime = (p.totalPlaytime ?? 0) + durationSeconds;
   saveProfile(p);
+  return submitted;
 }
 
 export function getBest(gameId) {
