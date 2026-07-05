@@ -4,6 +4,7 @@ import { mount as mountOnboarding, unmount as unmountOnboarding } from "./views/
 import { mount as mountMenu, unmount as unmountMenu } from "./views/menu.js";
 import { mount as mountProfile, unmount as unmountProfile } from "./views/profileView.js";
 import { mount as mountGame, unmount as unmountGame } from "./views/gameHost.js";
+import { mount as mountBoard, unmount as unmountBoard } from "./views/leaderboardView.js";
 
 const app = document.getElementById("app");
 
@@ -12,6 +13,7 @@ function unmountAll() {
   unmountGame();
   unmountProfile();
   unmountMenu();
+  unmountBoard();
 }
 
 route("/", () => {
@@ -27,6 +29,16 @@ route("/hub", () => {
 route("/profile", () => {
   unmountAll();
   mountProfile(app);
+});
+
+route("/board", () => {
+  unmountAll();
+  mountBoard(app, {});
+});
+
+route("/board/:id", ({ params }) => {
+  unmountAll();
+  mountBoard(app, { params });
 });
 
 route("/games/:id", ({ params }) => {

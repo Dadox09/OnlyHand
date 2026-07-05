@@ -9,6 +9,8 @@ function defaultProfile() {
     avatar: "🎮",
     createdAt: new Date().toISOString(),
     stats: {},
+    badges: {},    // { [badgeId]: earnedAtISO } — see core/badges.js
+    counters: {},  // { records } — personal bests broken
     totalPlaytime: 0,
     settings: {
       mirrorWebcam: true,

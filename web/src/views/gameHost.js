@@ -190,10 +190,10 @@ async function startGame(app) {
     onHandUpdate: onGameHandUpdate,
     handState,
     onScore(score) {
-      const submitted = recordPlay(meta.id, score, Math.round((Date.now() - startTime) / 1000));
+      const { submitted, newBadges } = recordPlay(meta.id, score, Math.round((Date.now() - startTime) / 1000));
       activeGame?.unmount?.();
       activeGame = null;
-      showGameOver(app, score, submitted);
+      showGameOver(app, score, submitted, newBadges);
     },
   });
 }
@@ -212,7 +212,7 @@ const houseBoard = (score) => `
   ${boardRows(getLeaderboard(meta.id, score))}
 `;
 
-function showGameOver(app, score, submitted) {
+function showGameOver(app, score, submitted, newBadges = []) {
   const best = getBest(meta.id);
   const isRecord = score >= best && score > 0;
   const online = isOnline();
@@ -228,12 +228,21 @@ function showGameOver(app, score, submitted) {
       <div class="go-best">
         ${isRecord ? `${icon("zap", { size: 14 })} New personal best!` : `Personal best · ${best}`}
       </div>
+      ${newBadges.length ? `
+        <div class="go-badges">
+          ${newBadges.map((b) => `
+            <span class="go-badge oh-pop">
+              <span class="badge-icon">${b.icon}</span>
+              <span class="lbl">BADGE UNLOCKED</span> ${b.name}
+            </span>`).join("")}
+        </div>` : ""}
       <div class="board">
         ${online ? `
           <div class="board-head">${icon("trophy", { size: 13 })} TOP HANDS · GLOBAL</div>
           <div class="board-row"><span class="rank">…</span><span class="nm">Loading…</span></div>
         ` : houseBoard(score)}
       </div>
+      <a class="go-board-link" href="#/board/${meta.id}">${icon("trophy", { size: 12 })} Hall of Fame</a>
       <div class="go-actions">
         <button class="btn btn-accent" id="play-again">${icon("rotate-ccw", { size: 15 })} Play again</button>
         <button class="btn" id="go-menu">${icon("arrow-left", { size: 15 })} Menu</button>

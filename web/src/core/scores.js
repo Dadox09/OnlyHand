@@ -1,5 +1,6 @@
 import { getProfile, saveProfile } from "./profile.js";
 import { submitScore } from "./backend.js";
+import { syncBadges } from "./badges.js";
 
 export function recordPlay(gameId, score, durationSeconds = 0) {
   // Cloud submit runs in parallel; local stats never wait on the network.
@@ -15,8 +16,13 @@ export function recordPlay(gameId, score, durationSeconds = 0) {
     lastPlayed: new Date().toISOString(),
   };
   p.totalPlaytime = (p.totalPlaytime ?? 0) + durationSeconds;
+  p.counters = p.counters ?? {};
+  if (score > prev.best && prev.plays > 0) {
+    p.counters.records = (p.counters.records ?? 0) + 1;
+  }
+  const newBadges = syncBadges(p);
   saveProfile(p);
-  return submitted;
+  return { submitted, newBadges };
 }
 
 export function getBest(gameId) {
@@ -33,12 +39,13 @@ const HOUSE_RIVALS = {
   pong:      [{ name: "Nova",  avatar: "⚡", score: 87 },  { name: "Rex",   avatar: "🐉", score: 35 }],
   breakout:  [{ name: "Brick", avatar: "🤖", score: 90 },  { name: "Nova",  avatar: "⚡", score: 44 }],
   snake:     [{ name: "Viper", avatar: "🐍", score: 240 }, { name: "Nova",  avatar: "⚡", score: 150 }],
+  slash:     [{ name: "Kenji", avatar: "🥷", score: 120 }, { name: "Nova",  avatar: "⚡", score: 65 }],
   asteroids: [{ name: "Nova",  avatar: "⚡", score: 60 },  { name: "Rex",   avatar: "🐉", score: 28 }],
 };
 
 // Build a small TOP HANDS leaderboard: house rivals + the player's best
-// (or this run's score, whichever is higher), sorted, top 3.
-export function getLeaderboard(gameId, score = 0) {
+// (or this run's score, whichever is higher), sorted, top `limit`.
+export function getLeaderboard(gameId, score = 0, limit = 3) {
   const p = getProfile();
   const rivals = HOUSE_RIVALS[gameId] ?? HOUSE_RIVALS.pong;
   const you = {
@@ -49,5 +56,5 @@ export function getLeaderboard(gameId, score = 0) {
   };
   return [...rivals.map((r) => ({ ...r })), you]
     .sort((a, b) => b.score - a.score)
-    .slice(0, 3);
+    .slice(0, limit);
 }

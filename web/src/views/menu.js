@@ -15,6 +15,7 @@ export async function mount(app) {
   app.innerHTML = `
     <nav>
       <a class="logo" href="#/hub">ONLY<span class="lit">HAND</span></a>
+      <a href="#/board">${icon("trophy", { size: 14 })} Hall of Fame</a>
       <a href="#/profile">${profile.avatar} ${profile.name} ${icon("chevron-right", { size: 14 })}</a>
     </nav>
     <div class="page">

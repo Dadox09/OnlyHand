@@ -13,8 +13,10 @@
 @import "./components/webcam.css";
 @import "./components/hand-cursor.css";
 @import "./components/overlays.css";
+@import "./components/badges.css";
 
 @import "./views/hub.css";
 @import "./views/game-host.css";
 @import "./views/profile.css";
 @import "./views/onboarding.css";
+@import "./views/leaderboard.css";

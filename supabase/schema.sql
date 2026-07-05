@@ -27,7 +27,7 @@ create policy "users update own profile"
 create table if not exists public.scores (
   id         bigint generated always as identity primary key,
   user_id    uuid not null references public.profiles (id) on delete cascade,
-  game_id    text not null check (game_id in ('pong', 'breakout', 'snake', 'asteroids')),
+  game_id    text not null check (game_id in ('pong', 'breakout', 'snake', 'slash', 'asteroids')),
   score      integer not null check (score >= 0 and score <= 100000),
   created_at timestamptz not null default now()
 );

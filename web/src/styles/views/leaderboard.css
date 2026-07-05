@@ -1,0 +1,134 @@
+/* ── Hall of Fame (all-time leaderboard) ─────────────────────── */
+.lb-wrap {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: var(--space-page);
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+.lb-wrap .page-header h1 {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--text);
+}
+.lb-wrap .page-header h1 svg { color: var(--accent); filter: drop-shadow(var(--glow-accent-sm)); }
+
+/* Tabs */
+.lb-tabs { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.lb-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.8rem;
+  background: var(--surface);
+  border: var(--border-default);
+  border-radius: var(--radius-pill);
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: var(--ease-prop);
+}
+.lb-tab:hover { border-color: var(--border-hover); color: var(--text); }
+.lb-tab.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: var(--glow-accent-sm);
+}
+.lb-tab .ic { font-size: 1rem; line-height: 1; }
+
+/* Board container */
+.lb-board { display: flex; flex-direction: column; gap: 0.9rem; }
+.lb-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-muted);
+  font-size: var(--text-sub);
+  padding: 2rem 0;
+  justify-content: center;
+}
+
+/* Podium: 2nd · 1st · 3rd */
+.lb-podium {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+  align-items: end;
+}
+.lb-podium-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  text-align: center;
+  min-width: 0;
+}
+.lb-podium-slot .medal { font-size: 1.5rem; line-height: 1; }
+.lb-podium-slot .av { font-size: 2rem; line-height: 1.2; }
+.lb-podium-slot .nm {
+  font-size: var(--text-sub);
+  color: var(--text);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lb-podium-slot .sc {
+  font-family: var(--font-display);
+  font-weight: var(--weight-black);
+  font-size: 1.1rem;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.lb-podium-slot .base {
+  width: 100%;
+  border: var(--border-default);
+  border-bottom: none;
+  border-radius: var(--radius-box) var(--radius-box) 0 0;
+  background: linear-gradient(180deg, var(--surface-hover), var(--surface));
+  margin-top: 0.35rem;
+}
+.lb-podium-slot.p1 .base { height: 74px; border-color: var(--accent); box-shadow: var(--glow-accent-sm); }
+.lb-podium-slot.p2 .base { height: 50px; }
+.lb-podium-slot.p3 .base { height: 34px; }
+.lb-podium-slot.p1 .sc { color: var(--accent); text-shadow: var(--text-glow); }
+.lb-podium-slot.p1 .av { font-size: 2.5rem; }
+.lb-podium-slot.you .nm { color: var(--accent); }
+.lb-podium-slot.empty .nm,
+.lb-podium-slot.empty .av,
+.lb-podium-slot.empty .sc { color: var(--text-faint); }
+.tag-you {
+  font-family: var(--font-display);
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  color: var(--on-accent);
+  background: var(--accent);
+  border-radius: var(--radius-chip);
+  padding: 0.05rem 0.3rem;
+  vertical-align: middle;
+}
+
+/* Ranks 4+ reuse .board-row from cards.css inside a full-width list */
+.lb-list {
+  background: var(--surface);
+  border: var(--border-default);
+  border-radius: var(--radius-box);
+  padding: 0.6rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+.lb-you-row { border-color: var(--accent); box-shadow: var(--glow-accent-sm); }
+
+.lb-cta { margin: 0; color: var(--text-muted); font-size: var(--text-sub); text-align: center; }
+.lb-cta a { color: var(--accent); }
+
+@media (max-width: 560px) {
+  .lb-tab .nm { display: none; }
+  .lb-tab { padding: 0.45rem 0.6rem; }
+}

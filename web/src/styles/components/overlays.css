@@ -40,6 +40,16 @@
 }
 .go-actions { display: flex; gap: 0.6rem; justify-content: center; }
 .go-hint { color: var(--text-faint); font-size: var(--text-tag); }
+.go-board-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--text-muted);
+  font-size: var(--text-tag);
+  text-decoration: none;
+  transition: var(--ease-prop);
+}
+.go-board-link:hover { color: var(--accent); }
 
 /* ── CRT scanlines + vignette on game canvases ───────────────── */
 .canvas-wrap::after {

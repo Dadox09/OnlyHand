@@ -38,6 +38,17 @@ real TOP HANDS.
 - **Rate limit**: max 1 score per 5 s per user (trigger).
 - **`leaderboard` view**: best score per player per game — what the app queries.
 
+## Migrations for existing projects
+
+If you deployed the schema **before Fruit Slash was added**, the `game_id`
+check constraint rejects `'slash'` scores. Run once in the SQL Editor:
+
+```sql
+alter table public.scores drop constraint scores_game_id_check;
+alter table public.scores add constraint scores_game_id_check
+  check (game_id in ('pong', 'breakout', 'snake', 'slash', 'asteroids'));
+```
+
 ## Data model
 
 | Table | Contents |

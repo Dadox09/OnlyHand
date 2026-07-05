@@ -89,13 +89,15 @@ src/
 │   ├── handCursor.js    # Point with your hand, pinch to click (menus/overlays)
 │   ├── cardPreviews.js  # Animated mini-scenes on the hub cards
 │   ├── icon.js          # Lucide line-icon SVG builder
+│   ├── badges.js        # Gamification: XP → level curve + 13 achievement badges
 │   └── backend.js       # Optional Supabase: anon auth + global leaderboard
 ├── input/
 │   └── handInput.js     # Singleton GestureRecognizer, One-Euro filter, pinch detection
 ├── views/
 │   ├── onboarding.js    # Camera gate → pick your tag → how-to-play (first access)
 │   ├── menu.js          # Hub: webcam preview + game grid
-│   ├── profileView.js   # Profile editor, avatar picker, stats, settings
+│   ├── profileView.js   # Profile editor, avatar picker, stats, level + badges, settings
+│   ├── leaderboardView.js # Hall of Fame: all-time top 10 per game, podium + your rank
 │   └── gameHost.js      # Game lifecycle, pause, Game Over + leaderboard overlay
 └── games/
     ├── registry.js      # { id, name, icon, description, requires, load() }
@@ -137,6 +139,15 @@ export default {
 
 Hand state: `{ x, y, isDetected, landmarks, gesture, pinch }` — x/y normalized 0–1,
 One-Euro filtered; `pinch` = thumb-index pinch with hysteresis.
+
+### Gamification
+
+Every finished run earns XP (score + a per-run bonus) that levels you up — the
+profile shows your level bar plus **13 achievement badges** (milestones, personal
+records, per-game mastery) with live progress on the locked ones. New unlocks pop
+on the Game Over screen. The **Hall of Fame** (`#/board`, trophy in the nav) is the
+all-time leaderboard: one tab per game, top-3 podium, ranks 4–10, and your global
+rank even when you're off the board.
 
 ### Global leaderboard (optional)
 

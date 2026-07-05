@@ -1,5 +1,6 @@
 import { getProfile, updateProfile, updateSettings } from "../core/profile.js";
 import { getStats } from "../core/scores.js";
+import { getBadges, getLevel } from "../core/badges.js";
 import { games } from "../games/registry.js";
 import { icon } from "../core/icon.js";
 import { startHandCursor, stopHandCursor } from "../core/handCursor.js";
@@ -18,10 +19,14 @@ export function unmount() {
 
 function render(app) {
   const profile = getProfile();
+  const lvl = getLevel(profile);
+  const badges = getBadges(profile);
+  const unlockedCount = badges.filter((b) => b.unlocked).length;
 
   app.innerHTML = `
     <nav>
       <a class="logo" href="#/hub">ONLY<span class="lit">HAND</span></a>
+      <a href="#/board">${icon("trophy", { size: 14 })} Hall of Fame</a>
       <a href="#/hub" class="active">${icon("arrow-left", { size: 14 })} Back</a>
     </nav>
     <div class="profile-wrap">
@@ -36,6 +41,13 @@ function render(app) {
             </div>
             <p class="subtitle" style="margin-top:0.45rem">Playing since ${new Date(profile.createdAt).toLocaleDateString()}</p>
           </div>
+          <div class="level-card">
+            <div class="level-line">
+              <span class="lv">LV ${lvl.level}</span>
+              <span class="xp">${lvl.intoLevel} / ${lvl.span} XP</span>
+            </div>
+            <div class="level-bar"><div class="fill" style="width:${Math.round(lvl.pct * 100)}%"></div></div>
+          </div>
         </div>
 
         <div class="avatar-picker oh-pop" id="avatar-picker" hidden>
@@ -45,6 +57,11 @@ function render(app) {
         <section class="oh-fade-up">
           <h2 class="section-head">${icon("trophy", { size: 13 })} GAME STATS</h2>
           <div class="stats-grid" id="stats-grid"></div>
+        </section>
+
+        <section class="oh-fade-up">
+          <h2 class="section-head">${icon("shield-check", { size: 13 })} BADGES · ${unlockedCount}/${badges.length}</h2>
+          <div class="badge-grid" id="badge-grid"></div>
         </section>
 
         <section class="oh-fade-up">
@@ -80,6 +97,27 @@ function render(app) {
       : `<div class="label">${g.icon} ${g.name}</div>
          <div class="empty">Not played yet</div>`;
     grid.appendChild(card);
+  }
+
+  // Badges — unlocked glow with earned date, locked show live progress
+  const badgeGrid = app.querySelector("#badge-grid");
+  for (const b of badges) {
+    const card = document.createElement("div");
+    card.className = `badge-card ${b.unlocked ? "unlocked" : "locked"}`;
+    card.innerHTML = `
+      <span class="badge-icon">${b.icon}</span>
+      <div class="badge-body">
+        <span class="badge-name">${b.name}</span>
+        <span class="badge-desc">${b.desc}</span>
+        ${b.unlocked
+          ? `<span class="badge-date">Earned${b.earnedAt ? " " + new Date(b.earnedAt).toLocaleDateString() : ""}</span>`
+          : `<div class="badge-progress">
+               <div class="bar"><div class="fill" style="width:${Math.round(b.pct * 100)}%"></div></div>
+               <span class="num">${b.cur}/${b.goal}</span>
+             </div>`}
+      </div>
+    `;
+    badgeGrid.appendChild(card);
   }
 
   // Avatar picker
