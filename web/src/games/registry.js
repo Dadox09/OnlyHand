@@ -35,7 +35,7 @@ export const games = [
     id: "asteroids",
     name: "Asteroids",
     icon: "🚀",
-    description: "Fly with your hand — auto-fires at the nearest rock. Pinch for rapid fire.",
+    description: "Clear sector after sector — comets, UFOs and power-ups. Pinch for rapid fire.",
     requires: ["hand"],
     load: () => import("./asteroids/index.js"),
   },
