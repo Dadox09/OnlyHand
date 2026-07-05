@@ -13,10 +13,11 @@ const POINTS = { large: 1, medium: 2, small: 3, comet: 5 };
 const SPLIT = { large: "medium", medium: "small", small: null, comet: null };
 const SHIP_SMOOTHING = 0.14;
 const SHIP_RADIUS = 12;
+const SHIP_HITBOX = SHIP_RADIUS * 0.96; // damage hitbox (was ×0.8, +20%)
 const SHIP_DRAW = 50;             // sprite size on canvas (px)
 const FIRE_INTERVAL = 460;        // ms, auto-fire
-const FIRE_INTERVAL_PINCH = 170;  // ms while pinching
-const BULLET_SPEED = 8;
+const FIRE_INTERVAL_PINCH = 245;  // ms while pinching (~30% slower cadence than the old 170)
+const BULLET_SPEED = 12;
 const BULLET_LIFE = 70;           // frames
 const UFO_EVERY = 12000;          // ms between UFO spawns (level 4+)
 const UFO_SHOOT_EVERY = 1700;     // ms
@@ -193,8 +194,14 @@ export default {
 
     // Optional art — loads in the background, procedural fallbacks
     // render immediately so the game never waits on files.
-    const assets = { ship: null, bgs: LEVELS.map(() => null), rocks: [], bosses: [null, null, null] };
+    const assets = {
+      ship: null, bgs: LEVELS.map(() => null), rocks: [],
+      bosses: [null, null, null], pfire: null, efire: null, life: null,
+    };
+    loadFirst([`${ASSET_BASE}life.png`, `${ASSET_BASE}life.webp`]).then((img) => { assets.life = img; });
     loadFirst(withExts("ship").reverse()).then((img) => { assets.ship = img; }); // prefer png/webp
+    loadFirst([`${ASSET_BASE}playerfire.png`, `${ASSET_BASE}playerfire.webp`]).then((img) => { assets.pfire = img; });
+    loadFirst([`${ASSET_BASE}enemyfire.png`, `${ASSET_BASE}enemyfire.webp`]).then((img) => { assets.efire = img; });
     BOSS_NAMES.forEach((_, i) => {
       loadFirst([`${ASSET_BASE}boss${i + 1}.png`, `${ASSET_BASE}boss${i + 1}.webp`])
         .then((img) => { assets.bosses[i] = img; });
@@ -517,7 +524,7 @@ export default {
           }
           sfx.shoot();
         }
-        if (Math.hypot(ship.x - b.x, ship.y - b.y) < b.r * 0.8 + SHIP_RADIUS * 0.8) hitShip();
+        if (Math.hypot(ship.x - b.x, ship.y - b.y) < b.r * 0.8 + SHIP_HITBOX) hitShip();
       }
 
       // UFO (level 4+, never during boss fights)
@@ -538,7 +545,7 @@ export default {
           sfx.shoot();
         }
         if ((u.vx > 0 && u.x > W + 50) || (u.vx < 0 && u.x < -50)) state.ufo = null;
-        else if (Math.hypot(ship.x - u.x, ship.y - u.y) < u.r + SHIP_RADIUS * 0.8) hitShip();
+        else if (Math.hypot(ship.x - u.x, ship.y - u.y) < u.r + SHIP_HITBOX) hitShip();
       }
 
       // Enemy bullets
@@ -550,7 +557,7 @@ export default {
           state.enemyBullets.splice(i, 1);
           continue;
         }
-        if (Math.hypot(b.x - ship.x, b.y - ship.y) < 5 + SHIP_RADIUS * 0.8) {
+        if (Math.hypot(b.x - ship.x, b.y - ship.y) < 5 + SHIP_HITBOX) {
           state.enemyBullets.splice(i, 1);
           hitShip();
         }
@@ -576,7 +583,7 @@ export default {
         state.invincible--;
       } else {
         for (const a of state.asteroids) {
-          if (Math.hypot(ship.x - a.x, ship.y - a.y) < SIZES[a.size] * 0.75 + SHIP_RADIUS * 0.8) {
+          if (Math.hypot(ship.x - a.x, ship.y - a.y) < SIZES[a.size] * 0.75 + SHIP_HITBOX) {
             hitShip();
             break;
           }
@@ -796,6 +803,13 @@ export default {
       ctx.translate(p.x, p.y);
       ctx.scale(pulse, pulse);
       ctx.globalAlpha = fade;
+      if (p.type === "life" && assets.life) {
+        ctx.shadowColor = NEON.danger;
+        ctx.shadowBlur = 12;
+        ctx.drawImage(assets.life, -14, -14, 28, 28);
+        ctx.restore();
+        return;
+      }
       ctx.beginPath();
       ctx.arc(0, 0, 13, 0, TAU);
       ctx.fillStyle = "rgba(6,10,18,0.75)";
@@ -915,24 +929,48 @@ export default {
       drawUfo();
       drawBosses();
 
-      // player bullets
-      ctx.fillStyle = NEON.cyan;
-      ctx.shadowColor = NEON.cyan;
-      ctx.shadowBlur = 8;
-      for (const b of state.bullets) {
-        ctx.beginPath();
-        ctx.arc(b.x, b.y, 3, 0, TAU);
-        ctx.fill();
+      // player bullets — sprite points UP, rotate along velocity
+      if (assets.pfire) {
+        const bh = 24, bw = bh * (assets.pfire.width / assets.pfire.height);
+        for (const b of state.bullets) {
+          ctx.save();
+          ctx.translate(b.x, b.y);
+          ctx.rotate(Math.atan2(b.vy, b.vx) + Math.PI / 2);
+          ctx.drawImage(assets.pfire, -bw / 2, -bh / 2, bw, bh);
+          ctx.restore();
+        }
+      } else {
+        ctx.fillStyle = NEON.cyan;
+        ctx.shadowColor = NEON.cyan;
+        ctx.shadowBlur = 8;
+        for (const b of state.bullets) {
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, 3, 0, TAU);
+          ctx.fill();
+        }
+        ctx.shadowBlur = 0;
       }
       // enemy bullets
-      ctx.fillStyle = NEON.danger;
-      ctx.shadowColor = NEON.danger;
-      for (const b of state.enemyBullets) {
-        ctx.beginPath();
-        ctx.arc(b.x, b.y, 4, 0, TAU);
-        ctx.fill();
+      if (assets.efire) {
+        const bh = 26, bw = bh * (assets.efire.width / assets.efire.height);
+        for (const b of state.enemyBullets) {
+          ctx.save();
+          ctx.translate(b.x, b.y);
+          ctx.rotate(Math.atan2(b.vy, b.vx) + Math.PI / 2);
+          ctx.drawImage(assets.efire, -bw / 2, -bh / 2, bw, bh);
+          ctx.restore();
+        }
+      } else {
+        ctx.fillStyle = NEON.danger;
+        ctx.shadowColor = NEON.danger;
+        ctx.shadowBlur = 8;
+        for (const b of state.enemyBullets) {
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, 4, 0, TAU);
+          ctx.fill();
+        }
+        ctx.shadowBlur = 0;
       }
-      ctx.shadowBlur = 0;
 
       drawShip();
       particles.draw(ctx);
@@ -944,7 +982,13 @@ export default {
         drawHudText(ctx, `COMBO x${mult}`, 14, 48, { size: 12, color: NEON.magenta, glow: NEON.magenta });
       }
       drawHudText(ctx, `LV ${state.level}`, W / 2, 28, { size: 15, align: "center", color: NEON.muted });
-      drawLives(ctx, Math.max(0, state.lives), W - 16, 22);
+      if (assets.life) {
+        for (let i = 0; i < Math.max(0, state.lives); i++) {
+          ctx.drawImage(assets.life, W - 16 - 20 - i * 23, 12, 20, 20);
+        }
+      } else {
+        drawLives(ctx, Math.max(0, state.lives), W - 16, 22);
+      }
       drawBossBars();
 
       if (state.tripleT > 0) {
