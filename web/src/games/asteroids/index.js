@@ -1,6 +1,6 @@
 import {
   NEON, setupCanvas, createParticles, createShake, createFlash,
-  createCountdown, drawHudText, drawHandLostBanner, drawLives, sfx,
+  createCountdown, createFixedStep, STEP_MS, drawHudText, drawHandLostBanner, drawLives, sfx,
 } from "../../core/gameKit.js";
 
 const W = 800;
@@ -25,17 +25,19 @@ function wrap(v, max) { return ((v % max) + max) % max; }
 function makeAsteroid(size, x, y, level) {
   const angle = Math.random() * TAU;
   const speedMult = 1 + (level - 1) * 0.18;
-  const speed = (size === "large" ? randRange(0.6, 1.2)
-               : size === "medium" ? randRange(1.0, 2.0)
-               : randRange(1.8, 3.2)) * speedMult;
+  const speed = (size === "large" ? randRange(1.2, 2.2)
+    : size === "medium" ? randRange(1.7, 3.2)
+      : randRange(3.0, 5.0)) * speedMult;
   const verts = 8;
   const shape = Array.from({ length: verts }, (_, i) => {
     const a = (i / verts) * TAU;
     const r = SIZES[size] * randRange(0.7, 1.0);
     return { x: Math.cos(a) * r, y: Math.sin(a) * r };
   });
-  return { x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
-           rot: 0, rotSpeed: randRange(-0.02, 0.02), size, shape };
+  return {
+    x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+    rot: 0, rotSpeed: randRange(-0.02, 0.02), size, shape
+  };
 }
 
 function spawnInitial(n = 4, level = 1) {
@@ -80,7 +82,6 @@ export default {
       lives: 3,
       level: 1,
       elapsed: 0,       // seconds of actual play (pause-aware)
-      lastTs: null,
       sinceSpawn: 0,    // ms accumulators
       sinceShot: 0,
       invincible: 0,
@@ -140,7 +141,7 @@ export default {
       }
     }
 
-    function update(ts) {
+    function update() {
       // Asteroids always drift (looks alive even while dying)
       for (const a of state.asteroids) {
         a.x = wrap(a.x + a.vx, W);
@@ -152,9 +153,7 @@ export default {
       shake.update();
       flash.update();
 
-      if (state.lastTs === null) state.lastTs = ts;
-      const dt = Math.min(ts - state.lastTs, 100);
-      state.lastTs = ts;
+      const dt = STEP_MS; // fixed 60 Hz step
 
       if (!countdown.done || state.dying) return;
 
@@ -263,9 +262,9 @@ export default {
       const r = SHIP_RADIUS + 3;
       ctx.beginPath();
       ctx.moveTo(-r, 0); ctx.lineTo(-SHIP_RADIUS * 0.7, 0);
-      ctx.moveTo(r, 0);  ctx.lineTo(SHIP_RADIUS * 0.7, 0);
+      ctx.moveTo(r, 0); ctx.lineTo(SHIP_RADIUS * 0.7, 0);
       ctx.moveTo(0, -r); ctx.lineTo(0, -SHIP_RADIUS * 0.7);
-      ctx.moveTo(0, r);  ctx.lineTo(0, SHIP_RADIUS * 0.7);
+      ctx.moveTo(0, r); ctx.lineTo(0, SHIP_RADIUS * 0.7);
       ctx.stroke();
 
       ctx.restore();
@@ -339,12 +338,14 @@ export default {
     let running = true;
     let deathTimer = null;
 
+    const fixed = createFixedStep(update);
+
     function step(ts) {
       if (!state.paused) {
         countdown.update();
-        update(ts);
+        fixed.tick(ts);
       } else {
-        state.lastTs = ts; // don't accumulate time across a pause
+        fixed.reset(); // don't accumulate time across a pause
       }
       draw();
       if (running) raf = requestAnimationFrame(step);

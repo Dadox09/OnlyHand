@@ -1,6 +1,6 @@
 import {
   NEON, setupCanvas, createParticles, createShake, createFlash,
-  createCountdown, drawHudText, drawHandLostBanner, sfx,
+  createCountdown, createFixedStep, drawHudText, drawHandLostBanner, sfx,
 } from "../../core/gameKit.js";
 
 const W = 800;
@@ -9,7 +9,7 @@ const PADDLE_W = 14;
 const PADDLE_H = 100;
 const PADDLE_X = 30;
 const BALL_R = 9;
-const MAX_VX = 11;
+const MAX_VX = 16.5;
 const TRAIL_LEN = 12;
 
 export default {
@@ -24,7 +24,7 @@ export default {
     const state = {
       paddleY: H / 2 - PADDLE_H / 2,
       targetY: H / 2 - PADDLE_H / 2,
-      ball: { x: W / 2, y: H / 2, vx: -5, vy: 3 },
+      ball: { x: W / 2, y: H / 2, vx: -7.5, vy: 4.5 },
       trail: [],
       score: 0,
       dying: false,
@@ -41,10 +41,14 @@ export default {
     let running = true;
     let deathTimer = null;
 
-    function step() {
+    const fixed = createFixedStep(update);
+
+    function step(ts) {
       if (!state.paused) {
         countdown.update();
-        update();
+        fixed.tick(ts);
+      } else {
+        fixed.reset();
       }
       draw();
       if (running) raf = requestAnimationFrame(step);
@@ -91,7 +95,7 @@ export default {
       ) {
         b.x = PADDLE_X + PADDLE_W + BALL_R;
         b.vx = Math.min(-b.vx * 1.04, MAX_VX);
-        b.vy += ((b.y - (state.paddleY + PADDLE_H / 2)) / (PADDLE_H / 2)) * 2;
+        b.vy += ((b.y - (state.paddleY + PADDLE_H / 2)) / (PADDLE_H / 2)) * 3;
         state.score += 1;
         sfx.hit();
         shake.add(0.12);

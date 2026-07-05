@@ -40,6 +40,30 @@ export function setupCanvas(canvas, W, H) {
   return ctx;
 }
 
+/* ── Fixed timestep: same game speed on every display ─────────── */
+// rAF fires at the display refresh rate (60/90/120/144 Hz), so games that
+// move objects "per frame" would run faster or slower depending on the
+// monitor. This wraps the update in a 60 Hz accumulator: call tick(ts)
+// every rAF frame and stepFn runs exactly 60 times per second everywhere.
+// All per-frame tuning constants in the games are calibrated for 60 Hz.
+export const STEP_MS = 1000 / 60;
+
+export function createFixedStep(stepFn) {
+  let last = null;
+  let acc = 0;
+  return {
+    tick(now) {
+      if (last === null) last = now;
+      acc += Math.min(now - last, 100); // clamp survives tab-switch/hiccups
+      last = now;
+      let steps = 0;
+      while (acc >= STEP_MS && steps < 4) { stepFn(); acc -= STEP_MS; steps++; }
+      if (steps === 4) acc = 0; // too far behind — drop the backlog
+    },
+    reset() { last = null; acc = 0; },
+  };
+}
+
 /* ── Particles ────────────────────────────────────────────────── */
 export function createParticles() {
   const parts = [];

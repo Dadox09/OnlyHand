@@ -1,13 +1,13 @@
 import {
   NEON, setupCanvas, createParticles, createShake, createFlash,
-  createCountdown, drawHudText, drawHandLostBanner, drawLives, sfx,
+  createCountdown, createFixedStep, STEP_MS, drawHudText, drawHandLostBanner, drawLives, sfx,
 } from "../../core/gameKit.js";
 
 const W = 800;
 const H = 550;
 const TAU = Math.PI * 2;
 
-const GRAVITY = 0.085;            // px/frame² on fruits and chunks
+const GRAVITY = 0.19;             // px/frame² on fruits and chunks (scales with speed²)
 const TRAIL_LIFE = 160;           // ms a blade point stays visible
 const SLICE_SPEED = 0.5;          // px/ms — swipes slice, slow drift doesn't
 const COMBO_WINDOW = 500;         // ms between slices to keep a combo alive
@@ -39,8 +39,8 @@ function makeFruit(level) {
   return {
     ...kind, golden,
     x, y: H + kind.r + 10,
-    vx: (W / 2 - x) * 0.004 + randRange(-1.2, 1.2),
-    vy: randRange(-11, -8.5) - Math.min(1.5, (level - 1) * 0.15),
+    vx: (W / 2 - x) * 0.006 + randRange(-1.8, 1.8),
+    vy: randRange(-16.5, -12.75) - Math.min(2.25, (level - 1) * 0.225),
     rot: Math.random() * TAU,
     rotSpeed: randRange(-0.06, 0.06),
     bomb: false,
@@ -52,8 +52,8 @@ function makeBomb(level) {
   return {
     color: "#1e293b", glow: NEON.danger, r: 22, points: 0, golden: false,
     x, y: H + 32,
-    vx: (W / 2 - x) * 0.004 + randRange(-1, 1),
-    vy: randRange(-10.5, -8.5) - Math.min(1.5, (level - 1) * 0.15),
+    vx: (W / 2 - x) * 0.006 + randRange(-1.5, 1.5),
+    vy: randRange(-15.75, -12.75) - Math.min(2.25, (level - 1) * 0.225),
     rot: Math.random() * TAU,
     rotSpeed: randRange(-0.04, 0.04),
     bomb: true,
@@ -81,7 +81,6 @@ export default {
       combo: 0,
       lastSliceAt: -Infinity,
       elapsed: 0,
-      lastTs: null,
       sinceSpawn: 0,
       dying: false,
       paused: false,
@@ -124,8 +123,8 @@ export default {
       for (const dir of [-1, 1]) {
         state.chunks.push({
           x: f.x, y: f.y,
-          vx: f.vx + Math.cos(strokeA + dir * Math.PI / 2) * 2.4,
-          vy: f.vy * 0.4 + Math.sin(strokeA + dir * Math.PI / 2) * 2.4 - 1,
+          vx: f.vx + Math.cos(strokeA + dir * Math.PI / 2) * 3.6,
+          vy: f.vy * 0.4 + Math.sin(strokeA + dir * Math.PI / 2) * 3.6 - 1.5,
           r: f.r, color: f.color, glow: f.glow,
           rot: strokeA + (dir > 0 ? 0 : Math.PI),
           rotSpeed: randRange(-0.08, 0.08),
@@ -169,7 +168,7 @@ export default {
       if (Math.random() < bombChance) state.fruits.push(makeBomb(state.level));
     }
 
-    function update(ts) {
+    function update() {
       particles.update();
       shake.update();
       flash.update();
@@ -177,9 +176,7 @@ export default {
       const now = performance.now();
       state.trail = state.trail.filter((p) => now - p.t < TRAIL_LIFE);
 
-      if (state.lastTs === null) state.lastTs = ts;
-      const dt = Math.min(ts - state.lastTs, 100);
-      state.lastTs = ts;
+      const dt = STEP_MS; // fixed 60 Hz step
 
       // Chunks and popups keep animating even while dying — feels alive
       for (let i = state.chunks.length - 1; i >= 0; i--) {
@@ -377,12 +374,14 @@ export default {
     let running = true;
     let deathTimer = null;
 
+    const fixed = createFixedStep(update);
+
     function step(ts) {
       if (!state.paused) {
         countdown.update();
-        update(ts);
+        fixed.tick(ts);
       } else {
-        state.lastTs = ts;
+        fixed.reset();
         state.segments.length = 0; // discard strokes made while paused
       }
       draw();

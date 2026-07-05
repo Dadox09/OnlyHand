@@ -1,6 +1,6 @@
 import {
   NEON, setupCanvas, createParticles, createShake, createFlash,
-  createCountdown, drawHudText, drawHandLostBanner, sfx,
+  createCountdown, createFixedStep, drawHudText, drawHandLostBanner, sfx,
 } from "../../core/gameKit.js";
 
 const COLS = 24;
@@ -16,7 +16,7 @@ const DEADZONE = 0.13;
 const DIR = { UP: [0,-1], DOWN: [0,1], LEFT: [-1,0], RIGHT: [1,0] };
 const OPPOSITE = { UP: "DOWN", DOWN: "UP", LEFT: "RIGHT", RIGHT: "LEFT" };
 
-const SPEEDS = [180, 150, 120, 100, 85, 72];  // ms per tick, faster every 5 score
+const SPEEDS = [120, 100, 80, 67, 57, 48];  // ms per tick, faster every 5 score
 
 function rnd(max) { return Math.floor(Math.random() * max); }
 function spawnFood(snake) {
@@ -124,13 +124,19 @@ export default {
     }
     schedTick();
 
-    function render() {
+    const fixed = createFixedStep(() => {
+      particles.update();
+      shake.update();
+      flash.update();
+    });
+
+    function render(ts) {
       if (!running) return;
       if (!state.paused) {
         countdown.update();
-        particles.update();
-        shake.update();
-        flash.update();
+        fixed.tick(ts);
+      } else {
+        fixed.reset();
       }
       draw();
       raf = requestAnimationFrame(render);

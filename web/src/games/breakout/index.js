@@ -1,6 +1,6 @@
 import {
   NEON, setupCanvas, createParticles, createShake, createFlash,
-  createCountdown, drawHudText, drawHandLostBanner, drawLives, sfx,
+  createCountdown, createFixedStep, drawHudText, drawHandLostBanner, drawLives, sfx,
 } from "../../core/gameKit.js";
 
 const W = 800;
@@ -43,8 +43,8 @@ function makeBall(x, y, level, vx = null) {
   const speed = 1 + (level - 1) * 0.08;
   return {
     x, y,
-    vx: (vx ?? (Math.random() > 0.5 ? 1 : -1) * (3 + Math.random())) * speed,
-    vy: -4 * speed,
+    vx: (vx ?? (Math.random() > 0.5 ? 1 : -1) * (4.5 + Math.random() * 1.5)) * speed,
+    vy: -6 * speed,
     glued: vx === null, // fresh serve sticks to the paddle until launch
   };
 }
@@ -102,7 +102,7 @@ export default {
         state.drops.push({
           x: brick.x + BRICK_W / 2,
           y: brick.y + BRICK_H / 2,
-          vy: 2.4,
+          vy: 3.6,
           type: Math.random() < 0.5 ? "WIDE" : "MULTI",
         });
       }
@@ -116,8 +116,8 @@ export default {
         state.wideFrames = WIDE_FRAMES;
       } else {
         const src = state.balls.find((b) => !b.glued) ?? state.balls[0];
-        state.balls.push(makeBall(src.x, src.y, state.level, src.vx + 1.6));
-        state.balls.push(makeBall(src.x, src.y, state.level, src.vx - 1.6));
+        state.balls.push(makeBall(src.x, src.y, state.level, src.vx + 2.4));
+        state.balls.push(makeBall(src.x, src.y, state.level, src.vx - 2.4));
       }
     }
 
@@ -325,10 +325,14 @@ export default {
       ctx.restore();
     }
 
-    function step() {
+    const fixed = createFixedStep(update);
+
+    function step(ts) {
       if (!state.paused) {
         countdown.update();
-        update();
+        fixed.tick(ts);
+      } else {
+        fixed.reset();
       }
       draw();
       if (running) raf = requestAnimationFrame(step);
