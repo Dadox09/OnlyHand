@@ -1,0 +1,135 @@
+/* ── Game card ───────────────────────────────────────────────── */
+.game-card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  transition: var(--ease-prop);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  text-decoration: none;
+  color: var(--text);
+}
+.game-card:hover {
+  background: var(--surface-hover);
+  border-color: var(--accent);
+  box-shadow: var(--glow-accent);
+  transform: translateY(-2px);
+}
+
+.game-card .top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.game-card .icon { font-size: 1.8rem; line-height: 1.1; }
+.game-card .play {
+  color: var(--accent);
+  display: inline-flex;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 0.2s, transform 0.2s var(--ease-out);
+}
+.game-card:hover .play { opacity: 1; transform: translateX(0); }
+
+.game-card h3 { margin: 0; font-size: 1rem; font-weight: var(--weight-medium); }
+.game-card p  { margin: 0; font-size: var(--text-sub); color: var(--text-muted); }
+.game-card .chips { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.3rem; }
+.game-card:hover .chip-best { color: var(--accent); }
+
+/* ── Game card animated preview strip ────────────────────────── */
+.card-preview-wrap {
+  position: relative;
+  margin: -1rem -1.25rem 0.45rem;
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border);
+}
+.card-preview {
+  display: block;
+  width: 100%;
+  height: 86px;
+  object-fit: cover;
+  opacity: 0.85;
+  transition: opacity 0.2s;
+}
+.game-card:hover .card-preview,
+.game-card.hand-hover .card-preview { opacity: 1; }
+.card-preview-wrap .icon {
+  position: absolute;
+  left: 0.7rem; bottom: 0.45rem;
+  font-size: 1.5rem;
+  line-height: 1;
+  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.9));
+}
+.card-preview-wrap .play {
+  position: absolute;
+  right: 0.7rem; bottom: 0.55rem;
+  color: var(--accent);
+  display: inline-flex;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 0.2s, transform 0.2s var(--ease-out);
+  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.9));
+}
+
+/* ── Stat card (profile + game host sidebar) ─────────────────── */
+.stat-card {
+  background: var(--surface);
+  border: var(--border-default);
+  border-radius: var(--radius-box);
+  padding: 0.75rem 1rem;
+}
+.stat-card .label { font-size: var(--text-sub); color: var(--text-muted); }
+.stat-card .value {
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-stat);
+  color: var(--accent);
+  text-shadow: var(--text-glow);
+  font-variant-numeric: tabular-nums;
+  margin: 0.15rem 0;
+}
+.stat-card .empty { color: var(--text-faint); font-size: 0.85rem; margin-top: 0.3rem; }
+
+/* ── Leaderboard box (game-over overlay) ─────────────────────── */
+.board {
+  width: 240px;
+  background: rgba(16, 20, 28, 0.9);
+  border: var(--border-default);
+  border-radius: var(--radius-box);
+  padding: 0.6rem 0.75rem;
+  margin: 0.4rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.board-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+}
+.board-row { display: flex; align-items: center; gap: 0.5rem; }
+.board-row .rank {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  width: 16px;
+  color: var(--text-faint);
+}
+.board-row .av { font-size: 0.95rem; }
+.board-row .nm { font-size: var(--text-sub); }
+.board-row .sc {
+  margin-left: auto;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  color: var(--text);
+}
+.board-row.lead .rank,
+.board-row.lead .sc { color: var(--accent); }

@@ -46,9 +46,11 @@ export async function mount(app, { params }) {
         <span class="hand-indicator" id="hand-ind"><span class="dot"></span> Detecting…</span>
       </div>
       <div class="game-host-body">
-        <div class="oh-fade-up">
-          <div class="canvas-wrap" id="canvas-wrap">
-            <canvas id="game-canvas" width="800" height="500"></canvas>
+        <div class="game-stage oh-fade-up">
+          <div class="stage-box">
+            <div class="canvas-wrap" id="canvas-wrap">
+              <canvas id="game-canvas" width="800" height="500"></canvas>
+            </div>
           </div>
           <div class="hint-bar">
             <span class="desc">${meta.description}</span>

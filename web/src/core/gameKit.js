@@ -27,16 +27,44 @@ export function bodyFont(size, weight = 400) {
 }
 
 /* ── Canvas setup: HiDPI + logical coordinates ────────────────── */
-// Renders at devicePixelRatio, keeps game code in logical W×H coords.
+// Contain-fits the canvas into its stage container (.stage-box, or the
+// parent element as fallback), renders at devicePixelRatio, and keeps
+// game code in logical W×H coords via a base transform. A ResizeObserver
+// re-fits on any container/viewport change, so games never handle resize.
+const MAX_BACKING_W = 2560; // perf cap for 2D canvas on 4K screens
+
 export function setupCanvas(canvas, W, H) {
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  canvas.width = W * dpr;
-  canvas.height = H * dpr;
-  canvas.style.width = W + "px";
-  canvas.style.aspectRatio = `${W} / ${H}`;
-  canvas.style.height = "auto";
+  const box = canvas.closest(".stage-box") || canvas.parentElement;
   const ctx = canvas.getContext("2d");
-  ctx.scale(dpr, dpr);
+
+  const fit = () => {
+    const r = box.getBoundingClientRect();
+    // borders on .canvas-wrap/canvas eat ~2px; keep a tiny safety margin
+    const boxW = Math.max(r.width - 4, 50);
+    const boxH = Math.max(r.height - 4, 50);
+    const s = Math.min(boxW / W, boxH / H);
+    const cssW = Math.floor(W * s);
+    const cssH = Math.floor(H * s);
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const scale = Math.min(dpr, MAX_BACKING_W / cssW);
+    // explicit px on both axes: the backing store must never feed back
+    // into layout, or the ResizeObserver would loop
+    canvas.style.width = cssW + "px";
+    canvas.style.height = cssH + "px";
+    canvas.width = Math.round(cssW * scale);
+    canvas.height = Math.round(cssH * scale);
+    ctx.setTransform((cssW * scale) / W, 0, 0, (cssH * scale) / H, 0, 0);
+  };
+
+  fit();
+
+  // remount / "Play again" calls setupCanvas again on the same element:
+  // drop the previous observer before attaching a fresh one
+  canvas._ohFit?.disconnect();
+  const ro = new ResizeObserver(fit);
+  ro.observe(box);
+  canvas._ohFit = ro;
+
   return ctx;
 }
 

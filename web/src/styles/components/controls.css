@@ -1,0 +1,118 @@
+/* ── Buttons ─────────────────────────────────────────────────── */
+.btn {
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  line-height: 1;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  transition: var(--ease-prop);
+}
+.btn:hover { background: var(--surface-hover); border-color: var(--border-hover); }
+.btn:active { transform: scale(0.97); }
+
+.btn-accent {
+  background: var(--accent);
+  border-color: transparent;
+  color: var(--on-accent);
+  font-weight: var(--weight-bold);
+  box-shadow: var(--glow-accent-sm);
+}
+.btn-accent:hover { background: var(--accent-hover); border-color: transparent; box-shadow: var(--glow-accent); }
+
+.btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-muted);
+  box-shadow: none;
+}
+.btn-ghost:hover { background: transparent; border-color: transparent; color: var(--text); }
+
+.btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+.btn svg { flex-shrink: 0; }
+
+/* ── Tags / chips ────────────────────────────────────────────── */
+.tag {
+  display: inline-block;
+  font-size: var(--text-tag);
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius-chip);
+  background: var(--border);
+  color: var(--text-muted);
+}
+
+/* ── Inputs ──────────────────────────────────────────────────── */
+.input {
+  background: var(--surface);
+  border: var(--border-default);
+  color: var(--text);
+  padding: 0.45rem 0.75rem;
+  border-radius: var(--radius-control);
+  font-size: var(--text-body);
+  font-family: var(--font-sans);
+  transition: var(--ease-prop);
+}
+.input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--glow-accent-sm);
+}
+
+/* ── Switch ──────────────────────────────────────────────────── */
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  font-size: var(--text-body);
+  color: var(--text);
+  user-select: none;
+}
+.switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+.switch .track {
+  position: relative;
+  width: 38px;
+  height: 22px;
+  border-radius: var(--radius-pill);
+  background: var(--border);
+  transition: var(--ease-prop);
+  flex-shrink: 0;
+}
+.switch .knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transition: left 0.2s var(--ease-out), background 0.15s;
+}
+.switch input:checked + .track { background: var(--accent); box-shadow: var(--glow-accent-sm); }
+.switch input:checked + .track .knob { left: 19px; background: var(--on-accent); }
+
+/* ── Avatar ──────────────────────────────────────────────────── */
+.avatar {
+  border-radius: 50%;
+  background: var(--surface);
+  border: var(--border-default);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+  cursor: pointer;
+  transition: var(--ease-prop);
+}
+.avatar.lg { width: 70px; height: 70px; font-size: 3rem; }
+.avatar.sm { width: 48px; height: 48px; font-size: 1.5rem; }
+.avatar:hover { border-color: var(--border-hover); transform: scale(1.06); }
+.avatar.selected { border-color: var(--accent); box-shadow: var(--glow-accent-sm); }

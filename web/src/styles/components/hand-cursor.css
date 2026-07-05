@@ -1,0 +1,64 @@
+/* ── Hand cursor (point with hand, pinch to click) ───────────── */
+.hand-cursor {
+  position: fixed;
+  top: 0; left: 0;
+  z-index: 1000;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.25s;
+  will-change: transform;
+}
+.hand-cursor.hidden { opacity: 0; }
+.hand-cursor .hc-ring {
+  position: absolute;
+  top: -18px; left: -18px;
+  width: 36px; height: 36px;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  box-shadow: var(--glow-accent-sm), inset 0 0 8px rgba(74, 222, 128, 0.25);
+  transition: transform 0.15s var(--ease-out), border-color 0.15s, box-shadow 0.15s;
+}
+.hand-cursor .hc-dot {
+  position: absolute;
+  top: -3px; left: -3px;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: var(--glow-accent-sm);
+  transition: background 0.15s;
+}
+.hand-cursor.hovering .hc-ring {
+  transform: scale(1.35);
+  border-color: var(--neon-cyan);
+  box-shadow: var(--glow-cyan);
+}
+.hand-cursor.hovering .hc-dot { background: var(--neon-cyan); }
+.hand-cursor.pinching .hc-ring { transform: scale(0.7); }
+.hand-cursor.clicked .hc-ring { animation: hc-pulse 0.35s var(--ease-out); }
+@keyframes hc-pulse {
+  0%   { transform: scale(0.7); }
+  50%  { transform: scale(1.6); border-color: var(--accent-hover); }
+  100% { transform: scale(1); }
+}
+
+/* Hand-hover: mimic :hover for elements targeted by the hand cursor */
+.hand-hover {
+  border-color: var(--accent) !important;
+  box-shadow: var(--glow-accent) !important;
+}
+.game-card.hand-hover {
+  background: var(--surface-hover);
+  transform: translateY(-2px);
+}
+.game-card.hand-hover .play { opacity: 1; transform: translateX(0); }
+.game-card.hand-hover .chip-best { color: var(--accent); }
+.btn.hand-hover { color: var(--text); }
+
+/* ── Pinch hint in the live row ──────────────────────────────── */
+.pinch-hint {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--text-muted);
+}

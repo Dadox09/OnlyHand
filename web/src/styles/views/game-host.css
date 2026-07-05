@@ -1,0 +1,99 @@
+/* ── Game host — full-viewport stage ─────────────────────────────
+   .game-host fills the viewport; .stage-box is the measured area
+   that core/gameKit.js setupCanvas() contain-fits the canvas into.
+   .canvas-wrap shrink-wraps the canvas so the pause/game-over
+   overlays and the CRT ::after keep tracking it exactly. */
+.game-host {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-page);
+  gap: 0.25rem;
+}
+.game-host-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+  flex-shrink: 0;
+}
+.game-host-header .title {
+  font-size: var(--text-title);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.game-host-header .title .name {
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--track-display);
+  text-transform: uppercase;
+  font-size: 0.9rem;
+}
+
+.game-host-body {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  gap: 1rem;
+  align-items: stretch;
+}
+
+/* left column: stage + hint bar */
+.game-stage {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.stage-box {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.canvas-wrap { position: relative; width: fit-content; }
+
+#game-canvas {
+  background: var(--canvas);
+  border-radius: var(--radius-box);
+  border: 1px solid var(--border);
+  box-shadow: 0 0 28px rgba(74, 222, 128, 0.12);
+  display: block;
+}
+
+.hint-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: var(--text-sub);
+  padding: 0.55rem 0.25rem 0;
+  flex-shrink: 0;
+}
+.hint-bar .desc { color: var(--text-muted); }
+.hint-bar .esc { margin-left: auto; color: var(--text-faint); }
+
+/* right column: webcam (always visible) + stats */
+.host-sidebar {
+  width: clamp(150px, 18vw, 300px);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.host-sidebar .game-webcam { width: 100%; }
+
+/* short landscape screens (phones): compress chrome, keep webcam */
+@media (max-height: 480px) {
+  .game-host { padding: 0.5rem 0.75rem; gap: 0; }
+  .game-host-header { margin-bottom: 0.25rem; gap: 0.5rem; }
+  .game-host-header .btn { padding: 0.3rem 0.6rem; }
+  .hint-bar { padding-top: 0.3rem; }
+  .hint-bar .desc { display: none; }
+  .host-sidebar { width: clamp(130px, 22vw, 200px); gap: 0.5rem; }
+  .host-sidebar .stat-card { display: none; }
+}

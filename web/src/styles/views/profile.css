@@ -1,0 +1,29 @@
+/* ── Profile ─────────────────────────────────────────────────── */
+.profile-wrap { max-width: var(--page-max); margin: 0 auto; padding: var(--space-page); }
+.profile-grid { display: grid; gap: 1.6rem; }
+
+.profile-header { display: flex; align-items: center; gap: 1.1rem; }
+.avatar-picker { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.avatar-picker[hidden] { display: none; }
+
+.section-head {
+  margin: 0 0 0.8rem;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.16em;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.form-row { display: flex; gap: 0.5rem; align-items: center; }
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 0.75rem;
+}
+
+.settings-list { display: flex; flex-direction: column; gap: 0.8rem; }

@@ -10,6 +10,18 @@
     <!-- Shared webcam: lives outside #app, persists across route changes -->
     <video id="webcam" autoplay playsinline muted hidden></video>
     <div id="app"></div>
+    <!-- Landscape-only: pure-CSS overlay shown on portrait phones/tablets -->
+    <div id="rotate-overlay" aria-hidden="true">
+      <div class="rotate-box">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="7" y="2" width="10" height="20" rx="2"></rect>
+          <path d="M2 12a10 10 0 0 0 3-7"></path>
+          <path d="M22 12a10 10 0 0 1-3 7"></path>
+        </svg>
+        <div class="rotate-title">ROTATE YOUR DEVICE</div>
+        <p>OnlyHand plays in landscape — turn your device sideways.</p>
+      </div>
+    </div>
     <script>
       /* Enable entrance animations only in live tabs: require TWO consecutive
          rAF ticks before stamping data-oh-anim on <html>. */

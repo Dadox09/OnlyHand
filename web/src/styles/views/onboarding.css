@@ -1,0 +1,102 @@
+/* ── Onboarding ──────────────────────────────────────────────── */
+.onboard-wrap {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-page);
+}
+.onboard-panel {
+  width: 460px;
+  max-width: 100%;
+  background: var(--surface);
+  border: var(--border-default);
+  border-radius: var(--radius-panel);
+  padding: 2.5rem 2.5rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.65rem;
+}
+.cam-ring {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  border: 1px solid rgba(74, 222, 128, 0.4);
+  box-shadow: var(--glow-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+  color: var(--accent);
+}
+.onboard-wordmark {
+  font-family: var(--font-display);
+  font-weight: var(--weight-black);
+  font-size: 1.6rem;
+  letter-spacing: var(--track-display);
+  color: var(--text);
+}
+.onboard-wordmark .lit { color: var(--accent); text-shadow: var(--text-glow); }
+.onboard-tagline { margin: 0; color: var(--text-muted); font-size: var(--text-body); }
+.onboard-copy {
+  margin: 0.5rem 0 0.9rem;
+  color: var(--text);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  max-width: 340px;
+}
+.onboard-cta { display: flex; flex-direction: column; gap: 0.75rem; align-items: center; }
+.onboard-status {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--text-muted);
+  font-size: var(--text-body);
+  padding: 0.9rem 0 1.1rem;
+}
+.onboard-privacy {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--text-muted);
+  font-size: var(--text-tag);
+  border-top: var(--border-default);
+  padding-top: 1rem;
+  margin-top: 0.9rem;
+}
+.onboard-privacy .ic { color: var(--accent); display: inline-flex; }
+
+/* ── Onboarding: how-to-play list ────────────────────────────── */
+.onboard-list {
+  list-style: none;
+  margin: 0.4rem 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  text-align: left;
+  width: 100%;
+}
+.onboard-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-size: var(--text-body);
+  color: var(--text-muted);
+  line-height: var(--leading-body);
+}
+.onboard-list li b { color: var(--text); font-weight: var(--weight-medium); }
+.onboard-list .ic {
+  flex-shrink: 0;
+  width: 38px; height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-box);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--accent);
+  box-shadow: var(--glow-accent-sm);
+}

@@ -1,0 +1,121 @@
+/* ════════════════════════════════════════════════════════════════
+   OnlyHand · Tokens + global base
+   Deep near-black arcade hall + one hero neon (signal green).
+   Depth = 1px border + GLOW, never grey drop-shadow.
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── Tokens ──────────────────────────────────────────────────── */
+:root {
+  /* Surfaces — deepened for neon contrast */
+  --bg:            #080a10;
+  --surface:       #10141c;
+  --surface-hover: #161b26;
+  --canvas:        #000000;
+
+  /* Borders */
+  --border:        #222837;
+  --border-hover:  #3a455e;
+
+  /* Text */
+  --text:          #e8ecf3;
+  --text-muted:    #8a92a6;
+  --text-faint:    #323b4f;
+
+  /* Hero neon — signal green. "You / live / go". */
+  --accent:        #4ade80;
+  --accent-hover:  #6ef0a0;
+  --on-accent:     #04130a;
+
+  /* Support neons (use sparingly) */
+  --neon-cyan:     #22d3ee;
+  --neon-magenta:  #e879f9;
+
+  /* Status */
+  --danger:        #f87171;
+  --warn:          #fbbf24;
+
+  /* Glow system — the elevation of this brand */
+  --glow-accent-sm: 0 0 8px rgba(74, 222, 128, 0.45);
+  --glow-accent:    0 0 12px rgba(74, 222, 128, 0.38), 0 0 36px rgba(74, 222, 128, 0.14);
+  --glow-cyan:      0 0 12px rgba(34, 211, 238, 0.38), 0 0 36px rgba(34, 211, 238, 0.14);
+  --glow-danger:    0 0 12px rgba(248, 113, 113, 0.40);
+  --glow-warn:      0 0 12px rgba(251, 191, 36, 0.40);
+  --text-glow:      0 0 10px rgba(74, 222, 128, 0.55);
+
+  /* Ambient backdrop */
+  --grid-line:     rgba(74, 222, 128, 0.05);
+  --scanline:      rgba(255, 255, 255, 0.025);
+  --scrim:         rgba(2, 4, 8, 0.78);
+  --status-bg:     rgba(0, 0, 0, 0.65);
+
+  /* Type */
+  --font-sans:    system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Orbitron", system-ui, sans-serif;
+
+  /* Display sizes are fluid (clamp); body sizes stay fixed for legibility */
+  --text-hero:     clamp(1.5rem, 1rem + 2vw, 2.4rem);
+  --text-h1:       clamp(1.25rem, 0.95rem + 1.3vw, 1.8rem);
+  --text-h2:       clamp(1rem, 0.9rem + 0.5vw, 1.15rem);
+  --text-title:    clamp(0.95rem, 0.85rem + 0.5vw, 1.1rem);
+  --text-stat:     clamp(1.15rem, 0.9rem + 1vw, 1.5rem);
+  --text-body:     0.9rem;
+  --text-sub:      0.82rem;
+  --text-tag:      0.7rem;
+
+  --weight-medium: 600;
+  --weight-bold:   700;
+  --weight-black:  900;
+
+  --track-heading: 0.04em;
+  --track-display: 0.08em;
+  --leading-body:  1.45;
+
+  /* Spacing / radii */
+  --page-max:    1440px;
+  --space-page:  clamp(0.75rem, 2vw, 2rem);
+  --radius-panel:   12px;
+  --radius-card:    10px;
+  --radius-box:     8px;
+  --radius-control: 6px;
+  --radius-chip:    4px;
+  --radius-pill:    999px;
+  --border-default: 1px solid var(--border);
+
+  /* Motion */
+  --ease:      0.15s;
+  --ease-prop: background var(--ease), border-color var(--ease), color var(--ease), box-shadow 0.2s, transform 0.2s;
+  --ease-out:  cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-med:   0.25s;
+  --dur-slow:  0.5s;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  /* faint arcade floor grid */
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+/* ambient vignette over the grid */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(120% 100% at 50% 0%, transparent 40%, rgba(2, 4, 8, 0.55) 100%);
+  z-index: 0;
+}
+
+#app {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}

@@ -1,0 +1,82 @@
+/* ── Base type + motion utilities + nav ──────────────────────── */
+
+h1, h2, h3 { color: var(--text); }
+
+/* ── Motion utilities (gated behind data-oh-anim on <html>) ───── */
+@keyframes oh-fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes oh-pop {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes oh-pulse {
+  0%, 100% { opacity: 1;    box-shadow: 0 0 6px rgba(74, 222, 128, 0.7); }
+  50%      { opacity: 0.55; box-shadow: 0 0 2px rgba(74, 222, 128, 0.3); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-oh-anim] .oh-fade-up { animation: oh-fade-up var(--dur-slow) var(--ease-out) both; }
+  [data-oh-anim] .oh-pop     { animation: oh-pop var(--dur-med) var(--ease-out) both; }
+  [data-oh-anim] .oh-stagger > :nth-child(1) { animation-delay: 0.00s; }
+  [data-oh-anim] .oh-stagger > :nth-child(2) { animation-delay: 0.06s; }
+  [data-oh-anim] .oh-stagger > :nth-child(3) { animation-delay: 0.12s; }
+  [data-oh-anim] .oh-stagger > :nth-child(4) { animation-delay: 0.18s; }
+  [data-oh-anim] .oh-stagger > :nth-child(5) { animation-delay: 0.24s; }
+  [data-oh-anim] .oh-stagger > :nth-child(6) { animation-delay: 0.30s; }
+  .oh-live-dot { animation: oh-pulse 1.6s ease-in-out infinite; }
+}
+
+/* hard-settle fallback: force end state if the anim clock is frozen */
+[data-oh-settled] .oh-fade-up,
+[data-oh-settled] .oh-pop {
+  animation: none !important;
+  opacity: 1;
+  transform: none;
+}
+
+/* pulsing "live" dot */
+.oh-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+/* ── Nav ─────────────────────────────────────────────────────── */
+nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-bottom: var(--border-default);
+}
+
+nav .logo {
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  font-size: 1rem;
+  letter-spacing: var(--track-display);
+  text-transform: uppercase;
+  margin-right: auto;
+  text-decoration: none;
+  color: var(--text);
+}
+nav .logo .lit { color: var(--accent); text-shadow: var(--text-glow); }
+
+nav a:not(.logo) {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: var(--text-body);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-chip);
+  transition: var(--ease-prop);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+nav a:not(.logo):hover,
+nav a:not(.logo).active { color: var(--text); }

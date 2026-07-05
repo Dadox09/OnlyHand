@@ -23,7 +23,7 @@ export async function mount(app) {
         <p class="subtitle">Control everything with your hands</p>
       </div>
 
-      <div class="oh-fade-up" style="animation-delay:0.05s">
+      <div class="webcam-col oh-fade-up" style="animation-delay:0.05s">
         <div class="webcam-panel" id="cam-panel">
           <video id="preview-video" autoplay playsinline muted></video>
           <canvas id="overlay-canvas"></canvas>
