@@ -79,6 +79,44 @@ const SCENES = {
     ctx.shadowBlur = 0;
   },
 
+  slash(ctx, t) {
+    ctx.fillStyle = "#05060c";
+    ctx.fillRect(0, 0, PW, PH);
+    // fruits pop up in arcs on staggered loops
+    const fruits = [
+      { x0: 50, color: NEON.accent, phase: 0, r: 8 },
+      { x0: 120, color: "#fb923c", phase: 700, r: 7 },
+      { x0: 185, color: NEON.magenta, phase: 1400, r: 6 },
+    ];
+    for (const f of fruits) {
+      const k = ((t + f.phase) % 2100) / 2100; // 0→1 flight
+      const y = PH + 10 - Math.sin(k * Math.PI) * (PH + 4);
+      const x = f.x0 + k * 22;
+      ctx.fillStyle = f.color;
+      ctx.shadowColor = f.color;
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.arc(x, y, f.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+    // blade swipe sweeps across periodically
+    const sw = (t % 1200) / 1200;
+    if (sw < 0.35) {
+      const p = sw / 0.35;
+      ctx.strokeStyle = `rgba(255,255,255,${0.9 * (1 - p)})`;
+      ctx.shadowColor = NEON.cyan;
+      ctx.shadowBlur = 10;
+      ctx.lineWidth = 3;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(30 + p * 120, 70 - p * 30);
+      ctx.quadraticCurveTo(90 + p * 120, 40 - p * 30, 150 + p * 60, 55 - p * 40);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+  },
+
   asteroids(ctx, t) {
     ctx.fillStyle = "#000008";
     ctx.fillRect(0, 0, PW, PH);

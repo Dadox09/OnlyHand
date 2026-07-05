@@ -11,7 +11,7 @@ Hand tracking platform — Python CLI demos + browser game hub, all powered by M
 | Layer | What it does |
 |-------|-------------|
 | `basics/` | Python scripts: real-time hand/face/object detection via webcam |
-| `web/` | Vite SPA with 4 hand-controlled games (Pong, Breakout, Snake, Asteroids) |
+| `web/` | Vite SPA with 5 hand-controlled games (Pong, Breakout, Snake, Fruit Slash, Asteroids) |
 | `models/` | Pre-trained MediaPipe + TFLite models (hand, face, object) |
 
 ---
@@ -102,6 +102,7 @@ src/
     ├── pong/            # Vertical paddle — hand y-position
     ├── breakout/        # Horizontal paddle — power-ups, endless levels
     ├── snake/           # Steer with hand offset from center
+    ├── slash/           # Swipe fast to slice fruit, avoid bombs, chain combos
     └── asteroids/       # Ship follows hand, auto-fire, pinch = rapid fire
 ```
 
@@ -115,6 +116,7 @@ a 4-line how-to (point, pinch, pause) → the hub. Returning players land straig
 | **Pong** | Hand Y → paddle height | Speed ramps with a cap, particle + shake juice |
 | **Breakout** | Hand X → paddle position | Endless levels, power-ups (wide paddle, multiball) |
 | **Snake** | Hand offset from center → steer | Progressive speed, live steering compass |
+| **Fruit Slash** | Fast swipe = blade slice | Fruit arcs + gravity, combo multiplier, bombs cost a life, rare golden fruit |
 | **Asteroids** | Hand → ship · **pinch = rapid fire** | Auto-fires nearest rock, asteroids split, score = kills |
 
 All games share `core/gameKit.js`: synthesized WebAudio sfx (zero audio files), particles,

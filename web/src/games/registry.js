@@ -24,6 +24,14 @@ export const games = [
     load: () => import("./snake/index.js"),
   },
   {
+    id: "slash",
+    name: "Fruit Slash",
+    icon: "🍉",
+    description: "Swipe fast to slice flying fruit — chain combos, don't hit the bombs.",
+    requires: ["hand"],
+    load: () => import("./slash/index.js"),
+  },
+  {
     id: "asteroids",
     name: "Asteroids",
     icon: "🚀",
