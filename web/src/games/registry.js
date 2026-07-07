@@ -3,7 +3,7 @@ export const games = [
     id: "pong",
     name: "Hand Pong",
     icon: "🏓",
-    description: "Move your hand up/down to control the paddle.",
+    description: "Duel a ranked AI rival — pinch = smash, grab orbs, climb ROOKIE → NIGHTMARE.",
     requires: ["hand"],
     load: () => import("./pong/index.js"),
   },
