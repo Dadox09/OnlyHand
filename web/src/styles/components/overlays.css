@@ -38,6 +38,22 @@
   color: var(--text-muted);
   font-size: var(--text-sub);
 }
+/* end-of-run report (Asteroids): stat tiles + kill breakdown line */
+.go-stats { display: flex; gap: 1.2rem; justify-content: center; }
+.go-stats .gs { display: flex; flex-direction: column; gap: 0.1rem; align-items: center; }
+.go-stats .v {
+  font-family: var(--font-display);
+  font-weight: var(--weight-black);
+  font-size: 1.05rem;
+  color: var(--text);
+}
+.go-stats .l {
+  font-size: 0.55rem;
+  letter-spacing: 0.12em;
+  color: var(--text-faint);
+}
+.go-kills { font-size: var(--text-tag); color: var(--text-muted); }
+
 .go-actions { display: flex; gap: 0.6rem; justify-content: center; }
 .go-hint { color: var(--text-faint); font-size: var(--text-tag); }
 .go-board-link {

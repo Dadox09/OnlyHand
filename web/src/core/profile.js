@@ -7,6 +7,7 @@ function defaultProfile() {
     id: crypto.randomUUID(),
     name: "Player",
     avatar: "🎮",
+    ship: "viper", // asteroids hangar pick — see games/asteroids/fleet.js
     createdAt: new Date().toISOString(),
     stats: {},
     badges: {},    // { [badgeId]: earnedAtISO } — see core/badges.js
@@ -26,6 +27,7 @@ export function getProfile() {
     if (!raw) return defaultProfile();
     const p = JSON.parse(raw);
     if (p.schemaVersion !== SCHEMA_VERSION) return defaultProfile();
+    if (!p.ship) p.ship = "viper"; // backfill profiles saved before the hangar existed
     return p;
   } catch {
     return defaultProfile();

@@ -5,6 +5,7 @@ import { games } from "../games/registry.js";
 import { icon } from "../core/icon.js";
 import { startHandCursor, stopHandCursor } from "../core/handCursor.js";
 import { syncProfile } from "../core/backend.js";
+import { PLAYER_SHIPS, isShipUnlocked } from "../games/asteroids/fleet.js";
 
 const AVATARS = ["🎮", "🤖", "👾", "🕹️", "🦾", "🧠", "🐉", "🦅", "🔥", "⚡"];
 
@@ -62,6 +63,22 @@ function render(app) {
         <section class="oh-fade-up">
           <h2 class="section-head">${icon("shield-check", { size: 13 })} BADGES · ${unlockedCount}/${badges.length}</h2>
           <div class="badge-grid" id="badge-grid"></div>
+        </section>
+
+        <section class="oh-fade-up">
+          <h2 class="section-head">${icon("rocket", { size: 13 })} HANGAR · ASTEROIDS SHIP</h2>
+          <div class="hangar-grid" id="hangar-grid">
+            ${PLAYER_SHIPS.map((s) => {
+              const locked = !isShipUnlocked(s, lvl.level);
+              return `
+              <button class="ship-card${s.id === (profile.ship || "viper") ? " selected" : ""}${locked ? " locked" : ""}"
+                      data-ship="${s.id}" ${locked ? `data-locked="1"` : ""}>
+                <img src="${s.sprite}" alt="${s.name}" draggable="false" />
+                <span class="ship-name">${s.name}</span>
+                <span class="ship-desc">${locked ? `${icon("lock", { size: 11 })} Unlocks at LV ${s.unlock}` : `${s.desc} · <b>${s.perk}</b>`}</span>
+              </button>`;
+            }).join("")}
+          </div>
         </section>
 
         <section class="oh-fade-up">
@@ -132,6 +149,16 @@ function render(app) {
       avatarBtn.textContent = emoji;
       picker.querySelectorAll("[data-emoji]").forEach((b) => b.classList.toggle("selected", b === btn));
       picker.hidden = true;
+    });
+  });
+
+  // Hangar — pick the Asteroids ship (locked ships don't select)
+  app.querySelectorAll("[data-ship]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      if (btn.dataset.locked) return;
+      updateProfile({ ship: btn.dataset.ship });
+      syncProfile().catch(() => {});
+      app.querySelectorAll("[data-ship]").forEach((b) => b.classList.toggle("selected", b === btn));
     });
   });
 

@@ -13,12 +13,16 @@ create table if not exists public.profiles (
 
 alter table public.profiles enable row level security;
 
+-- create policy has no "if not exists" — drop first so re-runs don't error
+drop policy if exists "profiles are readable by everyone" on public.profiles;
 create policy "profiles are readable by everyone"
   on public.profiles for select using (true);
 
+drop policy if exists "users insert own profile" on public.profiles;
 create policy "users insert own profile"
   on public.profiles for insert with check (auth.uid() = id);
 
+drop policy if exists "users update own profile" on public.profiles;
 create policy "users update own profile"
   on public.profiles for update using (auth.uid() = id);
 
@@ -27,7 +31,7 @@ create policy "users update own profile"
 create table if not exists public.scores (
   id         bigint generated always as identity primary key,
   user_id    uuid not null references public.profiles (id) on delete cascade,
-  game_id    text not null check (game_id in ('pong', 'breakout', 'snake', 'slash', 'asteroids')),
+  game_id    text not null check (game_id in ('pong', 'breakout', 'snake', 'slash', 'asteroids', 'asteroids-daily')),
   score      integer not null check (score >= 0 and score <= 100000),
   created_at timestamptz not null default now()
 );
@@ -37,9 +41,11 @@ create index if not exists scores_user on public.scores (user_id, game_id);
 
 alter table public.scores enable row level security;
 
+drop policy if exists "scores are readable by everyone" on public.scores;
 create policy "scores are readable by everyone"
   on public.scores for select using (true);
 
+drop policy if exists "users insert own scores" on public.scores;
 create policy "users insert own scores"
   on public.scores for insert with check (auth.uid() = user_id);
 
@@ -67,6 +73,14 @@ drop trigger if exists scores_rate_limit on public.scores;
 create trigger scores_rate_limit
   before insert on public.scores
   for each row execute function public.enforce_score_rate();
+
+-- ── Daily runs ──────────────────────────────────────────────────
+-- 'asteroids-daily' rows power the in-game TODAY board (seeded daily run,
+-- filtered client-side by created_at >= today UTC). The block below also
+-- migrates databases created before this game id existed — safe to re-run.
+alter table public.scores drop constraint if exists scores_game_id_check;
+alter table public.scores add constraint scores_game_id_check
+  check (game_id in ('pong', 'breakout', 'snake', 'slash', 'asteroids', 'asteroids-daily'));
 
 -- ── Leaderboard view: best score per player per game ───────────
 create or replace view public.leaderboard as

@@ -40,14 +40,25 @@ real TOP HANDS.
 
 ## Migrations for existing projects
 
-If you deployed the schema **before Fruit Slash was added**, the `game_id`
-check constraint rejects `'slash'` scores. Run once in the SQL Editor:
+If you deployed the schema **before the Asteroids daily run** (or before
+Fruit Slash), the `game_id` check constraint rejects the newer ids. Re-running
+the whole `schema.sql` fixes it (the daily-run block drops and recreates the
+constraint), or run just this in the SQL Editor:
 
 ```sql
-alter table public.scores drop constraint scores_game_id_check;
+alter table public.scores drop constraint if exists scores_game_id_check;
 alter table public.scores add constraint scores_game_id_check
-  check (game_id in ('pong', 'breakout', 'snake', 'slash', 'asteroids'));
+  check (game_id in ('pong', 'breakout', 'snake', 'slash', 'asteroids', 'asteroids-daily'));
 ```
+
+### Daily runs (`asteroids-daily`)
+
+Asteroids' DAILY RUN mode (hangar toggle) submits scores as
+`game_id = 'asteroids-daily'`, so daily attempts never touch the all-time
+Asteroids board. The in-game **TODAY'S RUN** board queries `scores` filtered
+to `created_at >= today (UTC)` and keeps each player's best. No extra tables
+or views needed. Without the migration above, daily submits fail silently
+(console warning) and the Game Over overlay falls back to the house board.
 
 ## Data model
 

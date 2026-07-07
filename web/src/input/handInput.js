@@ -39,6 +39,16 @@ function makeOneEuro({ minCutoff = 1.4, beta = 0.012, dCutoff = 1.0 } = {}) {
 let filterX = makeOneEuro();
 let filterY = makeOneEuro();
 
+// ── Coasting: on a short detection dropout (fast hand, motion blur) keep the
+// cursor moving along its last velocity instead of freezing/flagging lost.
+// Dropouts under COAST_MS become invisible to the player.
+const COAST_MS = 200;
+const COAST_DAMP_TAU = 0.1; // s — velocity halves roughly every 70 ms
+let vx = 0, vy = 0;
+let lastSeenAt = 0;   // last frame with a real detection
+let lastFrameAt = 0;  // last processed camera frame (for coast dt)
+const clamp01 = (v) => Math.min(1, Math.max(0, v));
+
 // Map an inner "active box" of the camera frame to the full 0–1 range: the
 // hand reaches the edge of the play area / screen while still well inside the
 // frame, where tracking is reliable. EDGE_MARGIN = normalized distance from
@@ -58,19 +68,30 @@ function detectPinch(lms, wasPinching) {
   return wasPinching ? ratio < PINCH_OFF : ratio < PINCH_ON;
 }
 
+function createRecognizer(fileset, delegate) {
+  return GestureRecognizer.createFromOptions(fileset, {
+    baseOptions: {
+      modelAssetPath: "/models/hand/gesture_recognizer.task",
+      delegate,
+    },
+    runningMode: "VIDEO",
+    numHands: 1,
+    // Default 0.5 drops the hand on motion-blurred frames; 0.3 keeps the
+    // tracker latched during fast moves at the cost of rare false holds.
+    minTrackingConfidence: 0.3,
+  });
+}
+
 async function ensureModel() {
   if (recognizer) return;
   if (initPromise) return initPromise;
   initPromise = (async () => {
     const fileset = await FilesetResolver.forVisionTasks("/wasm");
-    recognizer = await GestureRecognizer.createFromOptions(fileset, {
-      baseOptions: {
-        modelAssetPath: "/models/hand/gesture_recognizer.task",
-        delegate: "CPU",
-      },
-      runningMode: "VIDEO",
-      numHands: 1,
-    });
+    try {
+      recognizer = await createRecognizer(fileset, "GPU");
+    } catch {
+      recognizer = await createRecognizer(fileset, "CPU");
+    }
   })();
   return initPromise;
 }
@@ -92,19 +113,40 @@ function loop() {
       if (!handState.isDetected) {
         filterX = makeOneEuro();
         filterY = makeOneEuro();
+        vx = 0;
+        vy = 0;
       }
+      const prevX = handState.x, prevY = handState.y;
       handState.x = filterX(palm.x, now);
       handState.y = filterY(palm.y, now);
+      if (handState.isDetected && lastFrameAt) {
+        const dt = Math.max((now - lastFrameAt) / 1000, 1e-3);
+        vx = vx * 0.6 + ((handState.x - prevX) / dt) * 0.4;
+        vy = vy * 0.6 + ((handState.y - prevY) / dt) * 0.4;
+      }
       handState.isDetected = true;
       handState.landmarks = lms;
       handState.gesture = result.gestures?.[0]?.[0]?.categoryName ?? null;
       handState.pinch = detectPinch(lms, handState.pinch);
+      lastSeenAt = now;
+    } else if (handState.isDetected && now - lastSeenAt < COAST_MS) {
+      // Brief dropout: extrapolate along damped velocity; landmarks/gesture/
+      // pinch stay frozen at their last real values.
+      const dt = Math.max((now - lastFrameAt) / 1000, 1e-3);
+      const damp = Math.exp(-dt / COAST_DAMP_TAU);
+      vx *= damp;
+      vy *= damp;
+      handState.x = clamp01(handState.x + vx * dt);
+      handState.y = clamp01(handState.y + vy * dt);
     } else {
       handState.isDetected = false;
       handState.landmarks = null;
       handState.gesture = null;
       handState.pinch = false;
+      vx = 0;
+      vy = 0;
     }
+    lastFrameAt = now;
     for (const cb of subscribers) cb({ ...handState });
   }
   rafHandle = requestAnimationFrame(loop);

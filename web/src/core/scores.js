@@ -2,11 +2,15 @@ import { getProfile, saveProfile } from "./profile.js";
 import { submitScore } from "./backend.js";
 import { syncBadges } from "./badges.js";
 
-export function recordPlay(gameId, score, durationSeconds = 0) {
+// opts.submitAs — cloud game_id override (daily runs post to "<id>-daily"
+//                 so they never pollute the all-time board)
+// opts.apply(p) — mutate extra profile counters (e.g. asteroids run stats)
+//                 before badges are synced, inside the same save
+export function recordPlay(gameId, score, durationSeconds = 0, opts = {}) {
   // Cloud submit runs in parallel; local stats never wait on the network.
   // The promise is returned so callers can wait for it before fetching the
   // global leaderboard (ensures this run's score is included).
-  const submitted = submitScore(gameId, score).catch(() => false);
+  const submitted = submitScore(opts.submitAs ?? gameId, score).catch(() => false);
   const p = getProfile();
   const prev = p.stats[gameId] ?? { best: 0, plays: 0, totalScore: 0, lastPlayed: null };
   p.stats[gameId] = {
@@ -20,6 +24,7 @@ export function recordPlay(gameId, score, durationSeconds = 0) {
   if (score > prev.best && prev.plays > 0) {
     p.counters.records = (p.counters.records ?? 0) + 1;
   }
+  opts.apply?.(p);
   const newBadges = syncBadges(p);
   saveProfile(p);
   return { submitted, newBadges };

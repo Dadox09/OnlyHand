@@ -35,7 +35,7 @@ export const games = [
     id: "asteroids",
     name: "Asteroids",
     icon: "🚀",
-    description: "Clear sector after sector — comets, UFOs and power-ups. Pinch for rapid fire.",
+    description: "Clear sector after sector — fighters, bosses, power-ups. Pinch = rapid fire · fist = bomb.",
     requires: ["hand"],
     load: () => import("./asteroids/index.js"),
   },

@@ -85,6 +85,40 @@ export async function fetchLeaderboard(gameId, limit = 10) {
   }));
 }
 
+// Best score per player submitted today (UTC) — powers the daily-run
+// "TODAY" board. gameId here is the cloud id (e.g. "asteroids-daily").
+export async function fetchDailyBoard(gameId, limit = 5) {
+  if (!supabase) return null;
+  const session = await ensureSession();
+  const dayStart = new Date();
+  dayStart.setUTCHours(0, 0, 0, 0);
+  const { data, error } = await supabase
+    .from("scores")
+    .select("user_id, score, profiles(name, avatar)")
+    .eq("game_id", gameId)
+    .gte("created_at", dayStart.toISOString())
+    .order("score", { ascending: false })
+    .limit(60);
+  if (error) {
+    console.warn("[backend] daily board fetch failed:", error.message);
+    return null;
+  }
+  const seen = new Set();
+  const rows = [];
+  for (const r of data) {
+    if (seen.has(r.user_id)) continue; // best per player: rows arrive sorted
+    seen.add(r.user_id);
+    rows.push({
+      name: r.profiles?.name ?? "???",
+      avatar: r.profiles?.avatar ?? "🎮",
+      score: r.score,
+      you: session ? r.user_id === session.user.id : false,
+    });
+    if (rows.length >= limit) break;
+  }
+  return rows;
+}
+
 // Your global rank in a game (1-based), or null.
 export async function fetchMyRank(gameId) {
   const session = await ensureSession();

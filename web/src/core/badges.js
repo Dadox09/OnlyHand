@@ -3,6 +3,7 @@
 // are persisted in profile.badges = { [id]: earnedAtISO } so "new unlock"
 // moments can be detected once and shown on the Game Over overlay.
 import { getProfile } from "./profile.js";
+import { PLAYER_SHIPS } from "../games/asteroids/fleet.js";
 
 // ── XP / level ──────────────────────────────────────────────────
 // XP = every point scored + a flat bonus per finished run.
@@ -72,6 +73,13 @@ export const BADGES = [
     progress: (p) => [stat(p, "slash").best, 150] },
   { id: "star-pilot",   name: "Star Pilot",     icon: "🚀", desc: "Score 75 in Asteroids",
     progress: (p) => [stat(p, "asteroids").best, 75] },
+  // Asteroids mastery — counters filled by gameHost from the end-of-run report
+  { id: "warlord-slayer", name: "Warlord Slayer", icon: "🛰️", desc: "Destroy 3 warlord carriers in Asteroids",
+    progress: (p) => [p.counters?.warlordKills ?? 0, 3] },
+  { id: "untouchable",    name: "Untouchable",    icon: "🛡️", desc: "Clear an Asteroids boss wave without a scratch",
+    progress: (p) => [p.counters?.flawlessBosses ?? 0, 1] },
+  { id: "fleet-admiral",  name: "Fleet Admiral",  icon: "🪐", desc: `Fly every ship in the hangar (${PLAYER_SHIPS.length})`,
+    progress: (p) => [Object.keys(p.counters?.shipsFlown ?? {}).length, PLAYER_SHIPS.length] },
 ];
 
 // Full badge list with live progress + earned state, for the profile view.

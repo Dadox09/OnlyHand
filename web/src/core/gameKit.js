@@ -305,6 +305,136 @@ function noise({ dur = 0.2, vol = 0.8, delay = 0, lowpass = 1800 } = {}) {
   src.start(t0);
 }
 
+/* ── Procedural music: dark-synthwave loop (zero assets) ──────── */
+// createMusic() → { start(), stop(), setIntensity(0..1) }. Lookahead
+// scheduler over the shared AudioContext; every voice runs through a
+// private gain so the sfx above always cut through. Layers stack with
+// intensity: kick+bass always, hats ≥0.35, arp ≥0.5, snare ≥0.6; the
+// bass filter and arp brightness open as intensity rises (boss fights).
+const MUSIC_BPM = 112;
+const MUSIC_STEP = 60 / MUSIC_BPM / 2;         // 8th notes
+const MUSIC_ROOTS = [33, 33, 29, 31];          // A1 · A1 · F1 · G1 (Am/Am/F/G)
+const MUSIC_ARP = [0, 3, 7, 12, 7, 3, 10, 7];  // minor arp intervals
+
+function mtof(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+
+export function createMusic() {
+  let timer = null;
+  let out = null;       // private music bus → master
+  let step = 0;
+  let nextT = 0;
+  let intensity = 0.4;
+  const LEVEL = 0.42;   // music bed sits under the sfx
+
+  function bus() {
+    if (!out) {
+      out = actx.createGain();
+      out.gain.value = LEVEL;
+      out.connect(master);
+    }
+    return out;
+  }
+
+  function voice(t, { freq, freqEnd = null, type = "sawtooth", dur, vol, filter = null }) {
+    const o = actx.createOscillator();
+    const g = actx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, t);
+    if (freqEnd) o.frequency.exponentialRampToValueAtTime(Math.max(1, freqEnd), t + dur);
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    let head = o;
+    if (filter) {
+      const f = actx.createBiquadFilter();
+      f.type = filter.type;
+      f.frequency.value = filter.freq;
+      if (filter.q) f.Q.value = filter.q;
+      o.connect(f);
+      head = f;
+    }
+    head.connect(g).connect(bus());
+    o.start(t);
+    o.stop(t + dur + 0.02);
+  }
+
+  function hiss(t, { dur, vol, type = "highpass", freq = 6000 }) {
+    const len = Math.max(1, Math.floor(actx.sampleRate * dur));
+    const buf = actx.createBuffer(1, len, actx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / len);
+    const src = actx.createBufferSource();
+    src.buffer = buf;
+    const f = actx.createBiquadFilter();
+    f.type = type;
+    f.frequency.value = freq;
+    const g = actx.createGain();
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    src.connect(f).connect(g).connect(bus());
+    src.start(t);
+  }
+
+  function playStep(s, t) {
+    const root = MUSIC_ROOTS[s >> 3];
+    // kick — four on the floor
+    if (s % 4 === 0) voice(t, { freq: 120, freqEnd: 38, type: "sine", dur: 0.13, vol: 0.9 });
+    // bass — driving 8ths with an octave jump; filter opens with intensity
+    const up = s % 8 === 3 || s % 8 === 6 ? 12 : 0;
+    voice(t, {
+      freq: mtof(root + up), type: "sawtooth", dur: MUSIC_STEP * 0.85, vol: 0.32,
+      filter: { type: "lowpass", freq: 260 + intensity * 1100, q: 6 },
+    });
+    // offbeat hats
+    if (intensity >= 0.35 && s % 2 === 1) hiss(t, { dur: 0.03, vol: 0.12 });
+    // snare on the backbeat
+    if (intensity >= 0.6 && s % 8 === 4) hiss(t, { dur: 0.12, vol: 0.26, type: "bandpass", freq: 1900 });
+    // high arp — the "danger" layer
+    if (intensity >= 0.5) {
+      voice(t, {
+        freq: mtof(root + 24 + MUSIC_ARP[s % MUSIC_ARP.length]),
+        type: "square", dur: 0.09, vol: 0.05 + intensity * 0.06,
+        filter: { type: "lowpass", freq: 900 + intensity * 2400 },
+      });
+    }
+  }
+
+  function tick() {
+    const ac = ensureAudio();
+    if (!ac || ac.state !== "running") return; // retries until audio unlocks
+    if (nextT < ac.currentTime + 0.02) nextT = ac.currentTime + 0.05; // (re)sync
+    while (nextT < ac.currentTime + 0.3) {
+      playStep(step, nextT);
+      step = (step + 1) % 32;
+      nextT += MUSIC_STEP;
+    }
+  }
+
+  return {
+    start() {
+      if (timer) return;
+      timer = setInterval(tick, 80);
+      if (out && actx) {
+        out.gain.cancelScheduledValues(actx.currentTime);
+        out.gain.setValueAtTime(0, actx.currentTime);
+        out.gain.linearRampToValueAtTime(LEVEL, actx.currentTime + 0.4);
+      }
+      tick();
+    },
+    stop() {
+      if (!timer) return;
+      clearInterval(timer);
+      timer = null;
+      // fade the bus so already-scheduled notes don't ring past the stop
+      if (out && actx) {
+        out.gain.cancelScheduledValues(actx.currentTime);
+        out.gain.setValueAtTime(out.gain.value, actx.currentTime);
+        out.gain.linearRampToValueAtTime(0, actx.currentTime + 0.2);
+      }
+    },
+    setIntensity(v) { intensity = Math.max(0, Math.min(1, v)); },
+  };
+}
+
 export const sfx = {
   hit()      { tone({ freq: 220, freqEnd: 440, type: "square", dur: 0.06, vol: 0.5 }); },
   bounce()   { tone({ freq: 160, freqEnd: 120, type: "triangle", dur: 0.05, vol: 0.4 }); },
