@@ -1,11 +1,12 @@
 import { defineConfig } from "vite";
 import basicSsl from "@vitejs/plugin-basic-ssl";
 
-export default defineConfig({
+// `npm run dev` — plain HTTP on localhost (no cert warning).
+// `npm run dev:https` — self-signed HTTPS + --host, only for phones that
+// block getUserMedia on http:// LAN origins.
+export default defineConfig(({ mode }) => ({
   base: "./",
-  // Self-signed HTTPS in dev: getUserMedia (webcam) is blocked on insecure
-  // origins, and phones reach the dev server via LAN IP — not localhost.
-  plugins: [basicSsl()],
+  plugins: mode === "https" ? [basicSsl()] : [],
   build: {
     target: "es2020",
     rollupOptions: {
@@ -20,4 +21,4 @@ export default defineConfig({
     port: 5173,
     open: true,
   },
-});
+}));
