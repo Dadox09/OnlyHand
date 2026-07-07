@@ -13,6 +13,7 @@ export const games = [
     icon: "🧱",
     description: "Move your hand left/right to smash all the bricks.",
     requires: ["hand"],
+    hidden: true,
     load: () => import("./breakout/index.js"),
   },
   {
@@ -21,6 +22,7 @@ export const games = [
     icon: "🐍",
     description: "Steer by moving your hand away from the center.",
     requires: ["hand"],
+    hidden: true,
     load: () => import("./snake/index.js"),
   },
   {
@@ -29,6 +31,7 @@ export const games = [
     icon: "🍉",
     description: "Swipe fast to slice flying fruit — chain combos, don't hit the bombs.",
     requires: ["hand"],
+    hidden: true,
     load: () => import("./slash/index.js"),
   },
   {
@@ -37,6 +40,7 @@ export const games = [
     icon: "🎧",
     description: "Ride the beat — touch orbs as the ring closes (pinch = snap early), grab ⭐, dodge ⚠, ignite FEVER.",
     requires: ["hand"],
+    hidden: true,
     load: () => import("./beat/index.js"),
   },
   {
@@ -48,3 +52,6 @@ export const games = [
     load: () => import("./asteroids/index.js"),
   },
 ];
+
+// Games shown in the hub/leaderboard/profile UI; hidden ones stay routable by id.
+export const visibleGames = games.filter((g) => !g.hidden);

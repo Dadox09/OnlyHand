@@ -1,4 +1,4 @@
-import { games } from "../games/registry.js";
+import { visibleGames as games } from "../games/registry.js";
 import { getProfile } from "../core/profile.js";
 import { getBest } from "../core/scores.js";
 import { initCamera, getCameraVideo } from "../core/camera.js";

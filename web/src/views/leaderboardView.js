@@ -1,7 +1,7 @@
 // ALL-TIME leaderboard — one tab per game. Online it shows the global
 // Supabase top 10 (+ your rank when you're outside it); offline it falls
 // back to the local house board. Top 3 render as a podium.
-import { games } from "../games/registry.js";
+import { visibleGames as games } from "../games/registry.js";
 import { getProfile } from "../core/profile.js";
 import { getLeaderboard, getBest } from "../core/scores.js";
 import { getLevel } from "../core/badges.js";

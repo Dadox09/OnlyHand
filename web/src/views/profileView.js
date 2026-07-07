@@ -1,7 +1,7 @@
 import { getProfile, updateProfile, updateSettings } from "../core/profile.js";
 import { getStats } from "../core/scores.js";
 import { getBadges, getLevel } from "../core/badges.js";
-import { games } from "../games/registry.js";
+import { visibleGames as games } from "../games/registry.js";
 import { icon } from "../core/icon.js";
 import { startHandCursor, stopHandCursor } from "../core/handCursor.js";
 import { syncProfile } from "../core/backend.js";
