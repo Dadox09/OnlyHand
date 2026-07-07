@@ -5,8 +5,10 @@ import { mount as mountMenu, unmount as unmountMenu } from "./views/menu.js";
 import { mount as mountProfile, unmount as unmountProfile } from "./views/profileView.js";
 import { mount as mountGame, unmount as unmountGame } from "./views/gameHost.js";
 import { mount as mountBoard, unmount as unmountBoard } from "./views/leaderboardView.js";
+import { initFullscreen } from "./core/fullscreen.js";
 
 const app = document.getElementById("app");
+initFullscreen();
 
 function unmountAll() {
   unmountOnboarding();

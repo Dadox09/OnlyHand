@@ -40,6 +40,14 @@
 .game-card .chips { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.3rem; }
 .game-card:hover .chip-best { color: var(--accent); }
 
+/* short landscape phones: denser cards so the grid fits without endless scroll */
+@media (max-height: 480px) {
+  .game-card { padding: 0.6rem 0.8rem; }
+  .game-card p { display: none; }
+  .card-preview-wrap { margin: -0.6rem -0.8rem 0.35rem; }
+  .card-preview { height: 54px; }
+}
+
 /* ── Game card animated preview strip ────────────────────────── */
 .card-preview-wrap {
   position: relative;

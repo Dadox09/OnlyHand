@@ -87,15 +87,34 @@
 }
 .host-sidebar .game-webcam { width: 100%; }
 
+/* touch devices: ESC hint is meaningless (pause = hand lost / back button) */
+@media (pointer: coarse) {
+  .hint-bar .esc { display: none; }
+}
+
 /* short landscape screens (phones): compress chrome, keep webcam */
 @media (max-height: 480px) {
-  .game-host { padding: 0.5rem 0.75rem; gap: 0; }
+  .game-host {
+    padding: 0.5rem 0.75rem max(0.5rem, env(safe-area-inset-bottom));
+    gap: 0;
+  }
   .game-host-header { margin-bottom: 0.25rem; gap: 0.5rem; }
   .game-host-header .btn { padding: 0.3rem 0.6rem; }
   .hint-bar { padding-top: 0.3rem; }
   .hint-bar .desc { display: none; }
   .host-sidebar { width: clamp(130px, 22vw, 200px); gap: 0.5rem; }
   .host-sidebar .stat-card { display: none; }
+}
+
+/* very short landscape (compact phones): every px goes to the stage */
+@media (max-height: 420px) {
+  .game-host { padding-top: 0.35rem; }
+  .game-host-header { margin-bottom: 0.15rem; }
+  .game-host-header .btn { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
+  .game-host-header .title .name { font-size: 0.75rem; }
+  .game-host .hand-indicator { padding: 0.2rem 0.6rem; font-size: 0.7rem; }
+  .hint-bar { display: none; }
+  .host-sidebar { width: clamp(110px, 20vw, 170px); }
 }
 
 /* ── Pre-game hangar overlay (Asteroids) ─────────────────────── */
@@ -134,3 +153,15 @@
 .go-hangar .ship-card { padding: 0.5rem 0.35rem 0.45rem; }
 .go-hangar .ship-card img { width: 42px; height: 42px; }
 .go-hangar .ship-card .ship-name { font-size: 0.6rem; }
+
+/* short landscape: hangar must fit inside the shrunken stage */
+@media (max-height: 480px) {
+  .go-hangar .hangar-grid {
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 0.35rem;
+    margin: 0.2rem 0;
+  }
+  .go-hangar .ship-card { padding: 0.3rem 0.25rem; }
+  .go-hangar .ship-card img { width: 28px; height: 28px; }
+  .go-hangar .ship-card .ship-perk { display: none; }
+}

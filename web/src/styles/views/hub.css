@@ -38,3 +38,15 @@
     margin: 0 auto;
   }
 }
+
+/* short landscape (phones sideways): compress chrome, keep webcam + grid */
+@media (max-height: 480px) {
+  .page {
+    grid-template-columns: clamp(150px, 24vw, 230px) 1fr;
+    gap: 0.5rem 0.75rem;
+    padding: 0.5rem 0.75rem max(0.75rem, env(safe-area-inset-bottom));
+  }
+  .page-header h1 { font-size: 1.05rem; }
+  .subtitle { display: none; }
+  .game-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.5rem; }
+}

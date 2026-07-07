@@ -66,6 +66,12 @@
 @media (max-width: 900px) {
   .live-row .pinch-hint { display: none; }
 }
+/* short landscape phones: keep only the live dot + label */
+@media (max-height: 480px) {
+  .live-row { padding-top: 0.35rem; }
+  .live-row .live-meta { display: none; }
+  .status-bar { padding: 0.25rem 0.5rem; font-size: 0.7rem; }
+}
 
 /* Hand indicator pill */
 .hand-indicator {

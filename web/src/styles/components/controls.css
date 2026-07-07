@@ -116,3 +116,34 @@
 .avatar.sm { width: 48px; height: 48px; font-size: 1.5rem; }
 .avatar:hover { border-color: var(--border-hover); transform: scale(1.06); }
 .avatar.selected { border-color: var(--accent); box-shadow: var(--glow-accent-sm); }
+
+/* ── Fullscreen toggle (core/fullscreen.js) ──────────────────────
+   Touch devices only: browser chrome eats the short landscape edge,
+   fullscreen gets it back. Hidden when already running standalone. */
+.fs-btn {
+  position: fixed;
+  right: max(0.75rem, env(safe-area-inset-right));
+  bottom: max(0.75rem, env(safe-area-inset-bottom));
+  z-index: 900; /* under hand cursor (1000) and rotate overlay (1200) */
+  width: 42px;
+  height: 42px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--border);
+  background: rgba(16, 20, 28, 0.85);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: var(--ease-prop);
+}
+.fs-btn:hover { color: var(--text); border-color: var(--border-hover); }
+@media (pointer: coarse) {
+  .fs-btn { display: inline-flex; }
+}
+/* standalone PWA already has no browser chrome — the toggle is pointless
+   there. (display-mode: fullscreen also matches the API state, so it must
+   NOT be in this list or the exit button would vanish.) */
+@media (display-mode: standalone) {
+  .fs-btn { display: none !important; }
+}

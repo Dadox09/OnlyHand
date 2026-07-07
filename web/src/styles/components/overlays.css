@@ -15,6 +15,9 @@
   gap: 0.55rem;
   align-items: center;
   padding: 1rem;
+  /* never taller than the stage — scroll inside instead of clipping */
+  max-height: 100%;
+  overflow-y: auto;
 }
 .go-title {
   font-family: var(--font-display);
@@ -66,6 +69,17 @@
   transition: var(--ease-prop);
 }
 .go-board-link:hover { color: var(--accent); }
+
+/* short landscape phones: pause/game-over must fit the shrunken stage */
+@media (max-height: 480px) {
+  .go-panel { gap: 0.3rem; padding: 0.6rem; }
+  .go-title { font-size: 1.05rem; }
+  .go-score { font-size: 1.8rem; }
+  .go-stats { gap: 0.8rem; }
+  .board { width: 210px; padding: 0.4rem 0.6rem; gap: 0.25rem; margin: 0.15rem 0; }
+  .go-actions .btn { padding: 0.35rem 0.7rem; font-size: 0.78rem; }
+  .go-hint { display: none; }
+}
 
 /* ── CRT scanlines + vignette on game canvases ───────────────── */
 .canvas-wrap::after {
