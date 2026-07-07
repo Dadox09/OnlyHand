@@ -45,6 +45,7 @@ const HOUSE_RIVALS = {
   breakout:  [{ name: "Brick", avatar: "🤖", score: 90 },  { name: "Nova",  avatar: "⚡", score: 44 }],
   snake:     [{ name: "Viper", avatar: "🐍", score: 240 }, { name: "Nova",  avatar: "⚡", score: 150 }],
   slash:     [{ name: "Kenji", avatar: "🥷", score: 120 }, { name: "Nova",  avatar: "⚡", score: 65 }],
+  beat:      [{ name: "Echo",  avatar: "🎧", score: 220 }, { name: "Nova",  avatar: "⚡", score: 110 }],
   asteroids: [{ name: "Nova",  avatar: "⚡", score: 60 },  { name: "Rex",   avatar: "🐉", score: 28 }],
 };
 

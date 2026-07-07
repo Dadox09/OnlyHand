@@ -31,7 +31,7 @@ create policy "users update own profile"
 create table if not exists public.scores (
   id         bigint generated always as identity primary key,
   user_id    uuid not null references public.profiles (id) on delete cascade,
-  game_id    text not null check (game_id in ('pong', 'breakout', 'snake', 'slash', 'asteroids', 'asteroids-daily')),
+  game_id    text not null check (game_id in ('pong', 'breakout', 'snake', 'slash', 'beat', 'asteroids', 'asteroids-daily')),
   score      integer not null check (score >= 0 and score <= 100000),
   created_at timestamptz not null default now()
 );
@@ -74,13 +74,14 @@ create trigger scores_rate_limit
   before insert on public.scores
   for each row execute function public.enforce_score_rate();
 
--- ── Daily runs ──────────────────────────────────────────────────
+-- ── Game-id migrations ──────────────────────────────────────────
 -- 'asteroids-daily' rows power the in-game TODAY board (seeded daily run,
--- filtered client-side by created_at >= today UTC). The block below also
--- migrates databases created before this game id existed — safe to re-run.
+-- filtered client-side by created_at >= today UTC); 'beat' is Beat Pulse.
+-- The block below migrates databases created before these game ids
+-- existed — safe to re-run.
 alter table public.scores drop constraint if exists scores_game_id_check;
 alter table public.scores add constraint scores_game_id_check
-  check (game_id in ('pong', 'breakout', 'snake', 'slash', 'asteroids', 'asteroids-daily'));
+  check (game_id in ('pong', 'breakout', 'snake', 'slash', 'beat', 'asteroids', 'asteroids-daily'));
 
 -- ── Leaderboard view: best score per player per game ───────────
 create or replace view public.leaderboard as

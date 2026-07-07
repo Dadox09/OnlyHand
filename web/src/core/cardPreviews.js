@@ -117,6 +117,50 @@ const SCENES = {
     }
   },
 
+  beat(ctx, t) {
+    ctx.fillStyle = "#04060d";
+    ctx.fillRect(0, 0, PW, PH);
+    // beat-pulsing grid
+    const pulse = Math.pow(1 - ((t % 500) / 500), 2);
+    ctx.strokeStyle = NEON.accent;
+    ctx.globalAlpha = 0.05 + 0.08 * pulse;
+    for (let x = 20; x < PW; x += 40) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, PH); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    // orbs with closing approach rings on staggered beats
+    const orbs = [
+      { x: 50, y: 48, color: NEON.accent, phase: 0 },
+      { x: 122, y: 30, color: NEON.cyan, phase: 660 },
+      { x: 192, y: 58, color: NEON.magenta, phase: 1320 },
+    ];
+    for (const o of orbs) {
+      const k = 1 - ((t + o.phase) % 2000) / 2000; // 1 → 0 ring closes
+      ctx.strokeStyle = o.color;
+      ctx.shadowColor = o.color;
+      ctx.shadowBlur = 8;
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(o.x, o.y, 11, 0, Math.PI * 2); ctx.stroke();
+      ctx.globalAlpha = 0.9;
+      ctx.beginPath(); ctx.arc(o.x, o.y, 11 + 26 * k, 0, Math.PI * 2); ctx.stroke();
+      ctx.globalAlpha = 1;
+      if (k > 0.93) { // hit flash right as it closes
+        ctx.fillStyle = o.color;
+        ctx.beginPath(); ctx.arc(o.x, o.y, 8, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.shadowBlur = 0;
+    }
+    // cursor comet gliding between orbs
+    const k = (t % 2000) / 2000;
+    const cx = 40 + k * 160;
+    const cy = 55 - Math.sin(k * Math.PI * 2) * 18;
+    ctx.strokeStyle = NEON.cyan;
+    ctx.shadowColor = NEON.cyan;
+    ctx.shadowBlur = 8;
+    ctx.beginPath(); ctx.arc(cx, cy, 5, 0, Math.PI * 2); ctx.stroke();
+    ctx.shadowBlur = 0;
+  },
+
   asteroids(ctx, t) {
     ctx.fillStyle = "#000008";
     ctx.fillRect(0, 0, PW, PH);

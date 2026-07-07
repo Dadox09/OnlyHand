@@ -269,6 +269,14 @@ for (const evt of ["pointerdown", "keydown"]) {
   window.addEventListener(evt, () => ensureAudio(), { once: true, passive: true });
 }
 
+// Shared context + master bus for game-owned music engines (e.g. Beat Pulse's
+// beat-locked scheduler) so their volume stays balanced against the sfx here.
+// Returns null while the AudioContext is still locked.
+export function getAudioBus() {
+  const ac = ensureAudio();
+  return ac ? { ctx: ac, master } : null;
+}
+
 function tone({ freq = 440, freqEnd = null, type = "square", dur = 0.1, vol = 1, delay = 0 } = {}) {
   const ac = ensureAudio();
   if (!ac || ac.state !== "running") return;

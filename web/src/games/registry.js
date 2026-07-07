@@ -32,6 +32,14 @@ export const games = [
     load: () => import("./slash/index.js"),
   },
   {
+    id: "beat",
+    name: "Beat Pulse",
+    icon: "🎧",
+    description: "Ride the beat — touch orbs as the ring closes (pinch = snap early), grab ⭐, dodge ⚠, ignite FEVER.",
+    requires: ["hand"],
+    load: () => import("./beat/index.js"),
+  },
+  {
     id: "asteroids",
     name: "Asteroids",
     icon: "🚀",

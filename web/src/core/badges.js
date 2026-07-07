@@ -4,6 +4,7 @@
 // moments can be detected once and shown on the Game Over overlay.
 import { getProfile } from "./profile.js";
 import { PLAYER_SHIPS } from "../games/asteroids/fleet.js";
+import { games } from "../games/registry.js";
 
 // ── XP / level ──────────────────────────────────────────────────
 // XP = every point scored + a flat bonus per finished run.
@@ -52,7 +53,7 @@ export const BADGES = [
   { id: "no-life",       name: "Arcade Rat",     icon: "🔥", desc: "Finish 100 runs",
     progress: (p) => [totalPlays(p), 100] },
   { id: "explorer",      name: "Explorer",       icon: "🧭", desc: "Play every game at least once",
-    progress: (p) => [gamesPlayed(p), 5] },
+    progress: (p) => [gamesPlayed(p), games.length] },
   { id: "marathoner",    name: "Marathoner",     icon: "⏱️", desc: "30 minutes of total playtime",
     progress: (p) => [Math.floor((p.totalPlaytime ?? 0) / 60), 30] },
   // Records
@@ -73,6 +74,8 @@ export const BADGES = [
     progress: (p) => [stat(p, "slash").best, 150] },
   { id: "star-pilot",   name: "Star Pilot",     icon: "🚀", desc: "Score 75 in Asteroids",
     progress: (p) => [stat(p, "asteroids").best, 75] },
+  { id: "pulse-rider",  name: "Pulse Rider",    icon: "🎧", desc: "Score 250 in Beat Pulse",
+    progress: (p) => [stat(p, "beat").best, 250] },
   // Asteroids mastery — counters filled by gameHost from the end-of-run report
   { id: "warlord-slayer", name: "Warlord Slayer", icon: "🛰️", desc: "Destroy 3 warlord carriers in Asteroids",
     progress: (p) => [p.counters?.warlordKills ?? 0, 3] },

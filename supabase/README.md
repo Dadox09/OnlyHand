@@ -40,15 +40,15 @@ real TOP HANDS.
 
 ## Migrations for existing projects
 
-If you deployed the schema **before the Asteroids daily run** (or before
-Fruit Slash), the `game_id` check constraint rejects the newer ids. Re-running
-the whole `schema.sql` fixes it (the daily-run block drops and recreates the
-constraint), or run just this in the SQL Editor:
+If you deployed the schema **before Beat Pulse** (or before the Asteroids
+daily run / Fruit Slash), the `game_id` check constraint rejects the newer
+ids. Re-running the whole `schema.sql` fixes it (the migration block drops
+and recreates the constraint), or run just this in the SQL Editor:
 
 ```sql
 alter table public.scores drop constraint if exists scores_game_id_check;
 alter table public.scores add constraint scores_game_id_check
-  check (game_id in ('pong', 'breakout', 'snake', 'slash', 'asteroids', 'asteroids-daily'));
+  check (game_id in ('pong', 'breakout', 'snake', 'slash', 'beat', 'asteroids', 'asteroids-daily'));
 ```
 
 ### Daily runs (`asteroids-daily`)
