@@ -43,7 +43,6 @@
   --text-glow:      0 0 10px rgba(74, 222, 128, 0.55);
 
   /* Ambient backdrop */
-  --grid-line:     rgba(74, 222, 128, 0.05);
   --scanline:      rgba(255, 255, 255, 0.025);
   --scrim:         rgba(2, 4, 8, 0.78);
   --status-bg:     rgba(0, 0, 0, 0.65);
@@ -97,14 +96,9 @@ body {
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
-  /* faint arcade floor grid */
-  background-image:
-    linear-gradient(var(--grid-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-  background-size: 44px 44px;
 }
 
-/* ambient vignette over the grid */
+/* ambient vignette */
 body::before {
   content: "";
   position: fixed;

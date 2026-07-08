@@ -35,10 +35,20 @@
 }
 .game-card:hover .play { opacity: 1; transform: translateX(0); }
 
-.game-card h3 { margin: 0; font-size: 1rem; font-weight: var(--weight-medium); }
+.game-card h3 { margin: 0; font-size: 1.05rem; font-weight: var(--weight-medium); }
 .game-card p  { margin: 0; font-size: var(--text-sub); color: var(--text-muted); }
 .game-card .chips { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.3rem; }
 .game-card:hover .chip-best { color: var(--accent); }
+
+/* phones portrait: full-width hero-style cards */
+@media (max-width: 560px) {
+  .game-card { padding: 1.1rem 1.25rem; gap: 0.4rem; }
+  .game-card h3 { font-size: 1.1rem; }
+  .game-card p  { font-size: 0.88rem; }
+  .card-preview-wrap { margin: -1.1rem -1.25rem 0.5rem; }
+  .card-preview { height: 140px; }
+  .card-preview-wrap .icon { font-size: 1.9rem; }
+}
 
 /* short landscape phones: denser cards so the grid fits without endless scroll */
 @media (max-height: 480px) {
@@ -59,7 +69,7 @@
 .card-preview {
   display: block;
   width: 100%;
-  height: 86px;
+  height: 112px;
   object-fit: cover;
   opacity: 0.85;
   transition: opacity 0.2s;

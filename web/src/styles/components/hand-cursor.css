@@ -53,12 +53,3 @@
 .game-card.hand-hover .play { opacity: 1; transform: translateX(0); }
 .game-card.hand-hover .chip-best { color: var(--accent); }
 .btn.hand-hover { color: var(--text); }
-
-/* ── Pinch hint in the live row ──────────────────────────────── */
-.pinch-hint {
-  margin-left: auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  color: var(--text-muted);
-}

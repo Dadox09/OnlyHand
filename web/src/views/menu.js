@@ -34,7 +34,17 @@ export async function mount(app) {
           <span class="oh-dot oh-live-dot"></span>
           <span class="live-label">TRACKING LIVE</span>
           <span class="live-meta">MediaPipe · 60 fps</span>
-          <span class="live-meta pinch-hint">${icon("hand", { size: 13 })} point with your hand · pinch to select</span>
+        </div>
+        <div class="gesture-guide" role="note" aria-label="Hand controls: point to move the cursor, pinch to select">
+          <span class="guide-title">${icon("hand", { size: 13 })} HAND CONTROLS</span>
+          <span class="guide-chip">
+            <span class="guide-ic">${icon("pointer", { size: 16 })}</span>
+            <b>POINT</b><em>move cursor</em>
+          </span>
+          <span class="guide-chip guide-chip--accent">
+            <span class="guide-ic">${icon("pinch", { size: 16 })}</span>
+            <b>PINCH</b><em>select</em>
+          </span>
         </div>
       </div>
 

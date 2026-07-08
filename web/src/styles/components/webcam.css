@@ -62,15 +62,60 @@
   font-size: var(--text-tag);
 }
 
-/* narrow screens: the pinch hint wraps badly inside the live row */
-@media (max-width: 900px) {
-  .live-row .pinch-hint { display: none; }
+/* ── Gesture guide — commands stay visible at every size ─────── */
+.gesture-guide {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.6rem;
+  padding: 0.6rem 0.7rem;
+  background: var(--surface);
+  border: var(--border-default);
+  border-radius: var(--radius-box);
 }
-/* short landscape phones: keep only the live dot + label */
+.guide-title {
+  flex-basis: 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+}
+.guide-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--text-muted);
+}
+.guide-chip .guide-ic { color: var(--accent); display: inline-flex; }
+.guide-chip b {
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  color: var(--text);
+}
+.guide-chip em { font-style: normal; font-size: 0.72rem; }
+.guide-chip--accent {
+  border-color: rgba(74, 222, 128, 0.45);
+  box-shadow: var(--glow-accent-sm);
+}
+
+/* short landscape phones: keep only the live dot + label; compact guide */
 @media (max-height: 480px) {
   .live-row { padding-top: 0.35rem; }
   .live-row .live-meta { display: none; }
   .status-bar { padding: 0.25rem 0.5rem; font-size: 0.7rem; }
+  .gesture-guide { margin-top: 0.4rem; padding: 0.4rem 0.5rem; gap: 0.35rem; }
+  .guide-title { display: none; }
+  .guide-chip { padding: 0.3rem 0.55rem; }
+  .guide-chip em { display: none; }
 }
 
 /* Hand indicator pill */

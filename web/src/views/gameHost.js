@@ -58,7 +58,6 @@ export async function mount(app, { params }) {
             </div>
           </div>
           <div class="hint-bar">
-            <span class="desc">${meta.description}</span>
             <span class="esc">ESC — pause</span>
           </div>
         </div>
@@ -66,6 +65,14 @@ export async function mount(app, { params }) {
           <div class="webcam-panel game-webcam" id="cam-panel">
             <video id="game-preview" autoplay playsinline muted></video>
             <canvas id="game-overlay"></canvas>
+          </div>
+          <div class="gesture-guide" role="note" aria-label="Hand controls for ${meta.name}">
+            <span class="guide-title">${icon("hand", { size: 13 })} CONTROLS</span>
+            ${(meta.controls || []).map((c) => `
+              <span class="guide-chip">
+                <span class="guide-ic">${icon(c.icon, { size: 14 })}</span>
+                <b>${c.gesture}</b><em>${c.action}</em>
+              </span>`).join("") || `<span class="desc">${meta.description}</span>`}
           </div>
           <div class="stat-card">
             <div class="label">${meta.icon} Your best</div>

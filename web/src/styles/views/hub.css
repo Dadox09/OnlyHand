@@ -20,23 +20,24 @@
 
 .game-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
   align-content: start;
 }
 
 @media (max-width: 900px) {
-  .game-grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+  .game-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
 }
 
 /* very narrow: single column, webcam on top — still visible */
 @media (max-width: 560px) {
   .page { grid-template-columns: 1fr; }
   .page .webcam-col {
-    max-width: 300px;
+    max-width: 340px;
     width: 100%;
     margin: 0 auto;
   }
+  .game-grid { grid-template-columns: 1fr; gap: 0.9rem; }
 }
 
 /* short landscape (phones sideways): compress chrome, keep webcam + grid */
