@@ -49,6 +49,11 @@ export async function mount(app) {
       </div>
 
       <div class="game-grid oh-stagger" id="game-grid"></div>
+
+      <footer class="hub-footer">
+        <span>OnlyHand — your camera never leaves your device.</span>
+        <a href="#/privacy">Privacy</a>
+      </footer>
     </div>
   `;
 
@@ -72,7 +77,7 @@ export async function mount(app) {
     await startHandInput(getCameraVideo());
     statusEl.textContent = "Ready — show your hand";
   } catch (err) {
-    statusEl.textContent = "Error: " + err.message;
+    statusEl.textContent = "Error: " + (err?.message || err);
   }
 
   // Draw glowing landmark dots — canvas is CSS scaleX(-1), draw at lm.x directly

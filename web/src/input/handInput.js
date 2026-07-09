@@ -71,7 +71,8 @@ function detectPinch(lms, wasPinching) {
 function createRecognizer(fileset, delegate) {
   return GestureRecognizer.createFromOptions(fileset, {
     baseOptions: {
-      modelAssetPath: "/models/hand/gesture_recognizer.task",
+      // BASE_URL-relative: itch.io & co. serve the app from a subpath
+      modelAssetPath: `${import.meta.env.BASE_URL}models/hand/gesture_recognizer.task`,
       delegate,
     },
     runningMode: "VIDEO",
@@ -86,7 +87,7 @@ async function ensureModel() {
   if (recognizer) return;
   if (initPromise) return initPromise;
   initPromise = (async () => {
-    const fileset = await FilesetResolver.forVisionTasks("/wasm");
+    const fileset = await FilesetResolver.forVisionTasks(`${import.meta.env.BASE_URL}wasm`);
     try {
       recognizer = await createRecognizer(fileset, "GPU");
     } catch {

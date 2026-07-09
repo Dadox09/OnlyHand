@@ -51,7 +51,7 @@ const LEVELS = [
   { name: "ALIEN SECTOR", hue: 120 },
 ];
 
-const ASSET_BASE = "/assets/asteroids/";
+const ASSET_BASE = `${import.meta.env.BASE_URL}assets/asteroids/`;
 
 // ── RNG ─────────────────────────────────────────────────────────
 // Sim code draws from `rand`; mount() points it at a seeded generator in

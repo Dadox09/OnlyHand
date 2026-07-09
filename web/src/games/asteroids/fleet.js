@@ -2,7 +2,7 @@
 // (web/public/assets/asteroids/ships/, see sheet rows top→bottom = 0..11).
 // Player picks from PLAYER_SHIPS in the profile HANGAR; the orange family
 // is reserved for the enemy fighter squads.
-const BASE = "/assets/asteroids/ships/";
+const BASE = `${import.meta.env.BASE_URL}assets/asteroids/ships/`;
 
 export const DEFAULT_SHIP = "viper";
 

@@ -51,3 +51,33 @@
   .subtitle { display: none; }
   .game-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.5rem; }
 }
+
+/* ── Hub footer ──────────────────────────────────────────────── */
+.hub-footer {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1.25rem 0 0.25rem;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+.hub-footer a { color: var(--text-muted); text-decoration: underline; }
+.hub-footer a:hover { color: var(--text); }
+
+/* ── Privacy page ────────────────────────────────────────────── */
+.privacy-body {
+  grid-column: 1 / -1;
+  max-width: 640px;
+  line-height: 1.65;
+  color: var(--text-muted);
+}
+.privacy-body h2 {
+  margin: 1.6rem 0 0.4rem;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  letter-spacing: var(--track-display);
+  color: var(--text);
+}
+.privacy-body strong { color: var(--text); }
+.privacy-body a { color: var(--accent, #39ff14); }
