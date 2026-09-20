@@ -4,7 +4,7 @@
 // moments can be detected once and shown on the Game Over overlay.
 import { getProfile } from "./profile.js";
 import { PLAYER_SHIPS } from "../games/asteroids/fleet.js";
-import { games } from "../games/registry.js";
+import { visibleGames } from "../games/registry.js";
 
 // ── XP / level ──────────────────────────────────────────────────
 // XP = every point scored + a flat bonus per finished run.
@@ -41,7 +41,8 @@ export function getLevel(p = getProfile()) {
 const stat = (p, gameId) => p.stats[gameId] ?? { best: 0, plays: 0, totalScore: 0 };
 const totalPlays = (p) => Object.values(p.stats).reduce((n, s) => n + (s.plays ?? 0), 0);
 const totalScore = (p) => Object.values(p.stats).reduce((n, s) => n + (s.totalScore ?? 0), 0);
-const gamesPlayed = (p) => Object.values(p.stats).filter((s) => (s.plays ?? 0) > 0).length;
+const visibleGameIds = new Set(visibleGames.map((game) => game.id));
+const gamesPlayed = (p) => visibleGames.filter((game) => (p.stats[game.id]?.plays ?? 0) > 0).length;
 const records = (p) => p.counters?.records ?? 0;
 
 export const BADGES = [
@@ -53,7 +54,7 @@ export const BADGES = [
   { id: "no-life",       name: "Arcade Rat",     icon: "🔥", desc: "Finish 100 runs",
     progress: (p) => [totalPlays(p), 100] },
   { id: "explorer",      name: "Explorer",       icon: "🧭", desc: "Play every game at least once",
-    progress: (p) => [gamesPlayed(p), games.length] },
+    progress: (p) => [gamesPlayed(p), visibleGames.length] },
   { id: "marathoner",    name: "Marathoner",     icon: "⏱️", desc: "30 minutes of total playtime",
     progress: (p) => [Math.floor((p.totalPlaytime ?? 0) / 60), 30] },
   // Records
@@ -64,17 +65,17 @@ export const BADGES = [
   { id: "high-roller",    name: "High Roller",    icon: "💰", desc: "Score 5000 points across all games",
     progress: (p) => [totalScore(p), 5000] },
   // Per-game mastery
-  { id: "pong-ace",     name: "Pong Ace",       icon: "🏓", desc: "Score 50 in Hand Pong",
+  { id: "pong-ace",     gameId: "pong", name: "Pong Ace",       icon: "🏓", desc: "Score 50 in Hand Pong",
     progress: (p) => [stat(p, "pong").best, 50] },
-  { id: "brick-lord",   name: "Brick Lord",     icon: "🧱", desc: "Score 100 in Breakout",
+  { id: "brick-lord",   gameId: "breakout", name: "Brick Lord",     icon: "🧱", desc: "Score 100 in Breakout",
     progress: (p) => [stat(p, "breakout").best, 100] },
-  { id: "serpent-king", name: "Serpent King",   icon: "🐍", desc: "Score 300 in Snake",
+  { id: "serpent-king", gameId: "snake", name: "Serpent King",   icon: "🐍", desc: "Score 300 in Snake",
     progress: (p) => [stat(p, "snake").best, 300] },
-  { id: "fruit-ninja",  name: "Blade Master",   icon: "🍉", desc: "Score 150 in Fruit Slash",
+  { id: "fruit-ninja",  gameId: "slash", name: "Blade Master",   icon: "🍉", desc: "Score 150 in Fruit Slash",
     progress: (p) => [stat(p, "slash").best, 150] },
-  { id: "star-pilot",   name: "Star Pilot",     icon: "🚀", desc: "Score 75 in Asteroids",
+  { id: "star-pilot",   gameId: "asteroids", name: "Star Pilot",     icon: "🚀", desc: "Score 75 in Asteroids",
     progress: (p) => [stat(p, "asteroids").best, 75] },
-  { id: "pulse-rider",  name: "Pulse Rider",    icon: "🎧", desc: "Score 250 in Beat Pulse",
+  { id: "pulse-rider",  gameId: "beat", name: "Pulse Rider",    icon: "🎧", desc: "Score 250 in Beat Pulse",
     progress: (p) => [stat(p, "beat").best, 250] },
   // Asteroids mastery — counters filled by gameHost from the end-of-run report
   { id: "warlord-slayer", name: "Warlord Slayer", icon: "🛰️", desc: "Destroy 3 warlord carriers in Asteroids",
@@ -83,7 +84,7 @@ export const BADGES = [
     progress: (p) => [p.counters?.flawlessBosses ?? 0, 1] },
   { id: "fleet-admiral",  name: "Fleet Admiral",  icon: "🪐", desc: `Fly every ship in the hangar (${PLAYER_SHIPS.length})`,
     progress: (p) => [Object.keys(p.counters?.shipsFlown ?? {}).length, PLAYER_SHIPS.length] },
-];
+].filter((badge) => !badge.gameId || visibleGameIds.has(badge.gameId));
 
 // Full badge list with live progress + earned state, for the profile view.
 export function getBadges(p = getProfile()) {

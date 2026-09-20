@@ -10,8 +10,10 @@ function defaultProfile() {
     ship: "viper", // asteroids hangar pick — see games/asteroids/fleet.js
     createdAt: new Date().toISOString(),
     stats: {},
+    practiceStats: {}, // mouse/touch runs; never mixed with hand leaderboards or badges
     badges: {},    // { [badgeId]: earnedAtISO } — see core/badges.js
     counters: {},  // { records } — personal bests broken
+    daily: { lastDay: null, streak: 0, bestStreak: 0 },
     totalPlaytime: 0,
     settings: {
       mirrorWebcam: true,
@@ -28,6 +30,8 @@ export function getProfile() {
     const p = JSON.parse(raw);
     if (p.schemaVersion !== SCHEMA_VERSION) return defaultProfile();
     if (!p.ship) p.ship = "viper"; // backfill profiles saved before the hangar existed
+    if (!p.daily) p.daily = { lastDay: null, streak: 0, bestStreak: 0 };
+    if (!p.practiceStats) p.practiceStats = {};
     return p;
   } catch {
     return defaultProfile();

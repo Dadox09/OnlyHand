@@ -7,6 +7,7 @@ const subscribers = new Set();
 let rafHandle = null;
 let video = null;
 let lastVideoTime = -1;
+let pointerCleanup = null;
 
 export const handState = {
   x: 0.5,
@@ -15,7 +16,12 @@ export const handState = {
   landmarks: null,
   gesture: null, // e.g. "Thumb_Up", "Open_Palm", "Closed_Fist", etc.
   pinch: false,  // thumb tip close to index tip (scale-invariant)
+  source: null,  // "camera" | "pointer"
 };
+
+function emitState() {
+  for (const cb of subscribers) cb({ ...handState });
+}
 
 // ── One-Euro filter: kills jitter at rest, stays snappy on fast moves ──
 function makeOneEuro({ minCutoff = 1.4, beta = 0.012, dCutoff = 1.0 } = {}) {
@@ -129,6 +135,7 @@ function loop() {
       handState.landmarks = lms;
       handState.gesture = result.gestures?.[0]?.[0]?.categoryName ?? null;
       handState.pinch = detectPinch(lms, handState.pinch);
+      handState.source = "camera";
       lastSeenAt = now;
     } else if (handState.isDetected && now - lastSeenAt < COAST_MS) {
       // Brief dropout: extrapolate along damped velocity; landmarks/gesture/
@@ -144,20 +151,132 @@ function loop() {
       handState.landmarks = null;
       handState.gesture = null;
       handState.pinch = false;
+      handState.source = "camera";
       vx = 0;
       vy = 0;
     }
     lastFrameAt = now;
-    for (const cb of subscribers) cb({ ...handState });
+    emitState();
   }
   rafHandle = requestAnimationFrame(loop);
 }
 
 export async function startHandInput(videoElement) {
+  stopPointerInput();
   await ensureModel();
   video = videoElement;
   if (!rafHandle) {
     rafHandle = requestAnimationFrame(loop);
+  }
+}
+
+// Camera-free fallback used by shared links and curious visitors. Games keep
+// receiving the same hand-state contract: pointer position behaves like the
+// mirrored camera coordinates, hold/click maps to pinch and Space maps to fist.
+export function startPointerInput(element) {
+  stopPointerInput();
+  let pointerDown = false;
+  let spaceDown = false;
+  let pinchReleaseRaf = null;
+  let fistReleaseRaf = null;
+
+  const updatePosition = (event) => {
+    const rect = element.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const x = Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width));
+    const y = Math.min(1, Math.max(0, (event.clientY - rect.top) / rect.height));
+    handState.x = 1 - x; // games mirror camera x; invert here so pointer stays direct
+    handState.y = y;
+    handState.isDetected = true;
+    handState.landmarks = null;
+    handState.source = "pointer";
+    emitState();
+  };
+  const onPointerMove = (event) => updatePosition(event);
+  const onPointerDown = (event) => {
+    pointerDown = true;
+    if (pinchReleaseRaf !== null) cancelAnimationFrame(pinchReleaseRaf);
+    handState.pinch = true;
+    updatePosition(event);
+    element.setPointerCapture?.(event.pointerId);
+    event.preventDefault();
+  };
+  const onPointerUp = (event) => {
+    pointerDown = false;
+    updatePosition(event);
+    // Keep a click pinched through at least one game frame so quick taps are
+    // never lost between pointerdown and pointerup.
+    pinchReleaseRaf = requestAnimationFrame(() => {
+      pinchReleaseRaf = null;
+      if (pointerDown || handState.source !== "pointer") return;
+      handState.pinch = false;
+      emitState();
+    });
+  };
+  const onKeyDown = (event) => {
+    if (event.code !== "Space" || event.repeat) return;
+    spaceDown = true;
+    if (fistReleaseRaf !== null) cancelAnimationFrame(fistReleaseRaf);
+    handState.gesture = "Closed_Fist";
+    emitState();
+    event.preventDefault();
+  };
+  const onKeyUp = (event) => {
+    if (event.code !== "Space") return;
+    spaceDown = false;
+    fistReleaseRaf = requestAnimationFrame(() => {
+      fistReleaseRaf = null;
+      if (spaceDown || handState.source !== "pointer") return;
+      handState.gesture = null;
+      emitState();
+    });
+    event.preventDefault();
+  };
+
+  element.style.touchAction = "none";
+  element.addEventListener("pointermove", onPointerMove);
+  element.addEventListener("pointerdown", onPointerDown);
+  window.addEventListener("pointerup", onPointerUp);
+  window.addEventListener("pointercancel", onPointerUp);
+  window.addEventListener("keydown", onKeyDown);
+  window.addEventListener("keyup", onKeyUp);
+
+  Object.assign(handState, {
+    x: 0.5,
+    y: 0.5,
+    isDetected: true,
+    landmarks: null,
+    gesture: null,
+    pinch: false,
+    source: "pointer",
+  });
+  emitState();
+
+  pointerCleanup = () => {
+    element.removeEventListener("pointermove", onPointerMove);
+    element.removeEventListener("pointerdown", onPointerDown);
+    window.removeEventListener("pointerup", onPointerUp);
+    window.removeEventListener("pointercancel", onPointerUp);
+    window.removeEventListener("keydown", onKeyDown);
+    window.removeEventListener("keyup", onKeyUp);
+    if (pinchReleaseRaf !== null) cancelAnimationFrame(pinchReleaseRaf);
+    if (fistReleaseRaf !== null) cancelAnimationFrame(fistReleaseRaf);
+    element.style.touchAction = "";
+    pointerDown = false;
+    spaceDown = false;
+  };
+  return stopPointerInput;
+}
+
+export function stopPointerInput() {
+  pointerCleanup?.();
+  pointerCleanup = null;
+  if (handState.source === "pointer") {
+    handState.isDetected = false;
+    handState.pinch = false;
+    handState.gesture = null;
+    handState.source = null;
+    emitState();
   }
 }
 

@@ -42,6 +42,19 @@
   text-align: center;
   color: var(--text-muted);
 }
+.status-camera-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0;
+  border: 0;
+  color: var(--accent);
+  background: none;
+  font: inherit;
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+}
+.status-camera-btn:hover { color: var(--text); }
 
 /* "TRACKING LIVE" row under the hub webcam */
 .live-row {

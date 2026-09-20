@@ -11,7 +11,7 @@ Hand tracking platform — Python CLI demos + browser game hub, all powered by M
 | Layer | What it does |
 |-------|-------------|
 | `basics/` | Python scripts: real-time hand/face/object detection via webcam |
-| `web/` | Vite SPA with 5 hand-controlled games (Pong, Breakout, Snake, Fruit Slash, Asteroids) |
+| `web/` | Vite SPA with 6 built-in hand-controlled games; Pong, Beat Pulse and Asteroids are in the public beta |
 | `models/` | Pre-trained MediaPipe + TFLite models (hand, face, object) |
 
 ---
@@ -47,7 +47,7 @@ npm install        # first time only
 npm run dev        # http://localhost:5173
 ```
 
-Node 22.11+ required (Vite 5). Build: `npm run build` → output in `web/dist/`.
+Node 22.11+ required (Vite 6). Build: `npm run build` → output in `web/dist/`.
 
 ---
 
@@ -108,8 +108,26 @@ src/
     └── asteroids/       # Ship follows hand, auto-fire, pinch = rapid fire
 ```
 
-First access walks you through: enable camera → pick your player tag (name + avatar) →
-a 4-line how-to (point, pinch, pause) → the hub. Returning players land straight in.
+First access can enable the camera, pick a player tag (name + avatar), learn point/pinch/pause
+and enter the hub. Visitors can also browse immediately and every game offers a mouse/touch
+trial mode: move to steer, hold to pinch, and press Space for fist actions. The webcam remains
+the full experience, but a shared challenge no longer loses players at the permission prompt.
+Pointer runs stay local and are labelled as practice so global and daily boards remain hand-only.
+
+The public-growth loop is built into the result screen: every score can become a direct
+challenge link, and the browser generates a 1080×1920 result card using the gameplay canvas
+(never the webcam) for TikTok, Reels and Shorts. The hub also features a seeded daily Asteroids
+run with a UTC countdown and local streak. A web manifest plus service worker make the arcade
+installable and cache previously used assets for repeat visits.
+
+The first screen is a conversion-focused demo landing: it shows real gameplay before asking
+for camera access, keeps the privacy promise next to the CTA, and offers a camera-free route to
+explore the games. Its animated WebP is generated from `images/demo.gif` with
+`python web/scripts/optimize-demo.py`.
+
+On browsers with `MediaRecorder` support, **Creator Clip** records an opt-in 30-second vertical
+video composed locally from the gameplay canvas and hand-cam. It adds a hook and final-score
+slate for TikTok/Reels/Shorts, records no microphone audio and never uploads automatically.
 
 ### Games
 
@@ -164,14 +182,15 @@ global per-game leaderboard (anonymous auth, RLS-guarded, rate-limited). Setup i
 
 ## Models
 
-Stored in `models/` (Python) and `web/public/models/` (served as static assets):
+Python models live in `models/`. The browser ships only
+`web/public/models/hand/gesture_recognizer.task`, the model used by the game hub:
 
 | Model | Purpose |
 |-------|---------|
-| `hand/hand_landmarker.task` | 21-point hand skeleton |
-| `hand/gesture_recognizer.task` | ASL-like gesture classification |
-| `face/blaze_face_short_range.tflite` | Face detection + 6 keypoints |
-| `object/efficientdet.tflite` | Object detection (COCO, 80 classes) |
+| `hand/hand_landmarker.task` | 21-point hand skeleton (Python) |
+| `hand/gesture_recognizer.task` | Gesture classification (Python + web) |
+| `face/blaze_face_short_range.tflite` | Face detection + 6 keypoints (Python) |
+| `object/efficientdet.tflite` | Object detection, COCO 80 classes (Python) |
 
 All pre-trained — no training pipeline in this repo.
 
@@ -184,7 +203,7 @@ All pre-trained — no training pipeline in this repo.
 | Hand/gesture/face/object detection | [MediaPipe](https://ai.google.dev/edge/mediapipe/solutions/guide) |
 | Python video + drawing | OpenCV |
 | Web ML inference | `@mediapipe/tasks-vision` 0.10.35 (WASM) |
-| Web bundler | Vite 5 |
+| Web bundler | Vite 6 |
 | Frontend | Vanilla JS (ES modules, no framework) |
 | Backend (optional) | [Supabase](https://supabase.com) — anonymous auth, Postgres + RLS leaderboard |
 
@@ -200,8 +219,8 @@ OnlyHand/
 ├── landmarks-guide/  # Hand landmark reference diagram
 ├── web/              # Vite SPA
 │   ├── public/
-│   │   ├── models/   # Static copy of models/ for browser
-│   │   └── wasm/     # MediaPipe Vision WASM binaries
+│   │   ├── models/   # Browser gesture recognizer only
+│   │   └── wasm/     # MediaPipe Vision SIMD + compatibility runtimes
 │   └── src/          # App source
 ├── supabase/         # Backend schema (schema.sql) + setup guide
 ├── CLAUDE.md         # Dev guide
@@ -214,4 +233,4 @@ OnlyHand/
 
 **Python:** `opencv-python`, `mediapipe` (CPU-only, no GPU)
 
-**Node:** 22.11+ (Vite 5)
+**Node:** 22.11+ (Vite 6)

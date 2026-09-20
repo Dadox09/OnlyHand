@@ -70,6 +70,99 @@
 }
 .go-board-link:hover { color: var(--accent); }
 
+.challenge-result {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  width: min(360px, 100%);
+  padding: 0.55rem 0.8rem;
+  border: 1px solid rgba(168, 85, 247, 0.45);
+  border-radius: var(--radius-box);
+  color: var(--text-muted);
+  background: rgba(168, 85, 247, 0.08);
+  font-size: var(--text-tag);
+}
+.challenge-result.won { border-color: rgba(74, 222, 128, 0.55); background: rgba(74, 222, 128, 0.08); }
+.challenge-result-title {
+  color: #d8b4fe;
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: var(--weight-black);
+  letter-spacing: 0.1em;
+}
+.challenge-result.won .challenge-result-title { color: var(--accent); }
+.daily-result { display: inline-flex; align-items: center; gap: 0.35rem; color: #fb923c; font-size: var(--text-tag); font-weight: 700; }
+.practice-result {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid rgba(34, 211, 238, 0.35);
+  border-radius: 999px;
+  color: var(--cyan, #22d3ee);
+  background: rgba(34, 211, 238, 0.07);
+  font-size: var(--text-tag);
+  font-weight: 700;
+}
+.viral-actions { display: flex; gap: 0.45rem; justify-content: center; flex-wrap: wrap; }
+.btn-share {
+  color: #07120d;
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 15px rgba(74, 222, 128, 0.22);
+}
+.share-feedback { min-height: 1em; color: var(--accent); font-size: var(--text-tag); }
+
+/* Explicit opt-in before a local gameplay + hand-cam recording starts. */
+.creator-panel { width: min(460px, 94%); }
+.creator-rec-mark {
+  color: #f87171;
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.14em;
+}
+.creator-copy {
+  max-width: 420px;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sub);
+  line-height: 1.5;
+}
+.creator-layout {
+  position: relative;
+  width: 90px;
+  height: 150px;
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  gap: 3px;
+  padding: 5px;
+  border: 1px solid rgba(74, 222, 128, 0.55);
+  border-radius: 9px;
+  background: #05070a;
+  box-shadow: 0 0 16px rgba(74, 222, 128, 0.12);
+}
+.creator-layout span {
+  display: grid;
+  place-items: center;
+  color: var(--text-faint);
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.12), rgba(168, 85, 247, 0.15));
+  font-family: var(--font-display);
+  font-size: 0.42rem;
+  letter-spacing: 0.05em;
+}
+.creator-layout b {
+  position: absolute;
+  right: -19px;
+  top: 61px;
+  padding: 0.15rem 0.25rem;
+  border-radius: 4px;
+  color: #080a10;
+  background: var(--accent);
+  font-family: var(--font-display);
+  font-size: 0.45rem;
+}
+
 /* short landscape phones: pause/game-over must fit the shrunken stage */
 @media (max-height: 480px) {
   .go-panel { gap: 0.3rem; padding: 0.6rem; }
@@ -78,6 +171,12 @@
   .go-stats { gap: 0.8rem; }
   .board { width: 210px; padding: 0.4rem 0.6rem; gap: 0.25rem; margin: 0.15rem 0; }
   .go-actions .btn { padding: 0.35rem 0.7rem; font-size: 0.78rem; }
+  .viral-actions .btn { padding: 0.3rem 0.55rem; font-size: 0.7rem; }
+  .challenge-result { padding: 0.35rem 0.6rem; }
+  .creator-panel { gap: 0.25rem; }
+  .creator-layout { width: 54px; height: 90px; }
+  .creator-layout b { right: -17px; top: 34px; }
+  .creator-copy { line-height: 1.25; }
   .go-hint { display: none; }
 }
 

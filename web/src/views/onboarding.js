@@ -3,14 +3,16 @@
 // actually requests the camera + warms the hand model before entering the hub.
 // First access ever also asks for a player tag (name + avatar) before the hub.
 import { navigate } from "../router.js";
-import { initCamera, getCameraVideo } from "../core/camera.js";
+import { deferCamera, initCamera, getCameraVideo } from "../core/camera.js";
 import { startHandInput } from "../input/handInput.js";
 import { icon } from "../core/icon.js";
 import { getProfile, updateProfile } from "../core/profile.js";
 import { syncProfile } from "../core/backend.js";
 import { startHandCursor, stopHandCursor } from "../core/handCursor.js";
+import { track } from "../core/analytics.js";
 
 const AVATARS = ["🎮", "🤖", "👾", "🕹️", "🦾", "🧠", "🐉", "🦅", "🔥", "⚡"];
+const DEMO_URL = `${import.meta.env.BASE_URL}demo.webp`;
 
 let busy = false;
 
@@ -35,45 +37,77 @@ function render(app, phase, errorMsg) {
 
   app.innerHTML = `
     <div class="onboard-wrap">
-      <div class="onboard-panel oh-pop">
-        <div class="cam-ring">${icon(phase === "idle" ? "camera" : "hand", { size: 30, strokeWidth: 1.8 })}</div>
+      <div class="onboard-panel onboard-hero oh-pop">
+        <div class="onboard-hero-copy">
+          <div class="cam-ring">${icon(phase === "idle" ? "camera" : "hand", { size: 30, strokeWidth: 1.8 })}</div>
 
-        <div class="onboard-wordmark">ONLY<span class="lit">HAND</span></div>
-        <p class="onboard-tagline">Control everything with your hands</p>
+          <h1 class="onboard-wordmark">ONLY<span class="lit">HAND</span></h1>
+          <p class="onboard-tagline">Your hand is the controller.</p>
 
-        <p class="onboard-copy">
-          Your webcam is the controller. OnlyHand tracks your hand in real time —
-          no gamepad, no keyboard, no GPU.
-        </p>
+          <p class="onboard-copy">
+            Point, pinch and move to play a neon arcade through your webcam.
+            No gamepad, no install — just show your hand and start.
+          </p>
 
-        ${phase === "idle" ? `
-          <div class="onboard-cta">
-            <button class="btn btn-accent" id="enable" style="padding:0.7rem 1.6rem;font-size:0.95rem">
-              ${icon("camera", { size: 16 })} Enable camera
-            </button>
-            <button class="btn btn-ghost" id="skip">Not now</button>
+          <div class="onboard-benefits" aria-label="OnlyHand benefits">
+            <span>${icon("zap", { size: 13 })} instant play</span>
+            <span>${icon("trophy", { size: 13 })} daily challenges</span>
+            <span>${icon("video", { size: 13 })} creator clips</span>
           </div>
-        ` : `
-          <div class="onboard-status">
-            <span class="oh-dot oh-live-dot"></span>
-            ${phase === "starting" ? "Initializing camera…" : "Loading hand model…"}
+
+          ${phase === "idle" ? `
+            <div class="onboard-cta">
+              <button class="btn btn-accent" id="enable" style="padding:0.75rem 1.6rem;font-size:0.95rem">
+                ${icon("camera", { size: 16 })} Play with my hand
+              </button>
+              <button class="btn btn-ghost" id="skip">Explore games first</button>
+            </div>
+          ` : `
+            <div class="onboard-status">
+              <span class="oh-dot oh-live-dot"></span>
+              ${phase === "starting" ? "Starting your camera…" : "Loading the hand controller…"}
+            </div>
+          `}
+
+          ${errorMsg ? `<p class="onboard-error">${errorMsg}</p>
+            <button class="btn btn-ghost" id="skip2">Continue without camera</button>` : ""}
+
+          <div class="onboard-privacy">
+            <span class="ic">${icon("shield-check", { size: 15 })}</span>
+            Camera processing stays on this device. No video is uploaded.
           </div>
-        `}
+        </div>
 
-        ${errorMsg ? `<p class="onboard-tagline" style="color:var(--warn)">${errorMsg}</p>
-          <button class="btn btn-ghost" id="skip2">Continue without camera</button>` : ""}
-
-        <div class="onboard-privacy">
-          <span class="ic">${icon("shield-check", { size: 15 })}</span>
-          Everything runs locally in your browser. No video ever leaves your device.
+        <div class="onboard-demo-col">
+          <div class="onboard-demo-frame">
+            <img src="${DEMO_URL}" width="800" height="500"
+                 alt="Asteroids reacting live to a player moving their hand"
+                 decoding="async" fetchpriority="high" />
+            <span class="demo-live"><i></i> REAL HAND · REAL TIME</span>
+            <span class="demo-caption">Move · pinch · make a fist · survive.</span>
+          </div>
+          <div class="onboard-proof">
+            <span><b>3</b> polished games</span>
+            <span><b>0</b> downloads</span>
+            <span><b>100%</b> local tracking</span>
+          </div>
         </div>
       </div>
     </div>
   `;
 
-  app.querySelector("#enable")?.addEventListener("click", () => enable(app));
-  app.querySelector("#skip")?.addEventListener("click", () => enterHub(app));
-  app.querySelector("#skip2")?.addEventListener("click", () => enterHub(app));
+  app.querySelector("#enable")?.addEventListener("click", () => {
+    track("Camera Prompt Requested");
+    enable(app);
+  });
+  app.querySelector("#skip")?.addEventListener("click", exploreWithoutCamera);
+  app.querySelector("#skip2")?.addEventListener("click", exploreWithoutCamera);
+}
+
+function exploreWithoutCamera() {
+  deferCamera();
+  track("Hub Explored Without Camera");
+  navigate("/hub");
 }
 
 function renderNameStep(app) {
@@ -179,8 +213,10 @@ async function enable(app) {
     await initCamera();
     render(app, "loading");
     await startHandInput(getCameraVideo());
+    track("Camera Enabled");
     if (busy) enterHub(app);
   } catch (err) {
+    track("Camera Denied", { reason: err?.name || "unknown" });
     busy = false;
     render(app, "idle", "Camera unavailable: " + err.message);
   }

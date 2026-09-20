@@ -61,7 +61,7 @@ export function startHandCursor() {
 
   unsub = onHandUpdate((s) => {
     if (!el) return;
-    if (!s.isDetected) {
+    if (!s.isDetected || s.source === "pointer") {
       el.classList.add("hidden");
       setHover(null);
       wasPinching = false;

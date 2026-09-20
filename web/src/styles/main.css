@@ -3,7 +3,10 @@
    Import order = cascade order. Font @import must stay first.
    ════════════════════════════════════════════════════════════════ */
 
-@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&display=swap");
+/* Self-host the three weights we use: no Google Fonts request on first load. */
+@import "@fontsource/orbitron/latin-500.css";
+@import "@fontsource/orbitron/latin-700.css";
+@import "@fontsource/orbitron/latin-900.css";
 
 @import "./tokens.css";
 @import "./base.css";

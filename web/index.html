@@ -3,6 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="canonical" href="https://onlyhand.app/" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#080a10" />
     <!-- iPhone Safari has no Fullscreen API: "Add to Home Screen" (standalone,
@@ -10,8 +13,10 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="OnlyHand" />
     <title>OnlyHand — Play Arcade Games With Your Hand</title>
     <meta name="description" content="Hand-controlled arcade games in your browser. No controller, no install — point, pinch and play Asteroids, Pong, Beat Pulse and more using just your webcam." />
+    <meta name="robots" content="index,follow,max-image-preview:large" />
     <!-- Social share cards (og:url/og:image are absolute: update domain after deploy) -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="OnlyHand" />
@@ -25,6 +30,25 @@
     <meta name="twitter:title" content="OnlyHand — Play Arcade Games With Your Hand" />
     <meta name="twitter:description" content="Hand-controlled arcade games in your browser. Your webcam is the gamepad." />
     <meta name="twitter:image" content="https://onlyhand.app/og.png" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "OnlyHand",
+        "url": "https://onlyhand.app/",
+        "applicationCategory": "GameApplication",
+        "operatingSystem": "Any modern web browser",
+        "description": "A free browser arcade controlled with hand gestures through your webcam. Video processing stays on the device.",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+        "featureList": [
+          "Real-time hand tracking",
+          "Hand-controlled arcade games",
+          "Daily seeded challenge",
+          "Shareable score challenges",
+          "No webcam video uploads"
+        ]
+      }
+    </script>
   </head>
   <body>
     <!-- Shared webcam: lives outside #app, persists across route changes -->

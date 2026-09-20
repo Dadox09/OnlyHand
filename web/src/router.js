@@ -1,4 +1,6 @@
 // Hash router: maps #/path → handler({ params })
+import { track } from "./core/analytics.js";
+
 const routes = [];
 
 export function route(pattern, handler) {
@@ -21,6 +23,7 @@ export function navigate(path) {
 
 function dispatch() {
   const path = location.hash.slice(1) || "/";
+  track("Page Viewed", { path });
   for (const { re, keys, handler } of routes) {
     const m = path.match(re);
     if (m) {

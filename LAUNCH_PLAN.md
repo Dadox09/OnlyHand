@@ -12,6 +12,15 @@ Goal: real users + revenue, target ramp to ~20€/day (~600€/month).
 
 - ✅ SEO/OG/Twitter meta + `og.png` share card (update `og:url`/`og:image` domain after deploy)
 - ✅ Privacy page (`#/privacy`) — required for AdSense, and webcam apps must state "video never leaves the device"
+- ✅ Viral challenge loop — score link → friend target → result comparison → share-back
+- ✅ 9:16 result-card generator (gameplay canvas only; webcam is never captured)
+- ✅ Opt-in 30 s Creator Clip — vertical gameplay + hand-cam + final score, generated locally
+- ✅ Daily seeded run + streak/countdown CTA in the hub
+- ✅ Conversion landing — real gameplay demo before the camera prompt, privacy reassurance beside the CTA
+- ✅ Three-game public beta — Pong, Beat Pulse and Asteroids; simpler prototypes stay hidden until polished
+- ✅ Camera-free trial controller — mouse/touch fallback on every game and shared challenge
+- ✅ Installable PWA shell + runtime asset cache
+- ✅ Optional cookieless funnel events via `VITE_PLAUSIBLE_DOMAIN`
 - [ ] Deploy `web/` to **Cloudflare Pages** (free, unlimited bandwidth — matters: wasm+models ≈ 55 MB/first-load-heavy)
   - Build command `npm run build`, output `dist`, root dir `web`
   - Set `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` (names: see `web/.env.example`) in Pages env vars
@@ -51,7 +60,8 @@ The pitch writes itself: *split screen — your hand on webcam vs the game react
 ## Metrics to watch (add lightweight analytics at deploy)
 
 - Use **Cloudflare Web Analytics** (free, no cookies → no consent banner needed) or Plausible.
-- Funnel: visit → camera permission granted → first game started → second session.
+- Funnel: visit → controller selected (hand vs pointer) → first game started → second session.
+- Compare pointer players who later enable the camera against direct camera opt-ins.
 - Camera-permission grant rate is THE metric. If <40%, improve the onboarding pitch before spending on marketing.
 
 ## Honest timeline

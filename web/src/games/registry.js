@@ -11,7 +11,7 @@ export const games = [
       { icon: "pinch", gesture: "PINCH", action: "smash shot" },
       { icon: "zap", gesture: "ORBS", action: "hit them with your shot" },
     ],
-    requires: ["hand"],
+    requires: ["hand", "mouse / touch"],
     load: () => import("./pong/index.js"),
   },
   {
@@ -61,8 +61,7 @@ export const games = [
       { icon: "pinch", gesture: "PINCH", action: "snap early · grab ⭐" },
       { icon: "x", gesture: "DODGE", action: "red ⚠" },
     ],
-    requires: ["hand"],
-    hidden: true,
+    requires: ["hand", "mouse / touch"],
     load: () => import("./beat/index.js"),
   },
   {
@@ -75,7 +74,7 @@ export const games = [
       { icon: "pinch", gesture: "PINCH", action: "rapid fire" },
       { icon: "fist", gesture: "FIST", action: "smart bomb" },
     ],
-    requires: ["hand"],
+    requires: ["hand", "mouse / touch"],
     load: () => import("./asteroids/index.js"),
   },
 ];

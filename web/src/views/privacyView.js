@@ -20,13 +20,22 @@ export function mount(app) {
           OnlyHand uses your webcam to track your hand with
           <strong>MediaPipe, running entirely in your browser</strong>. Video frames are
           processed on your device and are <strong>never recorded, stored, or uploaded</strong>
-          to any server. Closing the tab stops the camera immediately.
+          to any server. Camera access is optional: every game can be tried with mouse or touch
+          instead. Closing the tab stops the camera immediately.
         </p>
 
         <h2>What is stored locally</h2>
         <p>
           Your player tag, avatar, scores, badges and settings live in your browser's
           <code>localStorage</code>, on your device only. Clearing site data removes them.
+        </p>
+
+        <h2>Creator clips</h2>
+        <p>
+          If you explicitly start a Creator Clip, OnlyHand combines the game canvas and
+          your hand-camera into a vertical video for up to 30 seconds. The recording is
+          generated locally, contains no microphone audio, and is not uploaded by OnlyHand.
+          It leaves the browser only if you choose to save or share it.
         </p>
 
         <h2>Online leaderboard (optional)</h2>
@@ -36,9 +45,19 @@ export function mount(app) {
           no real name, no camera data — just the tag you picked and your score.
         </p>
 
-        <h2>No tracking</h2>
+        <h2>Anonymous analytics</h2>
         <p>
-          OnlyHand sets no advertising cookies and runs no third-party trackers.
+          OnlyHand does not enable advertising cookies by default. The hosted site may use
+          optional, aggregate and cookieless analytics to understand events such as camera
+          setup, game starts and completed runs. These events contain no webcam frames,
+          email address or real name, and browser “Do Not Track” is respected.
+        </p>
+
+        <h2>Advertising</h2>
+        <p>
+          Advertising is currently disabled in this build. If ads are enabled later, this
+          notice and the consent controls will be updated before any advertising technology
+          is loaded for visitors who require consent.
         </p>
 
         <h2>Contact</h2>

@@ -27,6 +27,10 @@ const PATHS = {
   "video":         '<path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"/><rect x="2" y="6" width="14" height="12" rx="2"/>',
   "maximize":      '<path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/>',
   "minimize":      '<path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/>',
+  "share-2":       '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.59 13.51 6.83 3.98"/><path d="m15.41 6.51-6.82 3.98"/>',
+  "download":      '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
+  "flame":         '<path d="M12 22c4.97 0 8-3.58 8-8 0-2.38-1.19-4.47-3-6 .5 3-1.5 4-2 4-1.5 0 0-5-5-9 .5 4-3 6-3 11 0 4.42 4.03 8 9 8Z"/><path d="M8 16c0 2.21 1.79 4 4 4s4-1.79 4-4c0-1.5-.5-2.5-1.5-3.5 0 2-1 3-2 3-1.5 0-1.5-2-1.5-3.5-2 1.5-3 2.5-3 4Z"/>',
+  "calendar":      '<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/>',
 };
 
 // `play` is rendered filled (an arrow affordance), the rest are stroked.

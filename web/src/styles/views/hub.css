@@ -18,6 +18,52 @@
 }
 .subtitle { margin: 0.3rem 0 0; color: var(--text-muted); font-size: 0.9rem; }
 
+/* Daily challenge is the retention anchor: one deterministic run per UTC day. */
+.daily-drop {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.2rem;
+  padding: 1rem 1.2rem;
+  border: 1px solid rgba(74, 222, 128, 0.45);
+  border-radius: var(--radius-box);
+  color: var(--text);
+  text-decoration: none;
+  background:
+    radial-gradient(circle at 85% 10%, rgba(168, 85, 247, 0.2), transparent 35%),
+    linear-gradient(120deg, rgba(74, 222, 128, 0.1), rgba(8, 10, 16, 0.92));
+  box-shadow: 0 0 28px rgba(74, 222, 128, 0.08);
+  transition: var(--ease-prop);
+}
+.daily-drop:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: 0 0 32px rgba(74, 222, 128, 0.18); }
+.daily-kicker, .daily-play, .daily-streak, .daily-reset { display: inline-flex; align-items: center; gap: 0.35rem; }
+.daily-kicker {
+  color: var(--accent);
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.14em;
+}
+.daily-copy h2 { margin: 0.35rem 0 0.2rem; font-family: var(--font-display); font-size: clamp(0.95rem, 2vw, 1.25rem); letter-spacing: 0.04em; }
+.daily-copy p { margin: 0; color: var(--text-muted); font-size: var(--text-sub); }
+.daily-meta { display: flex; align-items: flex-end; flex-direction: column; gap: 0.3rem; white-space: nowrap; }
+.daily-streak { color: #fb923c; font-size: var(--text-sub); font-weight: 700; }
+.daily-reset { color: var(--text-faint); font-size: var(--text-tag); font-variant-numeric: tabular-nums; }
+.daily-play { color: var(--accent); font-family: var(--font-display); font-size: 0.65rem; font-weight: var(--weight-bold); letter-spacing: 0.08em; }
+
+.nav-install {
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.nav-install[hidden] { display: none; }
+
 .game-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -38,6 +84,8 @@
     margin: 0 auto;
   }
   .game-grid { grid-template-columns: 1fr; gap: 0.9rem; }
+  .daily-drop { align-items: flex-start; flex-direction: column; }
+  .daily-meta { align-items: flex-start; }
 }
 
 /* short landscape (phones sideways): compress chrome, keep webcam + grid */
@@ -50,6 +98,11 @@
   .page-header h1 { font-size: 1.05rem; }
   .subtitle { display: none; }
   .game-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.5rem; }
+  .daily-drop { padding: 0.6rem 0.8rem; }
+  .daily-copy p { display: none; }
+  .daily-copy h2 { margin-bottom: 0; }
+  .daily-meta { flex-direction: row; align-items: center; }
+  .daily-reset { display: none; }
 }
 
 /* ── Hub footer ──────────────────────────────────────────────── */
