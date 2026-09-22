@@ -1,6 +1,6 @@
 import { games } from "../games/registry.js";
 import { navigate } from "../router.js";
-import { deferCamera, getCameraVideo, getStream, initCamera } from "../core/camera.js";
+import { deferCamera, getCameraVideo, initCamera } from "../core/camera.js";
 import { startHandInput, startPointerInput, stopPointerInput, onHandUpdate, handState, mapToActiveBox } from "../input/handInput.js";
 import { recordPlay, getBest, getStats, getPracticeBest, getPracticeStats, getLeaderboard, updateDailyProgress, getDailyProgress } from "../core/scores.js";
 import { icon } from "../core/icon.js";
@@ -54,7 +54,6 @@ export async function mount(app, { params }) {
   if (!meta) { navigate("/hub"); return; }
   challenge = readChallenge(params, meta);
   appRef = app;
-  const hasCameraStream = !!getStream();
 
   const stats = getStats(meta.id);
   app.innerHTML = `
@@ -64,7 +63,7 @@ export async function mount(app, { params }) {
         <span class="title">${meta.icon} <span class="name">${meta.name}</span></span>
         ${challenge ? `<span class="challenge-pill">${icon("zap", { size: 12 })} Beat ${esc(challenge.challenger)} · ${challenge.score}</span>` : ""}
         <button class="creator-clip-btn" id="creator-clip" hidden>${icon("video", { size: 13 })} <span>REC CLIP</span></button>
-        <span class="hand-indicator" id="hand-ind"><span class="dot"></span> ${hasCameraStream ? "Detecting…" : "Choose controls"}</span>
+        <span class="hand-indicator" id="hand-ind"><span class="dot"></span> Choose controls</span>
       </div>
       <div class="game-host-body">
         <div class="game-stage oh-fade-up">
@@ -119,15 +118,7 @@ export async function mount(app, { params }) {
   app.querySelector("#back-btn").addEventListener("click", () => navigate("/hub"));
   window.addEventListener("keydown", onKey);
 
-  if (hasCameraStream) {
-    try {
-      await startCameraSession(app, generation);
-    } catch (error) {
-      showInputChoice(app, generation, `Hand controller unavailable: ${error?.message || error}`);
-    }
-  } else {
-    showInputChoice(app, generation);
-  }
+  showInputChoice(app, generation);
 }
 
 function showInputChoice(app, generation, error = "") {

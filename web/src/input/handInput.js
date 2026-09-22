@@ -175,6 +175,8 @@ export async function startHandInput(videoElement) {
 // mirrored camera coordinates, hold/click maps to pinch and Space maps to fist.
 export function startPointerInput(element) {
   stopPointerInput();
+  if (rafHandle !== null) cancelAnimationFrame(rafHandle);
+  rafHandle = null;
   let pointerDown = false;
   let spaceDown = false;
   let pinchReleaseRaf = null;
@@ -282,7 +284,7 @@ export function stopPointerInput() {
 
 export function onHandUpdate(cb) {
   subscribers.add(cb);
-  if (rafHandle === null && recognizer && video) {
+  if (handState.source !== "pointer" && rafHandle === null && recognizer && video) {
     rafHandle = requestAnimationFrame(loop);
   }
   return () => subscribers.delete(cb);

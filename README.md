@@ -11,7 +11,7 @@ Hand tracking platform — Python CLI demos + browser game hub, all powered by M
 | Layer | What it does |
 |-------|-------------|
 | `basics/` | Python scripts: real-time hand/face/object detection via webcam |
-| `web/` | Vite SPA with 6 built-in hand-controlled games; Pong, Beat Pulse and Asteroids are in the public beta |
+| `web/` | Vite SPA with 7 built-in hand-controlled games; Pong, Beat Pulse, Jelly Yeet and Asteroids are in the public beta |
 | `models/` | Pre-trained MediaPipe + TFLite models (hand, face, object) |
 
 ---
@@ -137,6 +137,7 @@ slate for TikTok/Reels/Shorts, records no microphone audio and never uploads aut
 | **Breakout** | Hand X → paddle position | Endless levels, power-ups (wide paddle, multiball) |
 | **Snake** | Hand offset from center → steer | Progressive speed, live steering compass |
 | **Fruit Slash** | Fast swipe = blade slice | Fruit arcs + gravity, combo multiplier, bombs cost a life, rare golden fruit |
+| **Jelly Yeet** | Pinch + drag, release to launch | Toss cute jellies through a moving portal, avoid bomb blobs and trigger FEVER |
 | **Asteroids** | Hand → ship · **pinch = rapid fire** | Auto-fires nearest rock, asteroids split, score = kills |
 
 All games share `core/gameKit.js`: synthesized WebAudio sfx (zero audio files), particles,

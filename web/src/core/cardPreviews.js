@@ -161,6 +161,29 @@ const SCENES = {
     ctx.shadowBlur = 0;
   },
 
+  jelly(ctx, t) {
+    ctx.fillStyle = "#071426";
+    ctx.fillRect(0, 0, PW, PH);
+    const px = PW / 2 + Math.sin(t / 700) * 70;
+    ctx.strokeStyle = NEON.magenta;
+    ctx.shadowColor = NEON.magenta;
+    ctx.shadowBlur = 10;
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(px, 25, 15, 0, Math.PI * 2); ctx.stroke();
+    ctx.shadowBlur = 0;
+    const jx = 70 + ((t / 10) % 95);
+    const jy = 68 - Math.abs(Math.sin(t / 620)) * 38;
+    ctx.fillStyle = "#a78bfa";
+    ctx.shadowColor = "#a78bfa";
+    ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.arc(jx, jy, 11, Math.PI, 0); ctx.lineTo(jx + 11, jy + 8); ctx.quadraticCurveTo(jx, jy + 18, jx - 11, jy + 8); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = "#172033";
+    ctx.beginPath(); ctx.arc(jx - 4, jy + 2, 1.7, 0, Math.PI * 2); ctx.arc(jx + 4, jy + 2, 1.7, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = NEON.cyan;
+    ctx.beginPath(); ctx.arc(jx + 24, jy + 7, 4, 0, Math.PI * 2); ctx.stroke();
+  },
+
   asteroids(ctx, t) {
     ctx.fillStyle = "#000008";
     ctx.fillRect(0, 0, PW, PH);

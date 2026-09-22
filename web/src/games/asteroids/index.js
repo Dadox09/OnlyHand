@@ -81,11 +81,6 @@ function seedFrom(str) {
 }
 
 function randRange(a, b) { return a + rand() * (b - a); }
-function wrap(v, max) { return ((v % max) + max) % max; }
-function lerpAngle(a, b, t) {
-  const d = ((b - a + Math.PI) % TAU + TAU) % TAU - Math.PI;
-  return a + d * t;
-}
 
 /* ── Asset loading (all optional — game runs without files) ───── */
 function loadFirst(paths) {
@@ -138,7 +133,7 @@ function makeFallbackBg(idx) {
 
 /* ── Entities ─────────────────────────────────────────────────── */
 function makeAsteroid(size, x, y, level) {
-  const angle = rand() * TAU;
+  const angle = Math.PI / 2 + randRange(-0.28, 0.28);
   const speedMult = 1 + (level - 1) * 0.12;
   const speed = (size === "large" ? randRange(1.2, 2.2)
     : size === "medium" ? randRange(1.7, 3.2)
@@ -163,27 +158,15 @@ function makeAsteroid(size, x, y, level) {
   };
 }
 
-function edgePos() {
-  const edge = (rand() * 4) | 0;
-  if (edge === 0) return { x: rand() * W, y: -50 };
-  if (edge === 1) return { x: rand() * W, y: H + 50 };
-  if (edge === 2) return { x: -50, y: rand() * H };
-  return { x: W + 50, y: rand() * H };
-}
-
-function buildWave(level, ship) {
+function buildWave(level) {
   const arr = [];
   const nLarge = Math.min(2 + level, 8);
   for (let i = 0; i < nLarge; i++) {
-    let x, y;
-    do { x = rand() * W; y = rand() * H; }
-    while (Math.hypot(x - ship.x, y - ship.y) < 180);
-    arr.push(makeAsteroid("large", x, y, level));
+    arr.push(makeAsteroid("large", randRange(50, W - 50), -60 - i * 180, level));
   }
   const nComets = level >= 3 ? Math.min(level - 2, 4) : 0;
   for (let i = 0; i < nComets; i++) {
-    const p = edgePos();
-    arr.push(makeAsteroid("comet", p.x, p.y, level));
+    arr.push(makeAsteroid("comet", randRange(50, W - 50), -400 - i * 260, level));
   }
   return arr;
 }
@@ -215,11 +198,10 @@ function makeBosses(level) {
 }
 
 function makeUfo() {
-  const dir = rand() < 0.5 ? 1 : -1;
+  const x = randRange(90, W - 90);
   return {
-    x: dir > 0 ? -40 : W + 40,
-    baseY: randRange(70, H - 170),
-    y: 0, vx: dir * 1.7, t: 0, hp: 3, shootT: 0, r: 19,
+    x, baseX: x,
+    y: -40, vy: 1.3, t: 0, hp: 3, shootT: 0, r: 19,
   };
 }
 
@@ -313,10 +295,8 @@ export default {
     }
 
     const ship = {
-      x: W / 2, y: H / 2,
-      targetX: W / 2, targetY: H / 2,
-      prevX: W / 2, prevY: H / 2,
-      aim: -Math.PI / 2,
+      x: W / 2, y: H * 0.8,
+      targetX: W / 2, targetY: H * 0.8,
     };
 
     const state = {
@@ -366,6 +346,7 @@ export default {
       hazardN: 0,             // hazard sectors survived (drives the rotation)
       well: null,             // { x, y, t } for GRAVITY WELL
       stormT: 0,              // ms accumulator for storm spawns
+      stormRemaining: 0,
       handLost: !handState.isDetected,
       bossWaveHit: false,     // took any hit during the current boss wave
       stats: {                // end-of-run report + badge counters
@@ -392,7 +373,7 @@ export default {
       state.phase = "play";
       state.levelBanner = BANNER_FRAMES;
       const boss = isBossLevel(n);
-      state.asteroids = boss ? [] : buildWave(n, ship);
+      state.asteroids = boss ? [] : buildWave(n);
       state.bosses = boss ? makeBosses(n) : [];
       state.bossWaveHit = false;
       if (boss) flash.trigger(NEON.danger, 0.12);
@@ -409,6 +390,7 @@ export default {
       state.well = state.hazard === "well"
         ? { x: randRange(W * 0.3, W * 0.7), y: randRange(H * 0.32, H * 0.68), t: 0 } : null;
       state.stormT = 0;
+      state.stormRemaining = state.hazard === "storm" ? Math.min(4 + n, 12) : 0;
       state.invincible = Math.max(state.invincible, 80);
       state.bgPrevIdx = state.bgIdx;
       state.bgIdx = (n - 1) % LEVELS.length;
@@ -448,32 +430,8 @@ export default {
       }
     }
 
-    function nearestTarget() {
-      let best = null, bestD = Infinity;
-      for (const a of state.asteroids) {
-        const d = Math.hypot(a.x - ship.x, a.y - ship.y);
-        if (d < bestD) { bestD = d; best = a; }
-      }
-      if (state.ufo) {
-        const d = Math.hypot(state.ufo.x - ship.x, state.ufo.y - ship.y);
-        if (d < bestD) { bestD = d; best = state.ufo; }
-      }
-      for (const b of state.bosses) {
-        const d = Math.hypot(b.x - ship.x, b.y - ship.y);
-        if (d < bestD) { bestD = d; best = b; }
-      }
-      for (const f of state.fighters) {
-        if (f.y < -10) continue; // still off-screen
-        const d = Math.hypot(f.x - ship.x, f.y - ship.y);
-        if (d < bestD) { bestD = d; best = f; }
-      }
-      return best;
-    }
-
     function fire() {
-      const target = nearestTarget();
-      if (!target) return;
-      const a = Math.atan2(target.y - ship.y, target.x - ship.x);
+      const a = -Math.PI / 2;
       // triple powerup = wide spread; NOVA's native triple = tight spread
       const angles = state.tripleT > 0 ? [a - 0.22, a, a + 0.22]
         : shipStats.triple ? [a - 0.13, a, a + 0.13] : [a];
@@ -502,7 +460,7 @@ export default {
       let type = r < 0.42 ? "shield" : r < 0.84 ? "triple" : "life";
       if (type === "life" && state.lives >= MAX_LIVES) type = "triple";
       state.powerups.push({
-        x, y, vx: randRange(-0.4, 0.4), vy: randRange(-0.4, 0.4),
+        x, y, vx: randRange(-0.4, 0.4), vy: randRange(1.0, 1.5),
         type, life: 520, t: 0,
       });
     }
@@ -621,7 +579,10 @@ export default {
       sfx.bigExplode();
       state.enemyBullets.length = 0;
       // backwards over the original list: children pushed by splits are untouched
-      for (let i = state.asteroids.length - 1; i >= 0; i--) breakAsteroid(i);
+      for (let i = state.asteroids.length - 1; i >= 0; i--) {
+        const a = state.asteroids[i];
+        if (a.y + SIZES[a.size] >= 0 && a.y - SIZES[a.size] <= H) breakAsteroid(i);
+      }
       for (let k = state.fighters.length - 1; k >= 0; k--) {
         const f = state.fighters[k];
         f.hp -= 3;
@@ -710,13 +671,6 @@ export default {
         if (++state.popups[i].t > 70) state.popups.splice(i, 1);
       }
 
-      // Asteroids always drift (looks alive even while dying)
-      for (const a of state.asteroids) {
-        a.x = wrap(a.x + a.vx, W);
-        a.y = wrap(a.y + a.vy, H);
-        a.rot += a.rotSpeed;
-      }
-
       particles.update();
       shake.update();
       flash.update();
@@ -726,6 +680,20 @@ export default {
 
       if (!countdown.done || state.dying) return;
 
+      // Incoming rocks travel down once, then leave the sector.
+      for (let i = state.asteroids.length - 1; i >= 0; i--) {
+        const a = state.asteroids[i];
+        const r = SIZES[a.size];
+        a.x += a.vx;
+        a.y += a.vy;
+        a.rot += a.rotSpeed;
+        if (a.x < r || a.x > W - r) {
+          a.x = Math.max(r, Math.min(W - r, a.x));
+          a.vx *= -1;
+        }
+        if (a.y > H + r) state.asteroids.splice(i, 1);
+      }
+
       if (state.levelBanner > 0) state.levelBanner--;
 
       // Combo & powerup timers
@@ -733,7 +701,6 @@ export default {
       if (state.tripleT > 0) state.tripleT--;
 
       // Ship movement
-      ship.prevX = ship.x; ship.prevY = ship.y;
       ship.x += (ship.targetX - ship.x) * SHIP_SMOOTHING * shipStats.agility;
       ship.y += (ship.targetY - ship.y) * SHIP_SMOOTHING * shipStats.agility;
       ship.x = Math.max(SHIP_RADIUS, Math.min(W - SHIP_RADIUS, ship.x));
@@ -753,6 +720,7 @@ export default {
           pull(a, 0.9);
           const s = Math.hypot(a.vx, a.vy);
           if (s > 5.5) { a.vx *= 5.5 / s; a.vy *= 5.5 / s; } // no slingshots
+          a.vy = Math.max(1, a.vy); // the current keeps rocks moving down
         }
         for (const b of state.bullets) pull(b, 1.4);
         for (const b of state.enemyBullets) pull(b, 1.0);
@@ -763,31 +731,22 @@ export default {
         ship.y += (dy / d) * (110 / d);
       }
 
-      // ASTEROID STORM hazard: rocks keep pouring in from the edges
-      // while the field is alive (stops once cleared, so waves can end)
-      if (state.hazard === "storm" && state.phase === "play" && state.asteroids.length > 0) {
+      // A finite storm from above: extra rocks must not keep a sector alive forever.
+      if (state.hazard === "storm" && state.phase === "play"
+          && state.asteroids.length > 0 && state.stormRemaining > 0) {
         state.stormT += dt;
         if (state.stormT >= STORM_SPAWN_MS) {
           state.stormT = 0;
-          const p = edgePos();
-          state.asteroids.push(makeAsteroid(rand() < 0.5 ? "comet" : "small", p.x, p.y, state.level));
+          state.stormRemaining--;
+          state.asteroids.push(makeAsteroid(rand() < 0.5 ? "comet" : "small", randRange(50, W - 50), -50, state.level));
         }
       }
 
-      // Aim: face nearest threat, else face travel direction
-      const svx = ship.x - ship.prevX, svy = ship.y - ship.prevY;
-      const speed = Math.hypot(svx, svy);
-      const tgt = nearestTarget();
-      const desired = tgt ? Math.atan2(tgt.y - ship.y, tgt.x - ship.x)
-        : speed > 1 ? Math.atan2(svy, svx) : ship.aim;
-      ship.aim = lerpAngle(ship.aim, desired, 0.12);
-
-      // Engine trail
-      if (speed > 0.5 && state.frame % 2 === 0) {
+      // Continuous thrust: forward flight also reads when the hand is still.
+      if (state.frame % 2 === 0) {
         particles.burst(
-          ship.x - Math.cos(ship.aim) * (SHIP_RADIUS + 4),
-          ship.y - Math.sin(ship.aim) * (SHIP_RADIUS + 4),
-          { count: 1, color: "#fca14a", speed: 1.6, life: 16, size: 2.5, angle: ship.aim + Math.PI, spread: 0.5 },
+          ship.x, ship.y + SHIP_RADIUS + 4,
+          { count: 1, color: "#fca14a", speed: 1.6, life: 16, size: 2.5, angle: Math.PI / 2, spread: 0.5 },
         );
       }
 
@@ -903,23 +862,24 @@ export default {
       }
 
       // UFO (level 4+, never during boss fights)
-      if (state.phase === "play" && state.level >= 4 && !state.ufo && !state.bosses.length) {
+      if (state.phase === "play" && state.level >= 4 && !state.ufo
+          && !isBossLevel(state.level) && state.asteroids.length > 0) {
         state.ufoT += dt;
         if (state.ufoT >= UFO_EVERY) { state.ufoT = 0; state.ufo = makeUfo(); }
       }
       if (state.ufo) {
         const u = state.ufo;
         u.t++;
-        u.x += u.vx;
-        u.y = u.baseY + Math.sin(u.t * 0.025) * 36;
+        u.x = u.baseX + Math.sin(u.t * 0.025) * 70;
+        u.y += u.vy;
         u.shootT += dt;
-        if (u.shootT >= UFO_SHOOT_EVERY && u.x > 20 && u.x < W - 20) {
+        if (u.shootT >= UFO_SHOOT_EVERY && u.y > 20 && u.y < H - 20) {
           u.shootT = 0;
           const a = Math.atan2(ship.y - u.y, ship.x - u.x) + randRange(-0.12, 0.12);
           state.enemyBullets.push({ x: u.x, y: u.y + 8, vx: Math.cos(a) * 3.2, vy: Math.sin(a) * 3.2 });
           sfx.shoot();
         }
-        if ((u.vx > 0 && u.x > W + 50) || (u.vx < 0 && u.x < -50)) state.ufo = null;
+        if (u.y > H + 50) state.ufo = null;
         else if (Math.hypot(ship.x - u.x, ship.y - u.y) < u.r + HITBOX) hitShip();
       }
 
@@ -1023,11 +983,13 @@ export default {
       // Powerups
       for (let i = state.powerups.length - 1; i >= 0; i--) {
         const p = state.powerups[i];
-        p.x = wrap(p.x + p.vx, W);
-        p.y = wrap(p.y + p.vy, H);
+        p.x += p.vx;
+        p.y += p.vy;
         p.t++;
         p.life--;
-        if (p.life <= 0) { state.powerups.splice(i, 1); continue; }
+        if (p.life <= 0 || p.y > H + 16 || p.x < -16 || p.x > W + 16) {
+          state.powerups.splice(i, 1); continue;
+        }
         if (!state.dying && Math.hypot(p.x - ship.x, p.y - ship.y) < 16 + SHIP_RADIUS) {
           state.powerups.splice(i, 1);
           applyPowerup(p.type);
@@ -1068,11 +1030,19 @@ export default {
     vignette.addColorStop(0, "rgba(0,0,8,0)");
     vignette.addColorStop(1, "rgba(0,0,8,0.55)");
 
-    function drawCover(img, alpha) {
+    function drawScrollingBg(img, alpha) {
       const s = Math.max(W / img.width, H / img.height);
       const dw = img.width * s, dh = img.height * s;
+      const offset = (state.frame * 0.65) % (dh * 2);
       ctx.globalAlpha = alpha;
-      ctx.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh);
+      // Alternate mirrored tiles so even non-seamless artwork joins cleanly.
+      for (let y = offset - dh * 2, tile = 0; y < H; y += dh, tile++) {
+        ctx.save();
+        ctx.translate((W - dw) / 2, y);
+        if (tile % 2 === 1) { ctx.translate(0, dh); ctx.scale(1, -1); }
+        ctx.drawImage(img, 0, 0, dw, dh);
+        ctx.restore();
+      }
       ctx.globalAlpha = 1;
     }
 
@@ -1082,10 +1052,10 @@ export default {
 
     function drawBackground() {
       if (state.bgFade < 1 && state.bgPrevIdx !== state.bgIdx) {
-        drawCover(bgFor(state.bgPrevIdx), 1);
-        drawCover(bgFor(state.bgIdx), state.bgFade);
+        drawScrollingBg(bgFor(state.bgPrevIdx), 1);
+        drawScrollingBg(bgFor(state.bgIdx), state.bgFade);
       } else {
-        drawCover(bgFor(state.bgIdx), 1);
+        drawScrollingBg(bgFor(state.bgIdx), 1);
       }
       // readability veil + vignette so gameplay stays crisp over any art
       ctx.fillStyle = "rgba(2,5,12,0.32)";
@@ -1097,11 +1067,11 @@ export default {
       const t = state.frame;
       ctx.fillStyle = "rgba(255,255,255,0.25)";
       for (let i = 0; i < 40; i++) {
-        ctx.fillRect(((i * 97 + 13) + t * 0.12) % W, (i * 67 + 31) % H, 1, 1);
+        ctx.fillRect((i * 97 + 13) % W, (i * 67 + 31 + t * 0.9) % H, 1, 1);
       }
       ctx.fillStyle = "rgba(255,255,255,0.45)";
       for (let i = 0; i < 20; i++) {
-        ctx.fillRect(((i * 131 + 57) + t * 0.3) % W, (i * 89 + 17) % H, 2, 2);
+        ctx.fillRect((i * 131 + 57) % W, (i * 89 + 17 + t * 1.8) % H, 2, 2);
       }
     }
 
@@ -1410,12 +1380,11 @@ export default {
       }
 
       if (assets.ship) {
-        // sprite points UP → rotate aim + 90°
-        ctx.rotate(ship.aim + Math.PI / 2);
+        // Sprite always points up, along the scrolling flight direction.
         ctx.drawImage(assets.ship, -SHIP_DRAW / 2, -SHIP_DRAW / 2, SHIP_DRAW, SHIP_DRAW);
       } else {
         // vector fallback ship (nose toward +x before rotation)
-        ctx.rotate(ship.aim);
+        ctx.rotate(-Math.PI / 2);
         const flame = 6 + Math.random() * 6;
         ctx.beginPath();
         ctx.moveTo(-6, 3.5); ctx.lineTo(-6 - flame, 0); ctx.lineTo(-6, -3.5);

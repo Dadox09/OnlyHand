@@ -99,6 +99,7 @@ const HOUSE_RIVALS = {
   snake:     [{ name: "Viper", avatar: "🐍", score: 240 }, { name: "Nova",  avatar: "⚡", score: 150 }],
   slash:     [{ name: "Kenji", avatar: "🥷", score: 120 }, { name: "Nova",  avatar: "⚡", score: 65 }],
   beat:      [{ name: "Echo",  avatar: "🎧", score: 220 }, { name: "Nova",  avatar: "⚡", score: 110 }],
+  jelly:     [{ name: "Mochi", avatar: "🪼", score: 345 }, { name: "Boba",  avatar: "🫧", score: 180 }],
   asteroids: [{ name: "Nova",  avatar: "⚡", score: 60 },  { name: "Rex",   avatar: "🐉", score: 28 }],
 };
 

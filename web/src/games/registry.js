@@ -65,12 +65,25 @@ export const games = [
     load: () => import("./beat/index.js"),
   },
   {
+    id: "jelly",
+    name: "Jelly Yeet",
+    icon: "🪼",
+    description: "Pinch cute jellies, then drop or yeet them into the moving portal. Avoid the bomb blobs.",
+    controls: [
+      { icon: "pointer", gesture: "MOVE", action: "aim your hand" },
+      { icon: "pinch", gesture: "PINCH + DRAG", action: "grab · release to yeet" },
+      { icon: "x", gesture: "AVOID", action: "red bomb jellies" },
+    ],
+    requires: ["hand", "mouse / touch"],
+    load: () => import("./jelly/index.js"),
+  },
+  {
     id: "asteroids",
     name: "Asteroids",
     icon: "🚀",
-    description: "Clear sector after sector — fighters, bosses, power-ups. Pinch = rapid fire · fist = bomb.",
+    description: "Fly upward through scrolling sectors — dodge incoming asteroids, fight fleets and bosses. Pinch = rapid fire · fist = bomb.",
     controls: [
-      { icon: "pointer", gesture: "MOVE", action: "steer your ship" },
+      { icon: "pointer", gesture: "MOVE", action: "steer · auto-fire upward" },
       { icon: "pinch", gesture: "PINCH", action: "rapid fire" },
       { icon: "fist", gesture: "FIST", action: "smart bomb" },
     ],
