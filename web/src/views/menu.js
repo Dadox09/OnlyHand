@@ -25,8 +25,17 @@ export async function mount(app) {
     </nav>
     <div class="page">
       <div class="page-header oh-fade-up">
-        <h1>GAMES</h1>
-        <p class="subtitle">Control everything with your hands</p>
+        <div class="hero-copy">
+          <span class="hero-kicker"><span class="oh-dot"></span> ONLYHAND · GESTURE ARCADE</span>
+          <h1>THE ARCADE<br><span>IS IN YOUR HANDS.</span></h1>
+          <p class="subtitle">Point to move. Pinch to play. No controller required.</p>
+          <button class="hero-random" id="random-game" type="button">${icon("zap", { size: 16 })} SURPRISE ME</button>
+        </div>
+        <div class="hero-visual" aria-hidden="true">
+          <span class="hero-visual-core">${icon("hand", { size: 38 })}</span>
+          <span class="hero-coordinate hero-coordinate--top">POINT TO MOVE</span>
+          <span class="hero-coordinate hero-coordinate--bottom">PINCH TO PLAY</span>
+        </div>
       </div>
 
       <a class="daily-drop oh-fade-up" href="#/daily" style="animation-delay:0.03s">
@@ -68,7 +77,12 @@ export async function mount(app) {
         </div>
       </div>
 
-      <div class="game-grid oh-stagger" id="game-grid"></div>
+      <div class="game-grid oh-stagger" id="game-grid">
+        <div class="catalogue-head">
+          <h2>CHOOSE YOUR GAME</h2>
+          <span>${games.length} ARCADE GAMES <i>·</i> POINT TO PREVIEW</span>
+        </div>
+      </div>
 
       <footer class="hub-footer">
         <span>OnlyHand — your camera never leaves your device.</span>
@@ -81,6 +95,9 @@ export async function mount(app) {
   const preview = app.querySelector("#preview-video");
   const overlayCanvas = app.querySelector("#overlay-canvas");
   const installButton = app.querySelector("#install-app");
+  app.querySelector("#random-game").addEventListener("click", () => {
+    location.hash = `#/games/${games[Math.floor(Math.random() * games.length)].id}`;
+  });
   const unsubInstall = onInstallAvailable((available) => { installButton.hidden = !available; });
   installButton.addEventListener("click", async () => {
     if (await promptInstall()) track("PWA Installed");

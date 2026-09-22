@@ -1,94 +1,128 @@
-/* ── Profile ─────────────────────────────────────────────────── */
+/* Profile panels keep the hub's dark, signal-green arcade language. */
 .profile-wrap { max-width: var(--page-max); margin: 0 auto; padding: var(--space-page); }
-.profile-grid { display: grid; gap: 1.6rem; }
+.profile-grid { display: grid; gap: 1.15rem; }
 
-.profile-header { display: flex; align-items: center; gap: 1.1rem; flex-wrap: wrap; }
-.profile-header .level-card { margin-left: auto; }
-@media (max-width: 560px) {
-  .profile-header .level-card { margin-left: 0; width: 100%; }
+.profile-header {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  overflow: hidden;
+  padding: clamp(1rem, 2.5vw, 1.7rem);
+  border: 1px solid rgba(74, 222, 128, 0.35);
+  border-radius: var(--radius-panel);
+  background:
+    radial-gradient(circle at 82% 50%, rgba(34, 211, 238, 0.12), transparent 24%),
+    linear-gradient(115deg, rgba(74, 222, 128, 0.09), var(--surface) 55%, #0a0e15);
+  box-shadow: 0 0 28px rgba(74, 222, 128, 0.06);
 }
-.avatar-picker { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.profile-header > * { position: relative; z-index: 1; }
+.profile-header .avatar.lg { border-color: rgba(74, 222, 128, 0.6); box-shadow: var(--glow-accent); }
+.profile-header > div:nth-child(2) { flex: 1 1 280px; min-width: min(100%, 280px); }
+.profile-header .form-row { width: min(100%, 440px); }
+.profile-header .input { flex: 1; min-width: 0; min-height: 44px; }
+.profile-header .btn { min-height: 44px; }
+.profile-header .level-card {
+  flex: 0 1 270px;
+  margin-left: auto;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-box);
+  background: rgba(8, 10, 16, 0.74);
+}
+
+.avatar-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.7rem;
+  border: var(--border-default);
+  border-radius: var(--radius-box);
+  background: var(--surface);
+}
 .avatar-picker[hidden] { display: none; }
 
+.profile-grid > section {
+  min-width: 0;
+  padding: clamp(0.8rem, 2vw, 1.1rem);
+  border: var(--border-default);
+  border-radius: var(--radius-panel);
+  background: linear-gradient(145deg, rgba(16, 20, 28, 0.85), rgba(8, 10, 16, 0.78));
+}
 .section-head {
-  margin: 0 0 0.8rem;
-  font-family: var(--font-display);
-  font-size: 0.72rem;
-  font-weight: var(--weight-bold);
-  letter-spacing: 0.16em;
-  color: var(--text-muted);
   display: flex;
   align-items: center;
   gap: 0.45rem;
+  margin: 0 0 0.8rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--accent);
+  font: 700 0.72rem var(--font-display);
+  letter-spacing: 0.14em;
 }
-
-.form-row { display: flex; gap: 0.5rem; align-items: center; }
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-  gap: 0.75rem;
-}
-
-.settings-list { display: flex; flex-direction: column; gap: 0.8rem; }
-
-/* ── Hangar (Asteroids ship picker) ──────────────────────────── */
-.hangar-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: 0.75rem;
-}
-.ship-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
+.section-head svg { color: var(--neon-cyan); }
+.form-row { display: flex; align-items: center; gap: 0.5rem; }
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0.7rem; }
+.stats-grid .stat-card { min-height: 100px; justify-content: center; border-color: var(--border-hover); }
+.stats-grid .stat-card .value { font-size: var(--text-stat); }
+.settings-list { display: grid; gap: 0.55rem; max-width: 520px; }
+.settings-list .switch {
+  min-height: 48px;
+  padding: 0.45rem 0.7rem;
+  border: var(--border-default);
   border-radius: var(--radius-box);
+  background: rgba(8, 10, 16, 0.55);
+}
+.settings-list .switch:hover { border-color: rgba(74, 222, 128, 0.5); background: var(--surface-hover); }
+.settings-list .switch input:focus-visible + .track { outline: 2px solid var(--neon-cyan); outline-offset: 3px; }
+
+.hangar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 0.7rem; }
+.ship-card {
+  min-height: 142px;
   padding: 0.8rem 0.6rem 0.7rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.35rem;
-  cursor: pointer;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-box);
+  background: var(--surface);
   color: var(--text);
+  cursor: pointer;
   transition: var(--ease-prop);
 }
-.ship-card img {
-  width: 56px;
-  height: 56px;
-  image-rendering: pixelated;
-  filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.6));
-  transition: transform 0.2s var(--ease-out);
-}
-.ship-card:hover { background: var(--surface-hover); border-color: var(--accent); }
+.ship-card img { width: 56px; height: 56px; image-rendering: pixelated; transition: transform 0.2s var(--ease-out); }
+.ship-card:hover { transform: translateY(-2px); border-color: var(--accent); background: var(--surface-hover); }
 .ship-card:hover img { transform: translateY(-3px) scale(1.06); }
-.ship-card .ship-name {
-  font-family: var(--font-display);
-  font-size: 0.68rem;
-  font-weight: var(--weight-bold);
-  letter-spacing: 0.12em;
-}
-.ship-card .ship-desc {
-  font-size: 0.68rem;
-  color: var(--text-muted);
-  text-align: center;
-  line-height: 1.25;
-}
-.ship-card.selected {
-  border-color: var(--accent);
-  box-shadow: var(--glow-accent);
-}
-.ship-card.selected .ship-name { color: var(--accent); text-shadow: var(--text-glow); }
+.ship-card .ship-name { font: 700 0.68rem var(--font-display); letter-spacing: 0.12em; }
+.ship-card .ship-desc { color: var(--text-muted); font-size: 0.68rem; line-height: 1.35; text-align: center; }
 .ship-card .ship-desc b { color: var(--text); font-weight: var(--weight-medium); }
-.ship-card.locked { cursor: not-allowed; opacity: 0.55; }
+.ship-card.selected { border-color: var(--accent); box-shadow: var(--glow-accent); }
+.ship-card.selected .ship-name { color: var(--accent); text-shadow: var(--text-glow); }
+.ship-card.locked { cursor: not-allowed; opacity: 0.72; }
 .ship-card.locked img { filter: grayscale(1) brightness(0.7); }
-.ship-card.locked:hover { border-color: var(--border); background: var(--surface); }
+.ship-card.locked:hover { transform: none; border-color: var(--border); background: var(--surface); }
 .ship-card.locked:hover img { transform: none; }
-.ship-card .ship-perk {
-  font-family: var(--font-display);
-  font-size: 0.55rem;
-  letter-spacing: 0.1em;
-  color: var(--text-muted);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-}
+.ship-card .ship-perk { display: inline-flex; align-items: center; gap: 0.25rem; color: var(--text-muted); font: 700 0.55rem var(--font-display); letter-spacing: 0.1em; }
 .ship-card:not(.locked) .ship-perk { color: var(--accent); }
+
+.profile-wrap :focus-visible { outline: 2px solid var(--neon-cyan); outline-offset: 3px; }
+.badge-card.unlocked { box-shadow: var(--glow-accent-sm); }
+.badge-card.locked { opacity: 0.82; }
+.badge-progress .num { color: var(--text-muted); }
+
+@media (max-width: 640px) {
+  .profile-header { align-items: flex-start; }
+  .profile-header .level-card { flex-basis: 100%; margin-left: 0; }
+  .profile-header > div:nth-child(2) { flex-basis: calc(100% - 84px); min-width: 0; }
+  .profile-header .form-row { flex-wrap: wrap; }
+  .profile-header .form-row .input { flex-basis: 100%; }
+  .profile-header .form-row .btn { flex: 1; justify-content: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ship-card, .ship-card img { transition: none; }
+  .ship-card:hover, .ship-card:hover img { transform: none; }
+}
