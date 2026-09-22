@@ -1,5 +1,5 @@
 import { getProfile, updateProfile, updateSettings } from "../core/profile.js";
-import { getStats } from "../core/scores.js";
+import { getStats, getPracticeStats } from "../core/scores.js";
 import { getBadges, getLevel } from "../core/badges.js";
 import { visibleGames as games } from "../games/registry.js";
 import { icon } from "../core/icon.js";
@@ -105,14 +105,19 @@ function render(app) {
   const grid = app.querySelector("#stats-grid");
   for (const g of games) {
     const s = getStats(g.id);
+    const practice = getPracticeStats(g.id);
     const card = document.createElement("div");
     card.className = "stat-card";
-    card.innerHTML = s
-      ? `<div class="label">${g.icon} ${g.name}</div>
-         <div class="value">${s.best}</div>
-         <div class="label">${s.plays} plays · total ${s.totalScore}</div>`
-      : `<div class="label">${g.icon} ${g.name}</div>
-         <div class="empty">Not played yet</div>`;
+    card.innerHTML = `
+      <div class="label">${g.icon} ${g.name}</div>
+      ${s
+        ? `<div class="value">${s.best}</div>
+           <div class="label">Hand runs · ${s.plays} plays · total ${s.totalScore}</div>`
+        : `<div class="empty">No hand runs yet</div>`}
+      ${practice ? `
+        <div class="label">Mouse / touch practice · best ${practice.best}</div>
+        <div class="label">${practice.plays} plays · total ${practice.totalScore}</div>` : ""}
+    `;
     grid.appendChild(card);
   }
 
