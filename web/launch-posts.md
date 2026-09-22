@@ -1,82 +1,79 @@
-# OnlyHand — launch posts (copy-paste ready)
+# OnlyHand launch posts
 
-Link: https://dadox09.itch.io/onlyhand
+Primary URL: https://only-hand-two.vercel.app/
+Secondary discovery page: https://dadox09.itch.io/onlyhand
 
-Rule: 1 post per community per week max. Always attach the GIF/video — it does 90% of the work.
-Reply to every comment in the first 2 hours; algorithms reward early engagement.
+Post once per community per week and attach a real gameplay clip. Reply to feedback and use it to improve the onboarding.
 
 ---
 
-## Reddit — r/WebGames
+## Reddit: r/WebGames
 
 **Title:**
-I made a browser arcade you play with your bare hand — webcam is the controller (no install, free)
+I made a browser arcade you control with your hand through a webcam
 
 **Body:**
-Point to move, pinch to shoot. Hand tracking runs 100% locally in the browser (MediaPipe) — no video ever leaves your device.
+Point to move, pinch to act. No install, and you can try mouse/touch without camera permission.
 
-6 games: Asteroids (fist = smart bomb), Pong vs a ranked AI, an osu!-style rhythm game, Breakout, Snake, Slash. Global leaderboard, badges, unlockable ships.
+The hub currently has four games: Asteroids, Pong, Beat Pulse and Jelly Yeet. Hand tracking runs locally in your browser; OnlyHand does not upload webcam video. Personal records work locally; the global leaderboard is optional.
 
-Play free: https://dadox09.itch.io/onlyhand
+Try it: https://only-hand-two.vercel.app/
 
-Works best on desktop with decent lighting. Would love feedback on the hand controls — tuning gesture detection has been 80% of the work.
+It works best on desktop with decent lighting. I would love feedback on the hand controls and camera setup.
 
 ---
 
-## Reddit — r/SideProject
+## Reddit: r/SideProject
 
 **Title:**
-I spent months building a web arcade controlled entirely by hand gestures — just launched on itch.io
+I built a browser arcade controlled by hand gestures through a webcam
 
 **Body:**
-No controller, no keyboard: your webcam tracks your hand (MediaPipe, all local, privacy-safe) and you point/pinch to play.
+OnlyHand is a browser arcade where you point and pinch to play. It has four games in the hub: Asteroids, Pong, Beat Pulse and Jelly Yeet. You can also try mouse/touch without enabling the camera.
 
-Tech: Vanilla JS + Vite, MediaPipe GestureRecognizer with One-Euro filtering for stable cursor, WebAudio procedural music, Supabase leaderboard. No game engine — everything canvas 2D at fixed 60 Hz.
+The hand tracker runs in the browser; webcam video is not uploaded by OnlyHand. The optional global leaderboard uses Supabase when configured.
 
-Hardest problems: pinch detection hysteresis (no accidental clicks), velocity coasting when tracking drops frames, camera-permission UX (biggest funnel drop).
+Built with vanilla JS, Vite, MediaPipe, canvas and WebAudio. Feedback welcome, especially on first-run setup and gesture controls.
 
-Try it: https://dadox09.itch.io/onlyhand — feedback very welcome.
+Play: https://only-hand-two.vercel.app/
 
 ---
 
-## Hacker News — Show HN
+## Hacker News: Show HN
 
 **Title:**
-Show HN: A browser arcade you play with your bare hand (MediaPipe, no install)
+Show HN: OnlyHand, a browser arcade controlled with hand gestures
 
-**URL:** https://dadox09.itch.io/onlyhand
+**URL:** https://only-hand-two.vercel.app/
 
-**First comment (post immediately after submitting):**
-Author here. Six arcade games (Asteroids, Pong, a rhythm game, etc.) controlled entirely by hand gestures through the webcam. Everything runs client-side: MediaPipe GestureRecognizer on wasm, One-Euro filter for cursor stability, pinch with hysteresis so it doesn't double-fire, 200 ms velocity coasting on tracking dropouts. Fixed-timestep game loop so 144 Hz monitors don't speed the games up. No engine, vanilla JS + canvas.
-
-The camera feed never leaves the device — only a player tag and score go to a Supabase leaderboard (optional).
-
-Happy to answer anything about the gesture-tuning rabbit hole.
+**First comment:**
+Author here. OnlyHand is a browser arcade controlled by pointing and pinching in front of a webcam. The hub currently shows Asteroids, Pong, Beat Pulse and Jelly Yeet. MediaPipe hand tracking runs locally in the browser; you can also try with mouse or touch. I built the games in vanilla JS and canvas, with a fixed-step loop and a One Euro filter for steadier input. Happy to answer questions and hear where the camera onboarding gets confusing.
 
 ---
 
-## itch.io devlog (post from your dashboard — helps itch discovery)
+## itch.io devlog
 
-**Title:** OnlyHand is live — play arcade classics with your bare hand
+**Title:** OnlyHand beta: play arcade games with your hand
 
 **Body:**
-First public release. 6 hand-controlled games, global leaderboard, badges, unlockable ships. All hand tracking is local — your camera never leaves your device. Feedback and scores welcome: leave a comment with your best Asteroids sector.
+OnlyHand is available to try in the browser. Point and pinch to control Asteroids, Pong, Beat Pulse and Jelly Yeet. Mouse/touch mode is available if you do not want to enable the camera. Hand tracking runs locally, and webcam video is not uploaded by OnlyHand.
+
+Try it: https://only-hand-two.vercel.app/
 
 ---
 
-## TikTok / Shorts / Reels — 3 clip scripts
+## TikTok / Reels / Shorts clips
 
-1. **Hook:** "POV: you control Asteroids with your bare hand" — split screen hand + game, fist-bomb moment as the payoff. Caption: "no controller. webcam only. link in bio (free, browser)"
-2. **Hook:** "My webcam is my gamepad" — Pong smash rally, lose a point, come back. Caption: "pinch = smash 🤏"
-3. **Hook:** "I built a rhythm game you play in the air" — Beat Pulse FEVER streak. Caption: "osu! but with your hand"
+1. **Hook:** POV: you control Asteroids with your hand. Show the hand and game together, then land the fist-bomb moment. **Caption:** No gamepad. Webcam hand controls. Try it free in your browser.
+2. **Hook:** My webcam is my gamepad. Show a Pong rally and the pinch smash. **Caption:** Point to move, pinch to smash. Try OnlyHand.
+3. **Hook:** I built a rhythm game you play in the air. Show a Beat Pulse streak. **Caption:** Beat Pulse, controlled with your hand. Play in your browser.
 
-Post the same clip on all 3 platforms. Best times: 18–21 CET.
+Use the same clip across platforms, link to the primary URL, and end with a challenge to beat the score.
 
 ---
 
-## CrazyGames pitch (developer.crazygames.com → Submit game)
+## CrazyGames pitch
 
-**Elevator pitch:**
-OnlyHand is a 6-game arcade hub controlled entirely by hand gestures via webcam — a genuinely novel input that players can't get anywhere else on the platform. All tracking is client-side (MediaPipe wasm), zero latency-sensitive server needs, works on any laptop with a camera. Live on itch.io with leaderboard, badges, and progression already built in.
+OnlyHand is a browser arcade controlled with hand gestures. The hub currently shows four games: Asteroids, Pong, Beat Pulse and Jelly Yeet. Hand tracking runs locally using MediaPipe, and visitors can try mouse/touch before allowing camera access. The beta is live at https://only-hand-two.vercel.app/.
 
-**Note for the form:** mention camera permission is required and privacy-safe (no video leaves the device) — address it before they ask.
+For a portal submission, package and integrate the portal SDK and follow that portal's camera-permission and ad-break requirements.

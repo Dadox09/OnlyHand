@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://onlyhand.app/sitemap.xml
+Sitemap: https://only-hand-two.vercel.app/sitemap.xml

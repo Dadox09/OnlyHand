@@ -1,19 +1,22 @@
 # OnlyHand go-live checklist
 
-The codebase is ready for a public beta, but production credentials and legal/account setup
-must be supplied by the owner. Do not enable ads before the consent step below is complete.
+The public Vercel URL is `https://only-hand-two.vercel.app/` and currently responds over HTTPS.
+Complete the device checks below before a broad launch. The global leaderboard is optional;
+do not advertise it as live unless production Supabase is configured. Do not enable site ads
+before the consent step below is complete.
 
 ## 1. Deploy
 
 - Build command: `npm run build`
 - Output directory: `dist`
 - Project/root directory: `web`
-- Use a custom HTTPS domain; camera access requires a secure context outside localhost.
-- Update the canonical, Open Graph URL and image URL in `index.html` if the domain is not
-  `onlyhand.app`.
-- Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in the host environment, then apply
-  `../supabase/schema.sql` to the production Supabase project.
-- Optionally set `VITE_PLAUSIBLE_DOMAIN` for cookieless funnel events.
+- The current Vercel URL uses HTTPS, which provides the secure context needed for camera access.
+  A custom domain is optional for beta; use one before domain verification or site-ad monetization.
+- Keep the canonical, Open Graph, Twitter and sitemap URLs on `https://only-hand-two.vercel.app/`.
+- Supabase is optional. To enable global boards and cross-device score sync, set
+  `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in Vercel and apply `../supabase/schema.sql`
+  to that production Supabase project. Without it, scores stay local.
+- Optionally set `VITE_PLAUSIBLE_DOMAIN=only-hand-two.vercel.app` for cookieless funnel events.
 
 ## 2. Verify the acquisition funnel
 

@@ -124,7 +124,7 @@ export function createCreatorClip({ gameCanvas, cameraVideo, game, profile, onSt
     ctx.fillText(`${profile.avatar || "🎮"} ${profile.name || "Player"} · TRY TO BEAT THIS RUN`, WIDTH / 2, 1224);
     ctx.fillStyle = "#64748b";
     ctx.font = "600 17px Arial, sans-serif";
-    ctx.fillText(location.host || "onlyhand.app", WIDTH / 2, 1256);
+    ctx.fillText(location.host || "only-hand-two.vercel.app", WIDTH / 2, 1256);
 
     if (finalScore !== null) {
       ctx.fillStyle = "rgba(4,7,10,.88)";
@@ -149,7 +149,7 @@ export function createCreatorClip({ gameCanvas, cameraVideo, game, profile, onSt
       ctx.fillText("PLAY ON ONLYHAND", WIDTH / 2, 925);
       ctx.fillStyle = "#94a3b8";
       ctx.font = "600 22px Arial, sans-serif";
-      ctx.fillText(location.host || "onlyhand.app", WIDTH / 2, 970);
+      ctx.fillText(location.host || "only-hand-two.vercel.app", WIDTH / 2, 970);
     }
 
     raf = requestAnimationFrame(drawFrame);

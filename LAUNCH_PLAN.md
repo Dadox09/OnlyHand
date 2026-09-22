@@ -10,21 +10,22 @@ Goal: real users + revenue, target ramp to ~20€/day (~600€/month).
 
 ## Phase 0 — Ship it (this week) ✅ = done in repo
 
-- ✅ SEO/OG/Twitter meta + `og.png` share card (update `og:url`/`og:image` domain after deploy)
+- ✅ SEO/OG/Twitter meta + `og.png` share card (canonical URL: `https://only-hand-two.vercel.app/`)
 - ✅ Privacy page (`#/privacy`) — required for AdSense, and webcam apps must state "video never leaves the device"
 - ✅ Viral challenge loop — score link → friend target → result comparison → share-back
 - ✅ 9:16 result-card generator (gameplay canvas only; webcam is never captured)
 - ✅ Opt-in 30 s Creator Clip — vertical gameplay + hand-cam + final score, generated locally
 - ✅ Daily seeded run + streak/countdown CTA in the hub
 - ✅ Conversion landing — real gameplay demo before the camera prompt, privacy reassurance beside the CTA
-- ✅ Three-game public beta — Pong, Beat Pulse and Asteroids; simpler prototypes stay hidden until polished
+- ✅ Four-game public beta — Pong, Beat Pulse, Jelly Yeet and Asteroids; Breakout, Snake and Slash remain hidden
 - ✅ Camera-free trial controller — mouse/touch fallback on every game and shared challenge
 - ✅ Installable PWA shell + runtime asset cache
 - ✅ Optional cookieless funnel events via `VITE_PLAUSIBLE_DOMAIN`
-- [ ] Deploy `web/` to **Cloudflare Pages** (free, unlimited bandwidth — matters: wasm+models ≈ 55 MB/first-load-heavy)
+- [x] Vercel deployment is online at `https://only-hand-two.vercel.app/` (HTTPS)
+- [ ] Redeploy after publishing the current canonical URL and share metadata changes
   - Build command `npm run build`, output `dist`, root dir `web`
-  - Set `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` (names: see `web/.env.example`) in Pages env vars
-- [ ] Buy domain (~10€/yr) — e.g. `onlyhand.app` / `.games` / `.io`. Portals & socials look more legit with a domain.
+  - Supabase env vars are optional; set them only if enabling the global leaderboard
+- [ ] Consider a custom domain later for branding and site-ad verification; the Vercel URL is enough for beta
 - [ ] Test on 2–3 other machines/phones (camera permission flow is your biggest funnel drop — measure it)
 
 ## Phase 1 — Distribution (weeks 1–3): go where players already are

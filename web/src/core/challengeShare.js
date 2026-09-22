@@ -125,7 +125,7 @@ export async function createChallengeCard({ game, score, profile, sourceCanvas, 
 
   ctx.fillStyle = "#cbd5e1";
   ctx.font = "700 34px Arial, sans-serif";
-  ctx.fillText(location.host || "onlyhand.app", 540, 1735);
+  ctx.fillText(location.host || "only-hand-two.vercel.app", 540, 1735);
   ctx.fillStyle = "#64748b";
   ctx.font = "600 25px Arial, sans-serif";
   ctx.fillText("Camera stays on your device · Free to play", 540, 1790);

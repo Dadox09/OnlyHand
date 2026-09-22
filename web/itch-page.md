@@ -1,45 +1,44 @@
-# itch.io page copy — OnlyHand
+# itch.io page copy: OnlyHand
 
-**Title**: OnlyHand
-**Project URL slug**: onlyhand
-**Short description / tagline**:
-Hand-controlled arcade games — your webcam is the gamepad. Point, pinch, play.
+**Title:** OnlyHand
+**Project URL slug:** onlyhand
+**Short description:** Browser arcade games controlled with your hand. Point, pinch and play.
+**Classification:** Game > HTML (played in browser)
+**Kind of project:** HTML
+**Release status:** Released (beta)
+**Pricing:** Free
+**Genre:** Action / Arcade
+**Tags:** arcade, webcam, hand-tracking, motion-controls, retro, neon, rhythm, asteroids, pong, browser
 
-**Classification**: Game → HTML (played in browser)
-**Kind of project**: HTML
-**Release status**: Released (or "In development" for soft launch)
-**Pricing**: $0 + "No payments / donations enabled" → enable "support this game"
-**Genre**: Action / Arcade
-**Tags**: arcade, webcam, hand-tracking, motion-controls, retro, neon, rhythm, asteroids, pong, browser
-
-**Embed options**:
-- Viewport: 1280 × 720, "Fullscreen button" ON, "Mobile friendly" ON
-- ⚠️ IMPORTANT: enable camera permission in Frame options (checkbox "This game will use the camera" or similar) — without it the iframe blocks getUserMedia and nothing works.
-
-**Description** (paste into the body):
+**Embed options:**
+- Viewport: 1280 x 720; enable fullscreen and mobile-friendly options.
+- Enable the camera permission for the embedded frame if that option is available. Without it, browser camera access inside the frame may fail.
 
 ---
 
-**No controller. No keyboard. Just your hand.**
+## Description
 
-OnlyHand is a neon arcade hub you play entirely with hand gestures, tracked live through your webcam. Point to aim, pinch to shoot — the camera never records or uploads anything, all tracking runs locally in your browser (MediaPipe).
+**No gamepad. Just your hand.**
 
-**6 games, one hand:**
+OnlyHand is a free browser arcade controlled with hand gestures. Point to move and pinch to act. The webcam is optional: try mouse/touch mode without granting camera permission.
 
-- 🚀 **Asteroids** — pilot with your finger, pinch for rapid fire, close your fist to drop a smart bomb. Unlockable ships, boss fights, seeded Daily Run.
-- 🏓 **Pong** — duel a tiered AI from ROOKIE to NIGHTMARE. Pinch at impact for a smash. Power-up orbs, 3 lives, OVERDRIVE mode.
-- 🎵 **Beat Pulse** — osu!-style rhythm game on a synthwave soundtrack. Be on the orb when the ring closes, pinch stars, dodge shocks.
-- 🧱 **Breakout**, 🐍 **Snake**, ⚔️ **Slash** — classics rebuilt for hand control.
+**Four games in the hub:**
 
-**Global leaderboard** — climb the Hall of Fame, earn badges, level up, unlock ships.
+- **Asteroids:** steer, pinch to fire rapidly, and make a fist to use a smart bomb.
+- **Pong:** play a ranked AI rival and pinch to smash.
+- **Beat Pulse:** hit the orbs as the rings close, keep a streak and dodge hazards.
+- **Jelly Yeet:** grab jellies, aim and toss them through the portal.
 
-**Privacy**: your camera feed never leaves your device. Hand tracking is 100% local. Only your player tag and score go online (optional leaderboard).
+Hand tracking runs locally in your browser. OnlyHand does not upload webcam video. If you explicitly start a Creator Clip, the video is composed locally and leaves your device only if you choose to save or share it. Personal records are stored locally; the global leaderboard is optional.
 
-**How to play**: allow camera access → show your hand → point to move, pinch to select. Best with decent lighting and your hand ~50 cm from the camera.
+Best with decent lighting and your hand about 50 cm from the camera. Mobile play is landscape.
+
+Play the current beta: https://only-hand-two.vercel.app/
 
 ---
 
-**Community post-launch checklist**:
-- [ ] Add 3–5 screenshots (hub + 2 games mid-action) — REQUIRED, pages with no screenshots get zero clicks
-- [ ] Cover image 630×500 (itch requirement)
-- [ ] A 15–30 s gameplay GIF as first screenshot slot (GIFs autoplay in listings)
+## Page assets to add
+
+- [ ] Add 3-5 screenshots: hub plus gameplay from at least two games.
+- [ ] Upload the existing cover at `web/itch-cover.png` and confirm it renders correctly.
+- [ ] Upload the existing 15.5-second gameplay GIF at `images/demo.gif` as the first screenshot slot.
