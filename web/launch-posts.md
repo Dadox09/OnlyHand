@@ -64,6 +64,9 @@ Try it: https://only-hand-two.vercel.app/
 
 ## TikTok / Reels / Shorts clips
 
+TikTok bio link: https://only-hand-two.vercel.app/?utm_source=tiktok&utm_medium=organic_social&utm_campaign=beta_launch&utm_content=profile_bio
+For Reels and Shorts, change `utm_source` to `instagram` or `youtube` and keep the campaign name.
+
 1. **Hook:** POV: you control Asteroids with your hand. Show the hand and game together, then land the fist-bomb moment. **Caption:** No gamepad. Webcam hand controls. Try it free in your browser.
 2. **Hook:** My webcam is my gamepad. Show a Pong rally and the pinch smash. **Caption:** Point to move, pinch to smash. Try OnlyHand.
 3. **Hook:** I built a rhythm game you play in the air. Show a Beat Pulse streak. **Caption:** Beat Pulse, controlled with your hand. Play in your browser.

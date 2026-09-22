@@ -47,10 +47,10 @@ export function mount(app) {
 
         <h2>Anonymous analytics</h2>
         <p>
-          OnlyHand does not enable advertising cookies by default. The hosted site may use
-          optional, aggregate and cookieless analytics to understand events such as camera
-          setup, game starts and completed runs. These events contain no webcam frames,
-          email address or real name, and browser “Do Not Track” is respected.
+          OnlyHand does not enable advertising cookies by default. The production site uses
+          Plausible for aggregate, cookieless analytics about camera setup, game starts and
+          completed runs. Events contain no webcam frames, email address or real name, and
+          the analytics script is not loaded when browser “Do Not Track” is enabled.
         </p>
 
         <h2>Advertising</h2>

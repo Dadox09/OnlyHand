@@ -10,6 +10,7 @@ import { getProfile, updateProfile } from "../core/profile.js";
 import { syncProfile } from "../core/backend.js";
 import { startHandCursor, stopHandCursor } from "../core/handCursor.js";
 import { track } from "../core/analytics.js";
+import { visibleGames as games } from "../games/registry.js";
 
 const AVATARS = ["🎮", "🤖", "👾", "🕹️", "🦾", "🧠", "🐉", "🦅", "🔥", "⚡"];
 const DEMO_URL = `${import.meta.env.BASE_URL}demo.webp`;
@@ -87,7 +88,7 @@ function render(app, phase, errorMsg) {
             <span class="demo-caption">Move · pinch · make a fist · survive.</span>
           </div>
           <div class="onboard-proof">
-            <span><b>3</b> polished games</span>
+            <span><b>${games.length}</b> polished games</span>
             <span><b>0</b> downloads</span>
             <span><b>100%</b> local tracking</span>
           </div>
@@ -125,8 +126,7 @@ function renderNameStep(app) {
         </div>
 
         <div class="form-row" style="justify-content:center">
-          <input class="input" id="tag-input" maxlength="24" placeholder="Your name"
-                 value="${(profile.name === "Player" ? "" : profile.name).replace(/"/g, "&quot;")}" autocomplete="off" />
+          <input class="input" id="tag-input" maxlength="24" placeholder="Your name" autocomplete="off" />
           <button class="btn btn-accent" id="tag-go">${icon("play", { size: 15 })} Start</button>
         </div>
 
@@ -139,6 +139,7 @@ function renderNameStep(app) {
   `;
 
   const input = app.querySelector("#tag-input");
+  input.value = profile.name === "Player" ? "" : profile.name;
   input.focus();
 
   app.querySelectorAll("[data-emoji]").forEach((btn) => {

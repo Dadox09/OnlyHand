@@ -37,7 +37,7 @@ function render(app) {
           <button class="avatar lg selected" id="avatar-btn" title="Change avatar">${profile.avatar}</button>
           <div>
             <div class="form-row">
-              <input class="input" id="name-input" value="${profile.name}" maxlength="24" />
+              <input class="input" id="name-input" maxlength="24" />
               <button class="btn btn-accent" id="save-name">${icon("check", { size: 15 })} Save</button>
             </div>
             <p class="subtitle" style="margin-top:0.45rem">Playing since ${new Date(profile.createdAt).toLocaleDateString()}</p>
@@ -100,6 +100,8 @@ function render(app) {
       </div>
     </div>
   `;
+
+  app.querySelector("#name-input").value = profile.name;
 
   // Stats per game
   const grid = app.querySelector("#stats-grid");

@@ -230,7 +230,7 @@
   max-width: 260px;
 }
 @media (orientation: portrait) and (max-width: 920px) {
-  #rotate-overlay { display: flex; }
+  #app:has(.game-host) ~ #rotate-overlay { display: flex; }
 }
 
 /* ── Route transition ────────────────────────────────────────── */

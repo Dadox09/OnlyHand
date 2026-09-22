@@ -21,7 +21,7 @@ export async function mount(app) {
       <a class="logo" href="#/hub">ONLY<span class="lit">HAND</span></a>
       <a href="#/board">${icon("trophy", { size: 14 })} Hall of Fame</a>
       <button class="nav-install" id="install-app" hidden>${icon("download", { size: 14 })} Install</button>
-      <a href="#/profile">${profile.avatar} ${profile.name} ${icon("chevron-right", { size: 14 })}</a>
+      <a href="#/profile">${profile.avatar} <span id="player-name"></span> ${icon("chevron-right", { size: 14 })}</a>
     </nav>
     <div class="page">
       <div class="page-header oh-fade-up">
@@ -90,6 +90,8 @@ export async function mount(app) {
       </footer>
     </div>
   `;
+
+  app.querySelector("#player-name").textContent = profile.name;
 
   const panel = app.querySelector("#cam-panel");
   const preview = app.querySelector("#preview-video");

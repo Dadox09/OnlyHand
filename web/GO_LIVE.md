@@ -16,7 +16,11 @@ before the consent step below is complete.
 - Supabase is optional. To enable global boards and cross-device score sync, set
   `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in Vercel and apply `../supabase/schema.sql`
   to that production Supabase project. Without it, scores stay local.
-- Optionally set `VITE_PLAUSIBLE_DOMAIN=only-hand-two.vercel.app` for cookieless funnel events.
+- The production build reads `VITE_PLAUSIBLE_DOMAIN=only-hand-two.vercel.app` from
+  `.env.production` (Vercel environment variables can override it). Add this domain to
+  Plausible and create custom-event goals for `Pointer Mode Selected`, `Camera Enabled`,
+  `Game Started`, `Game Finished`, `Challenge Shared`, and `Challenge Opened`; custom events
+  do not appear in Plausible reports until their goals exist.
 
 ## 2. Verify the acquisition funnel
 
@@ -39,6 +43,7 @@ Test on Chrome/Edge desktop, Android Chrome and iPhone Safari:
 
 Track: visit → controller selected → camera enabled/pointer mode → game started → game finished →
 challenge shared → challenge opened.
+TikTok bio link: `https://only-hand-two.vercel.app/?utm_source=tiktok&utm_medium=organic_social&utm_campaign=beta_launch&utm_content=profile_bio`
 
 ## 3. Monetization gate
 
