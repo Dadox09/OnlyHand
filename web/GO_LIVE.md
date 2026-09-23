@@ -19,11 +19,8 @@ before the consent step below is complete.
   accounts are tied to one browser; the app does not restore a profile or scores
   on another device. Re-run the schema before deploying the new daily leaderboard
   query and account-deletion button.
-- The production build reads `VITE_PLAUSIBLE_DOMAIN=only-hand-two.vercel.app` from
-  `.env.production` (Vercel environment variables can override it). Add this domain to
-  Plausible and create custom-event goals for `Pointer Mode Selected`, `Camera Enabled`,
-  `Game Started`, `Game Finished`, `Challenge Shared`, and `Challenge Opened`; custom events
-  do not appear in Plausible reports until their goals exist.
+- Plausible is disabled. Remove the unused `VITE_PLAUSIBLE_DOMAIN` setting in Vercel
+  and deploy this version before publishing the matching privacy notice.
 
 ## 2. Verify the acquisition funnel
 
@@ -44,8 +41,6 @@ Test on Chrome/Edge desktop, Android Chrome and iPhone Safari:
 12. Creator Clip asks for explicit opt-in, records no microphone, stops at 30 seconds and saves a playable video.
 13. “Add to Home Screen”/Install launches in landscape standalone mode.
 
-Track: visit → controller selected → camera enabled/pointer mode → game started → game finished →
-challenge shared → challenge opened.
 TikTok bio link: `https://only-hand-two.vercel.app/?utm_source=tiktok&utm_medium=organic_social&utm_campaign=beta_launch&utm_content=profile_bio`
 
 ## 3. Monetization gate
@@ -68,4 +63,3 @@ of mixing the portal build with the site's own ad tags.
 - Hook in the first 3 seconds: hand in frame plus immediate game reaction.
 - Use the generated 9:16 score card as the ending and challenge viewers to beat the score.
 - Reuse each clip on TikTok, Reels and Shorts; vary the opening caption.
-- Review funnel events weekly and prioritize the largest drop, especially camera permission.

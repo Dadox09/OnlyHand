@@ -21,7 +21,7 @@ export function mount(app) {
       <div class="privacy-body oh-fade-up" style="animation-delay:0.05s">
         <h2>Controller</h2>
         <p>
-          Davide Rizzo, Via Mario Tosa 45.
+          Davide Rizzo, Via Mario Tosa 45, 16151 Genova, Italia.
           Contact: <a href="mailto:rizzodavidege@gmail.com">rizzodavidege@gmail.com</a>.
         </p>
 
@@ -49,7 +49,8 @@ export function mount(app) {
           Rankings are casual: client-submitted scores are not independently verified. The
           leaderboard publicly shows player tags, avatars, anonymous IDs and best scores.
           The current Supabase project is in Ireland. Anonymous accounts, profiles and scores
-          are kept until you request deletion. Clearing browser storage alone does not remove
+          are kept until you request deletion; a monthly cleanup also removes accounts with no
+          cloud profile or score update for 12 months. Clearing browser storage alone does not remove
           cloud data and may remove your ability to identify the anonymous account.
         </p>
         <p>
@@ -59,24 +60,16 @@ export function mount(app) {
           correction or deletion by email.
         </p>
 
-        <h2>Hosting and analytics</h2>
+        <h2>Hosting</h2>
         <p>
           Vercel hosts <code>only-hand-two.vercel.app</code> and processes technical requests
-          needed to serve and secure the site. Its request-log retention depends on the account
-          settings and is being verified. Plausible receives page visits and custom events for
-          camera setup, controller choice, game starts and finishes, clips, sharing and installs.
-          Event properties can include game, mode, input method, score, duration and error type;
-          they do not include your tag or webcam frames. Challenge names are excluded from
-          custom event properties. Plausible also uses request IP and browser information to
-          calculate aggregate statistics without storing raw IP addresses or using cookies or
-          local storage. The analytics script is skipped when Do Not Track is enabled.
-          These measurements serve the operator's legitimate interest in understanding and
-          improving the site (Article 6(1)(f) GDPR).
+          needed to serve and secure the site. On the Hobby plan, runtime logs are available for
+          one hour. OnlyHand does not load an analytics service.
         </p>
 
         <h2>Recipients and transfers</h2>
         <p>
-          Vercel (hosting), Supabase (anonymous accounts and scores) and Plausible (analytics)
+          Vercel (hosting) and Supabase (anonymous accounts and scores)
           process the data described above. Supabase's primary project data is currently in
           Ireland; Vercel may process requests in other countries. Provider terms and applicable
           transfer safeguards govern processing outside the EEA. Contact the controller for

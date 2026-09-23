@@ -7,12 +7,11 @@ import { mount as mountGame, unmount as unmountGame } from "./views/gameHost.js"
 import { mount as mountBoard, unmount as unmountBoard } from "./views/leaderboardView.js";
 import { mount as mountPrivacy, unmount as unmountPrivacy } from "./views/privacyView.js";
 import { initFullscreen } from "./core/fullscreen.js";
-import { initAnalytics, track } from "./core/analytics.js";
+import { track } from "./core/analytics.js";
 import { initInstallPrompt } from "./core/install.js";
 
 const app = document.getElementById("app");
 initFullscreen();
-initAnalytics();
 initInstallPrompt();
 
 if ("serviceWorker" in navigator && import.meta.env.PROD) {

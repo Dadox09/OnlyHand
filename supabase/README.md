@@ -41,6 +41,17 @@ real TOP HANDS.
 - **`delete_my_account()`**: an anonymous player can remove their auth user,
   profile and scores. The profile screen calls it before clearing local data.
 
+## Anonymous-account retention
+
+To remove accounts 12 months after their last cloud profile or score write,
+enable **Integrations → Cron** in the production Supabase dashboard. In **SQL Editor →
+New Query**, run the first `select count(*)` block of [`retention.sql`](retention.sql)
+alone. If the count is expected, run the remaining `create function`, `revoke`, and
+`cron.schedule` statements. This schedules future cleanup; it deletes nothing
+immediately. The monthly job deletes anonymous auth users; the foreign keys
+in `schema.sql` delete their profiles and scores. Confirm the job appears under
+**Integrations → Cron → Jobs** and check its history after the first run.
+
 ## Migrations for existing projects
 
 If you deployed the schema **before Jelly Yeet** (or before the Asteroids

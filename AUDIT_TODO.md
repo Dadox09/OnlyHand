@@ -4,10 +4,10 @@ Revisione statica del 23 settembre 2026. Lo stato del deployment, di Plausible e
 
 ## Priorità alta — sito pubblico
 
-- [ ] **Completare l'informativa privacy** in `web/src/views/privacyView.js`: identità e contatti del titolare, finalità e basi giuridiche per ciascun trattamento, destinatari, eventuali trasferimenti, conservazione, diritti esercitabili e reclamo al Garante. Documentare la configurazione effettiva di hosting e Plausible. [Requisiti dell'informativa](https://www.garanteprivacy.it/home/principi-fondamentali-del-trattamento).
+- [ ] **Completare l'informativa privacy** in `web/src/views/privacyView.js`: identità e contatti del titolare, finalità e basi giuridiche per ciascun trattamento, destinatari, eventuali trasferimenti, conservazione, diritti esercitabili e reclamo al Garante. Documentare la configurazione effettiva di hosting e servizi attivi. [Requisiti dell'informativa](https://www.garanteprivacy.it/home/principi-fondamentali-del-trattamento).
 - [x] **Correggere le promesse sui dati**: il video non viene caricato, ma Creator Clip lo registra localmente dopo una scelta esplicita; il profilo resta solo locale *se Supabase è disattivato*. Con Supabase attivo il tag viene inviato già durante l'onboarding, mentre il database conserva anche ID anonimo, date e risultati delle partite. Riferimenti: `web/src/views/onboarding.js`, `web/src/core/backend.js`, `supabase/schema.sql`.
 - [x] **Rendere l'informativa raggiungibile prima della raccolta**: aggiungere un collegamento nella schermata iniziale e prima di salvare il tag. Verificare anche l'accesso diretto a `#/hub`, che può avviare la fotocamera automaticamente. Riferimenti: `web/src/views/onboarding.js`, `web/src/views/menu.js`.
-- [ ] **Verificare l'analisi in produzione**: controllare dominio, eventi e informazioni trasmesse a Plausible; descriverli nell'informativa. Non introdurre un banner per sola ipotesi: stabilire l'eventuale obbligo di consenso sulla configurazione reale e sulle [indicazioni del Garante](https://www.garanteprivacy.it/faq/cookie).
+- [ ] **Verificare Plausible disattivato in produzione**: dopo il deployment, controllare l'assenza dello script e degli eventi verso Plausible e rimuovere `VITE_PLAUSIBLE_DOMAIN` da Vercel. Rivalutare consenso e informativa solo se si riattiva l'analisi, secondo le [indicazioni del Garante](https://www.garanteprivacy.it/faq/cookie).
 
 ## Priorità alta — se si abilita Supabase
 
