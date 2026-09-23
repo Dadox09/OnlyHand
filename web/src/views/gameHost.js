@@ -360,7 +360,7 @@ function showHangar(app) {
           return `
           <button class="ship-card${s.id === current ? " selected" : ""}${locked ? " locked" : ""}"
                   data-ship="${s.id}" ${locked ? `data-locked="1"` : ""}>
-            <img src="${s.sprite}" alt="${s.name}" draggable="false" />
+            <span class="ship-thumb" aria-hidden="true" style="background-image:url('${s.sprite}');--ship-pos:${4 + s.sheet * 24}%"></span>
             <span class="ship-name">${s.name}</span>
             <span class="ship-perk">${locked ? `${icon("lock", { size: 10 })} LV ${s.unlock}` : s.perk}</span>
           </button>`;

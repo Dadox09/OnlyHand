@@ -27,7 +27,7 @@ const FIGHTER_BASE_EVERY = 9500;  // ms between fighter squads (level 2+, shrink
 const FIGHTER_MIN_EVERY = 5000;
 const FIGHTER_BULLET_SPEED = 3.4;
 const BOSS_EVERY = 3;             // boss wave every N levels
-const BOSS_NAMES = ["DREADCLAW", "BONE HARROW", "VOID SEER"]; // boss1/2/3.png
+const BOSS_NAMES = ["DREADCLAW", "BONE HARROW", "VOID SEER"]; // Monsters.png rows 1–3
 const TRIPLE_DUR = 540;           // frames (~9 s)
 const COMBO_WINDOW = 110;         // frames to keep the chain alive
 const BANNER_FRAMES = 150;
@@ -52,6 +52,28 @@ const LEVELS = [
 ];
 
 const ASSET_BASE = `${import.meta.env.BASE_URL}assets/asteroids/`;
+// Ships.png columns: one static ship, shots, impacts, deaths.
+const SHIPS = [
+  { ship: [70, 20, 210, 252], shots: [[68, 20], [125, 27], [190, 38], [258, 40]],
+    impacts: [[50, 28], [94, 48], [160, 62], [238, 80]], deaths: [[30, 90], [120, 90], [210, 110]], thrust: "#38bdf8" },
+  { ship: [370, 20, 212, 252], shots: [[385, 14], [435, 18], [493, 22], [558, 23]],
+    impacts: [[382, 40], [445, 55], [515, 78]], deaths: [[352, 65], [420, 88], [508, 105]], thrust: "#38bdf8" },
+  { ship: [650, 20, 265, 252], shots: [[680, 45], [754, 56], [837, 68]],
+    impacts: [[660, 52], [718, 85], [812, 105]], deaths: [[646, 75], [718, 100], [818, 105]], thrust: "#f59e0b" },
+  { ship: [980, 20, 232, 252], shots: [[980, 40], [1038, 68], [1118, 85]],
+    impacts: [[965, 42], [1029, 75], [1118, 98]], deaths: [[958, 65], [1025, 95], [1122, 110]], thrust: "#a855f7" },
+  { ship: [1305, 18, 195, 255], shots: [[1281, 25], [1334, 30], [1392, 42], [1459, 47]],
+    impacts: [[1276, 57], [1342, 74], [1423, 92]], deaths: [[1277, 60], [1320, 95], [1400, 120]], thrust: "#22c55e" },
+];
+// Monsters.png: three rows, each with six flight frames, four shots and five death frames.
+const MONSTERS = [
+  { y: 24, h: 230, flight: [16, 172, 324, 489, 638, 795], shotY: 45, shots: [972, 1025, 1078, 1123], deathY: 185,
+    deaths: [[947, 103], [1063, 102], [1175, 103], [1293, 116], [1418, 95]] },
+  { y: 350, h: 220, flight: [10, 172, 324, 481, 637, 782], shotY: 380, shots: [953, 997, 1042, 1094], deathY: 522,
+    deaths: [[950, 110], [1068, 125], [1200, 110], [1320, 100], [1428, 80]] },
+  { y: 688, h: 245, flight: [12, 180, 333, 481, 638, 785], shotY: 710, shots: [955, 997, 1054, 1103], deathY: 838,
+    deaths: [[950, 110], [1060, 130], [1195, 115], [1318, 90], [1418, 85]] },
+];
 
 // ── RNG ─────────────────────────────────────────────────────────
 // Sim code draws from `rand`; mount() points it at a seeded generator in
@@ -176,7 +198,7 @@ function isBossLevel(n) { return n % BOSS_EVERY === 0; }
 function makeBosses(level) {
   const tier = level / BOSS_EVERY;            // 1, 2, 3, … drives hp/fire rate
   const count = 1 + Math.floor(level / 15);   // 2 bosses from level 15, 3 from 30…
-  const idx = (tier - 1) % BOSS_NAMES.length; // rotate sprite/name every boss wave
+  const idx = (tier - 1) % BOSS_NAMES.length; // rotate monster/name every boss wave
   return Array.from({ length: count }, (_, i) => ({
     idx,
     phase: 0,   // 0 → 1 at 50% hp (ring attack + drones) → 2 at 25% (enrage)
@@ -265,27 +287,16 @@ export default {
     // Optional art — loads in the background, procedural fallbacks
     // render immediately so the game never waits on files.
     const assets = {
-      ship: null, bgs: LEVELS.map(() => null), rocks: [],
-      bosses: [null, null, null], pfire: null, efire: null, life: null,
-      fighters: ENEMY_FIGHTERS.map(() => null),
-      fighterFires: ENEMY_FIGHTERS.map(() => null),
+      ships: null, bgs: LEVELS.map(() => null), rocks: [],
+      monsters: null, life: null,
     };
-    // Hangar pick from the profile; legacy ship.png / playerfire.png as fallback
+    // Hangar pick from the profile; all ships share the same sheet.
     const shipDef = getShipDef(getProfile().ship);
     const shipStats = shipDef.stats;
     const HITBOX = SHIP_HITBOX * shipStats.hitbox;
     loadFirst([`${ASSET_BASE}life.png`, `${ASSET_BASE}life.webp`]).then((img) => { assets.life = img; });
-    loadFirst([shipDef.sprite, ...withExts("ship").reverse()]).then((img) => { assets.ship = img; });
-    loadFirst([shipDef.fire, `${ASSET_BASE}playerfire.png`, `${ASSET_BASE}playerfire.webp`]).then((img) => { assets.pfire = img; });
-    ENEMY_FIGHTERS.forEach((f, i) => {
-      loadFirst([f.sprite]).then((img) => { assets.fighters[i] = img; });
-      loadFirst([f.fire]).then((img) => { assets.fighterFires[i] = img; });
-    });
-    loadFirst([`${ASSET_BASE}enemyfire.png`, `${ASSET_BASE}enemyfire.webp`]).then((img) => { assets.efire = img; });
-    BOSS_NAMES.forEach((_, i) => {
-      loadFirst([`${ASSET_BASE}boss${i + 1}.png`, `${ASSET_BASE}boss${i + 1}.webp`])
-        .then((img) => { assets.bosses[i] = img; });
-    });
+    loadFirst([shipDef.sprite]).then((img) => { assets.ships = img; });
+    loadFirst([`${ASSET_BASE}Monsters/Monsters.png`]).then((img) => { assets.monsters = img; });
     LEVELS.forEach((_, i) => {
       loadFirst(withExts(`bg${i + 1}`)).then((img) => { assets.bgs[i] = img; });
     });
@@ -303,7 +314,9 @@ export default {
       ship,
       asteroids: [],
       bullets: [],
+      shotImpacts: [],
       enemyBullets: [],
+      monsterDeaths: [],
       powerups: [],
       bosses: [],
       ufo: null,
@@ -326,6 +339,7 @@ export default {
       bgFade: 1,
       frame: 0,
       sinceShot: 0,         // ms accumulator
+      shipDeathAt: -1000,
       invincible: 0,        // frames
       dying: false,
       paused: false,
@@ -378,6 +392,8 @@ export default {
       state.bossWaveHit = false;
       if (boss) flash.trigger(NEON.danger, 0.12);
       state.enemyBullets.length = 0;
+      state.shotImpacts.length = 0;
+      state.monsterDeaths.length = 0;
       state.ufo = null;
       state.ufoT = 0;
       state.fighters = [];
@@ -447,6 +463,7 @@ export default {
             vx: Math.cos(ang) * BULLET_SPEED,
             vy: Math.sin(ang) * BULLET_SPEED,
             life: BULLET_LIFE,
+            born: state.frame,
           });
         }
       }
@@ -490,6 +507,7 @@ export default {
     function killFighter(k) {
       const f = state.fighters[k];
       state.fighters.splice(k, 1);
+      state.monsterDeaths.push({ x: f.x, y: f.y, idx: f.typeIdx % 3, size: f.r * 2.6, born: state.frame });
       state.stats.kills[f.carrier ? "carriers" : "fighters"]++;
       addScore(f.carrier ? 60 : f.type.score);
       particles.burst(f.x, f.y, {
@@ -516,6 +534,7 @@ export default {
         state.enemyBullets.push({
           x: src.x, y: src.y,
           vx: Math.cos(a) * speed, vy: Math.sin(a) * speed,
+          monsterIdx: src.idx,
         });
       }
       sfx.shoot();
@@ -527,6 +546,7 @@ export default {
       bo.hp -= dmg;
       if (bo.hp <= 0) {
         state.bosses.splice(k, 1);
+        state.monsterDeaths.push({ x: bo.x, y: bo.y, idx: bo.idx, size: bo.r * 2.5, born: state.frame });
         state.stats.kills.bosses++;
         addScore(40);
         particles.burst(bo.x, bo.y, { count: 50, color: NEON.danger, speed: 6, life: 60, size: 5 });
@@ -589,6 +609,7 @@ export default {
         if (f.hp <= 0) killFighter(k);
       }
       if (state.ufo) {
+        state.monsterDeaths.push({ x: state.ufo.x, y: state.ufo.y, idx: 2, size: 50, born: state.frame });
         state.stats.kills.ufos++;
         addScore(15);
         particles.burst(state.ufo.x, state.ufo.y, { count: 30, color: NEON.magenta, speed: 4.5, life: 50, size: 4 });
@@ -618,6 +639,7 @@ export default {
       particles.burst(ship.x, ship.y, { count: 26, color: NEON.danger, speed: 5, life: 45, size: 4 });
       if (state.lives <= 0) {
         state.dying = true;
+        state.shipDeathAt = state.frame;
         music.stop();
         sfx.bigExplode();
         particles.burst(ship.x, ship.y, { count: 40, color: NEON.warn, speed: 6, life: 55, size: 4 });
@@ -658,6 +680,8 @@ export default {
         if (state.slowMo % 2 === 1) return;
       }
       state.frame++;
+      state.shotImpacts = state.shotImpacts.filter((p) => state.frame - p.born < 16);
+      state.monsterDeaths = state.monsterDeaths.filter((d) => state.frame - d.born < 30);
 
       // music follows the action: calm drift → boss → enrage
       music.setIntensity(state.bosses.length
@@ -746,7 +770,7 @@ export default {
       if (state.frame % 2 === 0) {
         particles.burst(
           ship.x, ship.y + SHIP_RADIUS + 4,
-          { count: 1, color: "#fca14a", speed: 1.6, life: 16, size: 2.5, angle: Math.PI / 2, spread: 0.5 },
+          { count: 1, color: SHIPS[shipDef.sheet].thrust, speed: 1.6, life: 16, size: 2.5, angle: Math.PI / 2, spread: 0.5 },
         );
       }
 
@@ -780,11 +804,13 @@ export default {
         }
         if (state.ufo && Math.hypot(b.x - state.ufo.x, b.y - state.ufo.y) < state.ufo.r + 3) {
           state.bullets.splice(i, 1);
+          state.shotImpacts.push({ x: b.x, y: b.y, born: state.frame });
           state.stats.hits++;
           state.ufo.hp--;
           particles.burst(b.x, b.y, { count: 6, color: NEON.magenta, speed: 2.5, life: 25, size: 2.5 });
           sfx.hit();
           if (state.ufo.hp <= 0) {
+            state.monsterDeaths.push({ x: state.ufo.x, y: state.ufo.y, idx: 2, size: 50, born: state.frame });
             state.stats.kills.ufos++;
             addScore(15);
             particles.burst(state.ufo.x, state.ufo.y, { count: 30, color: NEON.magenta, speed: 4.5, life: 50, size: 4 });
@@ -800,6 +826,7 @@ export default {
           const bo = state.bosses[k];
           if (Math.hypot(b.x - bo.x, b.y - bo.y) < bo.r * 0.8) {
             state.bullets.splice(i, 1);
+            state.shotImpacts.push({ x: b.x, y: b.y, born: state.frame });
             state.stats.hits++;
             particles.burst(b.x, b.y, { count: 5, color: NEON.danger, speed: 2.5, life: 22, size: 2.5 });
             sfx.hit();
@@ -811,6 +838,7 @@ export default {
           const f = state.fighters[k];
           if (Math.hypot(b.x - f.x, b.y - f.y) < f.r + 4) {
             state.bullets.splice(i, 1);
+            state.shotImpacts.push({ x: b.x, y: b.y, born: state.frame });
             state.stats.hits++;
             f.hp--;
             particles.burst(b.x, b.y, { count: 5, color: NEON.warn, speed: 2.5, life: 22, size: 2.5 });
@@ -825,6 +853,7 @@ export default {
           const hitR = a.size === "comet" ? 14 : SIZES[a.size] * 0.85;
           if (Math.hypot(b.x - a.x, b.y - a.y) < hitR) {
             state.bullets.splice(i, 1);
+            state.shotImpacts.push({ x: b.x, y: b.y, born: state.frame });
             state.stats.hits++;
             breakAsteroid(j);
             continue outer;
@@ -854,6 +883,7 @@ export default {
               x: b.x, y: b.y + 18,
               vx: Math.cos(ang) * b.bulletSpeed,
               vy: Math.sin(ang) * b.bulletSpeed,
+              monsterIdx: b.idx,
             });
           }
           sfx.shoot();
@@ -876,7 +906,7 @@ export default {
         if (u.shootT >= UFO_SHOOT_EVERY && u.y > 20 && u.y < H - 20) {
           u.shootT = 0;
           const a = Math.atan2(ship.y - u.y, ship.x - u.x) + randRange(-0.12, 0.12);
-          state.enemyBullets.push({ x: u.x, y: u.y + 8, vx: Math.cos(a) * 3.2, vy: Math.sin(a) * 3.2 });
+          state.enemyBullets.push({ x: u.x, y: u.y + 8, vx: Math.cos(a) * 3.2, vy: Math.sin(a) * 3.2, monsterIdx: 2 });
           sfx.shoot();
         }
         if (u.y > H + 50) state.ufo = null;
@@ -951,13 +981,14 @@ export default {
             x: f.x, y: f.y + f.r * 0.6,
             vx: Math.cos(a) * FIGHTER_BULLET_SPEED,
             vy: Math.sin(a) * FIGHTER_BULLET_SPEED,
-            fireIdx: f.typeIdx,
+            monsterIdx: f.typeIdx % 3,
           });
           sfx.shoot();
         }
         if (Math.hypot(ship.x - f.x, ship.y - f.y) < f.r * 0.85 + HITBOX) {
           if (!f.carrier) { // ramming the carrier hurts you, not it
             state.fighters.splice(i, 1);
+            state.monsterDeaths.push({ x: f.x, y: f.y, idx: f.typeIdx % 3, size: f.r * 2.6, born: state.frame });
             particles.burst(f.x, f.y, { count: 20, color: NEON.warn, speed: 4, life: 40, size: 3.5 });
             sfx.explode();
           }
@@ -1183,9 +1214,30 @@ export default {
       }
     }
 
+    function drawMonster(idx, frame, x, y, size) {
+      const row = MONSTERS[idx];
+      ctx.drawImage(assets.monsters, row.flight[frame], row.y, 150, row.h,
+        x - size / 2, y - size * 0.65, size, size * 1.3);
+    }
+
+    function drawMonsterDeaths() {
+      if (!assets.monsters) return;
+      for (const d of state.monsterDeaths) {
+        const frame = Math.floor((state.frame - d.born) / 6);
+        const row = MONSTERS[d.idx];
+        const [x, width] = row.deaths[frame];
+        ctx.drawImage(assets.monsters, x, row.deathY, width, 155,
+          d.x - d.size / 2, d.y - d.size * 0.65, d.size, d.size * 1.3);
+      }
+    }
+
     function drawUfo() {
       const u = state.ufo;
       if (!u) return;
+      if (assets.monsters) {
+        drawMonster(2, Math.floor(u.t / 8) % 6, u.x, u.y, 50);
+        return;
+      }
       ctx.save();
       ctx.translate(u.x, u.y);
       ctx.shadowColor = NEON.magenta;
@@ -1216,15 +1268,11 @@ export default {
 
     function drawFighters() {
       for (const f of state.fighters) {
-        ctx.save();
-        ctx.translate(f.x, f.y);
-        // sprite points UP → flip to face the player, light banking with the strafe
-        ctx.rotate(Math.PI + Math.cos(f.t * 0.022) * 0.14);
-        const img = assets.fighters[f.typeIdx];
-        const d = f.r * 2.6;
-        if (img) {
-          ctx.drawImage(img, -d / 2, -d / 2, d, d);
+        if (assets.monsters) {
+          drawMonster(f.typeIdx % 3, Math.floor(f.t / 8) % 6, f.x, f.y, f.r * 2.6);
         } else {
+          ctx.save();
+          ctx.translate(f.x, f.y);
           // vector fallback: orange dart
           ctx.beginPath();
           ctx.moveTo(0, -f.r);
@@ -1240,8 +1288,8 @@ export default {
           ctx.shadowBlur = 10;
           ctx.stroke();
           ctx.shadowBlur = 0;
+          ctx.restore();
         }
-        ctx.restore();
         if (f.carrier) {
           const bw = 46, frac = Math.max(0, f.hp / CARRIER_HP);
           ctx.fillStyle = "rgba(12,6,10,0.7)";
@@ -1269,10 +1317,9 @@ export default {
           ctx.stroke();
           ctx.shadowBlur = 0;
         }
-        const img = assets.bosses[b.idx];
         const d = b.r * 2.5;
-        if (img) {
-          ctx.drawImage(img, -d / 2, -d / 2, d, d);
+        if (assets.monsters) {
+          drawMonster(b.idx, Math.floor(b.t / 8) % 6, 0, 0, d);
         } else {
           // vector fallback: spiked core
           ctx.beginPath();
@@ -1360,7 +1407,15 @@ export default {
     }
 
     function drawShip() {
-      if (state.dying) return;
+      const art = SHIPS[shipDef.sheet];
+      if (state.dying) {
+        if (assets.ships) {
+          const frame = Math.min(2, Math.floor((state.frame - state.shipDeathAt) / 16));
+          const [x, width] = art.deaths[frame];
+          ctx.drawImage(assets.ships, x, 835, width, 155, ship.x - 38, ship.y - 38, 76, 76);
+        }
+        return;
+      }
       if (state.invincible > 0 && Math.floor(state.invincible / 6) % 2 === 0) return;
 
       ctx.save();
@@ -1379,9 +1434,11 @@ export default {
         ctx.shadowBlur = 0;
       }
 
-      if (assets.ship) {
-        // Sprite always points up, along the scrolling flight direction.
-        ctx.drawImage(assets.ship, -SHIP_DRAW / 2, -SHIP_DRAW / 2, SHIP_DRAW, SHIP_DRAW);
+      if (assets.ships) {
+        const [x, y, width, height] = art.ship;
+        const scale = Math.min(SHIP_DRAW / width, SHIP_DRAW * 1.3 / height);
+        ctx.drawImage(assets.ships, x, y, width, height,
+          -width * scale / 2, -height * scale / 2, width * scale, height * scale);
       } else {
         // vector fallback ship (nose toward +x before rotation)
         ctx.rotate(-Math.PI / 2);
@@ -1464,20 +1521,23 @@ export default {
       drawUfo();
       drawFighters();
       drawBosses();
+      drawMonsterDeaths();
 
       // BLACKOUT veil hides the field — bullets, powerups and the ship
       // draw above it so the fight is never a blind bullet-hell
       drawBlackout();
       for (const p of state.powerups) drawPowerup(p);
 
-      // player bullets — sprite points UP, rotate along velocity
-      if (assets.pfire) {
-        const bh = 24, bw = bh * (assets.pfire.width / assets.pfire.height);
+      // Player bullets use the selected ship's shot frames.
+      if (assets.ships) {
+        const art = SHIPS[shipDef.sheet];
         for (const b of state.bullets) {
+          const frame = Math.floor((state.frame - b.born) / 4) % art.shots.length;
+          const [x, width] = art.shots[frame];
           ctx.save();
           ctx.translate(b.x, b.y);
           ctx.rotate(Math.atan2(b.vy, b.vx) + Math.PI / 2);
-          ctx.drawImage(assets.pfire, -bw / 2, -bh / 2, bw, bh);
+          ctx.drawImage(assets.ships, x, 580, width, 125, -8, -14, 16, 28);
           ctx.restore();
         }
       } else {
@@ -1491,15 +1551,24 @@ export default {
         }
         ctx.shadowBlur = 0;
       }
-      // enemy bullets — fighters use their own fire sprite, rest use efire
+      if (assets.ships) {
+        const art = SHIPS[shipDef.sheet];
+        for (const p of state.shotImpacts) {
+          const frame = Math.min(art.impacts.length - 1, Math.floor((state.frame - p.born) / 4));
+          const [x, width] = art.impacts[frame];
+          ctx.drawImage(assets.ships, x, 715, width, 120, p.x - 16, p.y - 16, 32, 32);
+        }
+      }
+      // Enemy shots use the matching monster row.
       for (const b of state.enemyBullets) {
-        const img = (b.fireIdx != null && assets.fighterFires[b.fireIdx]) || assets.efire;
-        if (img) {
-          const bh = 26, bw = bh * (img.width / img.height);
+        if (assets.monsters && b.monsterIdx != null) {
+          const row = MONSTERS[b.monsterIdx];
+          const frame = Math.floor(state.frame / 5) % 4;
           ctx.save();
           ctx.translate(b.x, b.y);
           ctx.rotate(Math.atan2(b.vy, b.vx) + Math.PI / 2);
-          ctx.drawImage(img, -bw / 2, -bh / 2, bw, bh);
+          ctx.drawImage(assets.monsters, row.shots[frame], row.shotY, 38, 115,
+            -8, -15, 16, 30);
           ctx.restore();
         } else {
           ctx.fillStyle = NEON.danger;

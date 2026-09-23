@@ -74,7 +74,7 @@ function render(app) {
               return `
               <button class="ship-card${s.id === (profile.ship || "viper") ? " selected" : ""}${locked ? " locked" : ""}"
                       data-ship="${s.id}" ${locked ? `data-locked="1"` : ""}>
-                <img src="${s.sprite}" alt="${s.name}" draggable="false" />
+                <span class="ship-thumb" aria-hidden="true" style="background-image:url('${s.sprite}');--ship-pos:${4 + s.sheet * 24}%"></span>
                 <span class="ship-name">${s.name}</span>
                 <span class="ship-desc">${locked ? `${icon("lock", { size: 11 })} Unlocks at LV ${s.unlock}` : `${s.desc} · <b>${s.perk}</b>`}</span>
               </button>`;

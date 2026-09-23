@@ -81,7 +81,7 @@ export async function mount(app) {
       <div class="game-grid oh-stagger" id="game-grid">
         <div class="catalogue-head">
           <h2>CHOOSE YOUR GAME</h2>
-          <span>${games.length} ARCADE GAMES <i>·</i> POINT TO PREVIEW</span>
+          <span>${games.length} ARCADE GAMES <i>·</i> SELECT ONE TO PLAY</span>
         </div>
       </div>
 
@@ -143,15 +143,20 @@ export async function mount(app) {
     card.href = `#/games/${g.id}`;
     card.innerHTML = `
       <div class="card-preview-wrap">
-        <canvas class="card-preview"></canvas>
-        <span class="icon">${g.icon}</span>
-        <span class="play">${icon("play", { size: 18 })}</span>
+        <canvas class="card-preview" aria-hidden="true"></canvas>
+        <span class="icon" aria-hidden="true">${g.icon}</span>
+        <span class="card-category">${g.category}</span>
       </div>
-      <h3>${g.name}</h3>
-      <p>${g.description}</p>
-      <div class="chips">
-        ${g.requires.map((r) => `<span class="tag">${r}</span>`).join("")}
-        ${best > 0 ? `<span class="tag chip-best">Best: ${best}</span>` : ""}
+      <div class="card-copy">
+        <div class="card-heading">
+          <h3>${g.name}</h3>
+          <span class="play" aria-hidden="true">${icon("play", { size: 16 })}</span>
+        </div>
+        <p>${g.description}</p>
+        <div class="chips">
+          ${g.requires.map((r) => `<span class="tag">${r}</span>`).join("")}
+          ${best > 0 ? `<span class="tag chip-best">Best: ${best}</span>` : ""}
+        </div>
       </div>
     `;
     grid.appendChild(card);

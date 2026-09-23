@@ -4,12 +4,11 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
-  padding: 1rem 1.25rem;
   cursor: pointer;
   transition: var(--ease-prop);
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  overflow: hidden;
   text-decoration: none;
   color: var(--text);
 }
@@ -20,56 +19,52 @@
   transform: translateY(-2px);
 }
 
-.game-card .top {
+.card-copy {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding: 1rem 1.1rem 1.1rem;
 }
-.game-card .icon { font-size: 1.8rem; line-height: 1.1; }
+.card-heading { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+.game-card h3 { margin: 0; font: 700 0.95rem var(--font-display); line-height: 1.35; }
 .game-card .play {
-  color: var(--accent);
   display: inline-flex;
-  opacity: 0;
-  transform: translateX(-4px);
-  transition: opacity 0.2s, transform 0.2s var(--ease-out);
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(74, 222, 128, 0.45);
+  border-radius: 50%;
+  background: rgba(74, 222, 128, 0.1);
+  color: var(--accent);
+  transition: background var(--ease), color var(--ease);
 }
-.game-card:hover .play { opacity: 1; transform: translateX(0); }
+.game-card:is(:hover, :focus-visible, .hand-hover) .play { background: var(--accent); color: var(--on-accent); }
 
-.game-card h3 { margin: 0; font-size: 1.05rem; font-weight: var(--weight-medium); }
-.game-card p  { margin: 0; font-size: var(--text-sub); color: var(--text-muted); }
-.game-card .chips { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.3rem; }
+.game-card p { margin: 0; font-size: 0.9rem; line-height: 1.5; color: var(--text-muted); }
+.game-card .chips {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--border);
+}
 .game-card:hover .chip-best { color: var(--accent); }
-
-/* phones portrait: full-width hero-style cards */
-@media (max-width: 560px) {
-  .game-card { padding: 1.1rem 1.25rem; gap: 0.4rem; }
-  .game-card h3 { font-size: 1.1rem; }
-  .game-card p  { font-size: 0.88rem; }
-  .card-preview-wrap { margin: -1.1rem -1.25rem 0.5rem; }
-  .card-preview { height: 140px; }
-  .card-preview-wrap .icon { font-size: 1.9rem; }
-}
-
-/* short landscape phones: denser cards so the grid fits without endless scroll */
-@media (max-height: 480px) {
-  .game-card { padding: 0.6rem 0.8rem; }
-  .game-card p { display: none; }
-  .card-preview-wrap { margin: -0.6rem -0.8rem 0.35rem; }
-  .card-preview { height: 54px; }
-}
 
 /* ── Game card animated preview strip ────────────────────────── */
 .card-preview-wrap {
   position: relative;
-  margin: -1rem -1.25rem 0.45rem;
-  border-radius: var(--radius-card) var(--radius-card) 0 0;
   overflow: hidden;
   border-bottom: 1px solid var(--border);
 }
 .card-preview {
   display: block;
   width: 100%;
-  height: 112px;
+  height: 128px;
   object-fit: cover;
   opacity: 0.85;
   transition: opacity 0.2s;
@@ -78,20 +73,42 @@
 .game-card.hand-hover .card-preview { opacity: 1; }
 .card-preview-wrap .icon {
   position: absolute;
-  left: 0.7rem; bottom: 0.45rem;
-  font-size: 1.5rem;
+  left: 0.8rem; bottom: 0.65rem;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-box);
+  background: var(--scrim);
+  font-size: 1.25rem;
   line-height: 1;
-  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.9));
 }
-.card-preview-wrap .play {
+.card-category {
   position: absolute;
-  right: 0.7rem; bottom: 0.55rem;
-  color: var(--accent);
-  display: inline-flex;
-  opacity: 0;
-  transform: translateX(-4px);
-  transition: opacity 0.2s, transform 0.2s var(--ease-out);
-  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.9));
+  top: 0.7rem; right: 0.8rem;
+  padding: 0.3rem 0.45rem;
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-chip);
+  background: var(--scrim);
+  color: var(--text);
+  font: 700 0.66rem var(--font-display);
+  letter-spacing: 0.09em;
+}
+
+/* phones portrait: roomier previews and copy */
+@media (max-width: 560px) {
+  .card-preview { height: 148px; }
+  .card-copy { padding: 1.1rem 1.2rem 1.2rem; }
+  .game-card h3 { font-size: 1.05rem; }
+  .game-card p { font-size: 0.95rem; }
+}
+
+/* short landscape phones: keep the description visible in compact cards */
+@media (max-height: 480px) {
+  .card-preview { height: 72px; }
+  .card-copy { gap: 0.45rem; padding: 0.7rem 0.8rem; }
+  .game-card .chips { padding-top: 0.45rem; }
 }
 
 /* ── Stat card (profile + game host sidebar) ─────────────────── */

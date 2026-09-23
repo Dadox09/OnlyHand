@@ -244,7 +244,7 @@
   margin: 0.35rem 0;
 }
 .go-hangar .ship-card { padding: 0.5rem 0.35rem 0.45rem; }
-.go-hangar .ship-card img { width: 42px; height: 42px; }
+.go-hangar .ship-card .ship-thumb { width: 42px; height: 42px; }
 .go-hangar .ship-card .ship-name { font-size: 0.6rem; }
 
 /* short landscape: hangar must fit inside the shrunken stage */
@@ -257,6 +257,6 @@
     margin: 0.2rem 0;
   }
   .go-hangar .ship-card { padding: 0.3rem 0.25rem; }
-  .go-hangar .ship-card img { width: 28px; height: 28px; }
+  .go-hangar .ship-card .ship-thumb { width: 28px; height: 28px; }
   .go-hangar .ship-card .ship-perk { display: none; }
 }

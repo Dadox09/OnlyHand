@@ -93,18 +93,18 @@
   cursor: pointer;
   transition: var(--ease-prop);
 }
-.ship-card img { width: 56px; height: 56px; image-rendering: pixelated; transition: transform 0.2s var(--ease-out); }
+.ship-card .ship-thumb { width: 56px; height: 56px; flex: none; background-size: 600% auto; background-position: var(--ship-pos) 1.3%; background-repeat: no-repeat; image-rendering: pixelated; transition: transform 0.2s var(--ease-out); }
 .ship-card:hover { transform: translateY(-2px); border-color: var(--accent); background: var(--surface-hover); }
-.ship-card:hover img { transform: translateY(-3px) scale(1.06); }
+.ship-card:hover .ship-thumb { transform: translateY(-3px) scale(1.06); }
 .ship-card .ship-name { font: 700 0.68rem var(--font-display); letter-spacing: 0.12em; }
 .ship-card .ship-desc { color: var(--text-muted); font-size: 0.68rem; line-height: 1.35; text-align: center; }
 .ship-card .ship-desc b { color: var(--text); font-weight: var(--weight-medium); }
 .ship-card.selected { border-color: var(--accent); box-shadow: var(--glow-accent); }
 .ship-card.selected .ship-name { color: var(--accent); text-shadow: var(--text-glow); }
 .ship-card.locked { cursor: not-allowed; opacity: 0.72; }
-.ship-card.locked img { filter: grayscale(1) brightness(0.7); }
+.ship-card.locked .ship-thumb { filter: grayscale(1) brightness(0.7); }
 .ship-card.locked:hover { transform: none; border-color: var(--border); background: var(--surface); }
-.ship-card.locked:hover img { transform: none; }
+.ship-card.locked:hover .ship-thumb { transform: none; }
 .ship-card .ship-perk { display: inline-flex; align-items: center; gap: 0.25rem; color: var(--text-muted); font: 700 0.55rem var(--font-display); letter-spacing: 0.1em; }
 .ship-card:not(.locked) .ship-perk { color: var(--accent); }
 
@@ -123,6 +123,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ship-card, .ship-card img { transition: none; }
-  .ship-card:hover, .ship-card:hover img { transform: none; }
+  .ship-card, .ship-card .ship-thumb { transition: none; }
+  .ship-card:hover, .ship-card:hover .ship-thumb { transform: none; }
 }
