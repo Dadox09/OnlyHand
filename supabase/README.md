@@ -46,6 +46,21 @@ play to 7, request a rematch on both sides, then leave. A third anonymous
 profile must get "Lobby unavailable or full" for the same code. Check the
 `onlyhand-pong-lobbies` Cron job and its first successful run in Supabase.
 
+## Orb Rush invite lobbies
+
+After `schema.sql` and independently of Pong, run
+[`orb_rush_lobbies.sql`](orb_rush_lobbies.sql) in the production SQL Editor.
+Enable Supabase Cron first. In **Realtime Settings**, disable **Allow public
+access** so the private Broadcast and Presence policies protect the `orb-rush:`
+topic. Apply this SQL successfully before deploying the matching frontend;
+Pong's table, RPCs, policies and topic are unchanged. Orb Rush results are
+casual and never enter `scores` or the solo leaderboard.
+
+Check `onlyhand-orb-rush-lobbies` in **Integrations → Cron → Jobs** and confirm
+its first successful hourly run. With two separate anonymous browser profiles,
+create and join by code and link, then test rematch and leaving. A third profile
+must receive “Lobby unavailable or full” for the same code.
+
 ## What the schema enforces
 
 - **RLS everywhere**: users can read their own raw rows and insert their own

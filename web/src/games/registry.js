@@ -2,6 +2,19 @@
 // { icon: core/icon.js name, gesture: short caps label, action: what it does }
 export const games = [
   {
+    id: "orb-rush",
+    name: "Orb Rush",
+    icon: "🔮",
+    category: "ONLINE DUEL",
+    description: "Race a friend to claim orbs in a 60-second online arena. Invite by code or link.",
+    controls: [
+      { icon: "pointer", gesture: "MOVE", action: "aim at the orb" },
+      { icon: "pinch", gesture: "PINCH", action: "boost capture" },
+    ],
+    requires: ["hand", "mouse / touch", "online"],
+    load: () => import("./orb-rush/online.js"),
+  },
+  {
     id: "pong",
     name: "Hand Pong",
     icon: "🏓",
@@ -98,5 +111,6 @@ export const games = [
   },
 ];
 
-// Games shown in the hub/leaderboard/profile UI; hidden ones stay routable by id.
+// Hub games; online duels have no solo score history or leaderboard.
 export const visibleGames = games.filter((g) => !g.hidden);
+export const scoreGames = visibleGames.filter((g) => g.id !== "orb-rush");

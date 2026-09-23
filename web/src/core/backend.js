@@ -177,3 +177,34 @@ export async function openPongChannel(room) {
   });
   return { channel, userId: session.user.id, close: () => supabase.removeChannel(channel) };
 }
+
+export async function createOrbRushLobby() {
+  if (!await ensureSession()) throw new Error("Online play is unavailable");
+  const { data, error } = await supabase.rpc("create_orb_rush_lobby");
+  if (error) throw error;
+  return data;
+}
+
+export async function joinOrbRushLobby(code) {
+  if (!/^[A-F0-9]{10}$/.test(code)) throw new Error("Enter a 10-character lobby code");
+  if (!await ensureSession()) throw new Error("Online play is unavailable");
+  const { data, error } = await supabase.rpc("join_orb_rush_lobby", { invite_code: code });
+  if (error) throw error;
+  return data;
+}
+
+export async function leaveOrbRushLobby(code) {
+  if (!supabase || !code) return;
+  const { error } = await supabase.rpc("leave_orb_rush_lobby", { invite_code: code });
+  if (error) console.warn("[orb-rush] leaving lobby failed:", error.message);
+}
+
+export async function openOrbRushChannel(room) {
+  const session = await ensureSession();
+  if (!session) throw new Error("Online session unavailable");
+  await supabase.realtime.setAuth();
+  const channel = supabase.channel(`orb-rush:${room.code}`, {
+    config: { private: true, presence: { key: session.user.id } },
+  });
+  return { channel, userId: session.user.id, close: () => supabase.removeChannel(channel) };
+}

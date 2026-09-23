@@ -2,7 +2,7 @@ import { getProfile, updateProfile, updateSettings, deleteLocalProfile } from ".
 import { navigate } from "../router.js";
 import { getStats, getPracticeStats } from "../core/scores.js";
 import { getBadges, getLevel } from "../core/badges.js";
-import { visibleGames as games } from "../games/registry.js";
+import { scoreGames as games } from "../games/registry.js";
 import { icon } from "../core/icon.js";
 import { startHandCursor, stopHandCursor } from "../core/handCursor.js";
 import { syncProfile, deleteMyAccount } from "../core/backend.js";

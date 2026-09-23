@@ -77,6 +77,11 @@ route("/games/pong/:code", ({ params }) => {
   mountGame(app, { params: { id: "pong", code: params.code } }).catch(console.error);
 });
 
+route("/games/orb-rush/:code", ({ params }) => {
+  unmountAll();
+  mountGame(app, { params: { id: "orb-rush", code: params.code } }).catch(console.error);
+});
+
 route("/challenge/:id/:score/:name", ({ params }) => {
   unmountAll();
   track("Challenge Opened", { game: params.id });

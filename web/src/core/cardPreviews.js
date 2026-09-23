@@ -6,6 +6,20 @@ const PW = 240; // logical size (canvas is CSS-scaled to fit the card)
 const PH = 90;
 
 const SCENES = {
+  "orb-rush"(ctx, t) {
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, PW, PH);
+    const x = PW / 2 + Math.sin(t / 900) * 24;
+    ctx.strokeStyle = NEON.text;
+    ctx.shadowColor = NEON.text;
+    ctx.shadowBlur = 12;
+    ctx.beginPath(); ctx.arc(x, PH / 2, 16, 0, Math.PI * 2); ctx.stroke();
+    ctx.shadowBlur = 0;
+    for (const [i, color] of [[0, NEON.accent], [1, NEON.cyan]]) {
+      ctx.strokeStyle = color;
+      ctx.beginPath(); ctx.arc(x + Math.sin(t / 500 + i * Math.PI) * 24, PH / 2 + Math.cos(t / 700 + i * Math.PI) * 15, 6, 0, Math.PI * 2); ctx.stroke();
+    }
+  },
   pong(ctx, t) {
     ctx.fillStyle = "#000";
     ctx.fillRect(0, 0, PW, PH);

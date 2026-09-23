@@ -6,7 +6,7 @@ import { recordPlay, getBest, getStats, getPracticeBest, getPracticeStats, getLe
 import { icon } from "../core/icon.js";
 import { setupCanvas, sfx } from "../core/gameKit.js";
 import { startHandCursor, stopHandCursor } from "../core/handCursor.js";
-import { isOnline, fetchLeaderboard, fetchMyRank, fetchDailyBoard, createPongLobby, joinPongLobby, leavePongLobby } from "../core/backend.js";
+import { isOnline, fetchLeaderboard, fetchMyRank, fetchDailyBoard, createPongLobby, joinPongLobby, leavePongLobby, createOrbRushLobby, joinOrbRushLobby, leaveOrbRushLobby } from "../core/backend.js";
 import { syncProfile } from "../core/backend.js";
 import { getProfile, updateProfile } from "../core/profile.js";
 import { PLAYER_SHIPS, isShipUnlocked, DEFAULT_SHIP } from "../games/asteroids/fleet.js";
@@ -35,6 +35,7 @@ let inputMode = null;
 let inputStarting = false;
 let onlineRoom = null;
 let inviteCode = null;
+const leaveOnlineRoom = (room, gameId) => gameId === "orb-rush" ? leaveOrbRushLobby(room.code) : leavePongLobby(room.code);
 
 const AUTO_PAUSE_MS = 2000; // hand gone this long → auto-pause
 
@@ -54,8 +55,8 @@ export async function mount(app, { params }) {
   const generation = ++mountGeneration;
   meta = games.find((g) => g.id === params.id);
   if (!meta) { navigate("/hub"); return; }
-  challenge = readChallenge(params, meta);
-  inviteCode = meta.id === "pong" ? params.code?.toUpperCase() ?? null : null;
+  challenge = meta.id === "orb-rush" ? null : readChallenge(params, meta);
+  inviteCode = ["pong", "orb-rush"].includes(meta.id) ? params.code?.trim().toUpperCase() ?? null : null;
   appRef = app;
 
   const stats = getStats(meta.id);
@@ -93,7 +94,7 @@ export async function mount(app, { params }) {
                 <b>${c.gesture}</b><em>${c.action}</em>
               </span>`).join("") || `<span class="desc">${meta.description}</span>`}
           </div>
-          <div class="stat-card">
+          <div class="stat-card" ${meta.id === "orb-rush" ? "hidden" : ""}>
             <div class="label" id="run-stat-label">${challenge ? `${icon("zap", { size: 11 })} Challenge target` : `${meta.icon} Your best`}</div>
             <div class="value" id="run-stat-value">${challenge ? challenge.score : getBest(meta.id)}</div>
             <div class="label" id="run-stat-detail">${challenge ? `set by ${esc(challenge.challenger)}` : stats ? `${stats.plays} plays` : "first run"}</div>
@@ -141,7 +142,8 @@ export async function mount(app, { params }) {
   app.querySelector("#back-btn").addEventListener("click", () => navigate("/hub"));
   window.addEventListener("keydown", onKey);
 
-  showInputChoice(app, generation);
+  if (meta.id === "orb-rush" && !isOnline()) showPongChoice(app, generation);
+  else showInputChoice(app, generation);
 }
 
 function showInputChoice(app, generation, error = "") {
@@ -237,7 +239,7 @@ function showPointerCard(panel) {
       ${icon("pointer", { size: 30 })}
       <b>MOUSE / TOUCH</b>
       <span>move · hold = pinch</span>
-      <span>Space = fist</span>
+      ${meta.id === "orb-rush" ? "" : "<span>Space = fist</span>"}
     </div>
   `);
 }
@@ -294,38 +296,40 @@ function wireInputFeedback(app) {
 async function launchGameExperience(app, generation) {
   if (generation !== mountGeneration) return;
   // Asteroids opens on the hangar; other games start straight away.
-  if (meta.id === "pong" && !challenge) showPongChoice(app, generation);
+  if (["pong", "orb-rush"].includes(meta.id) && !challenge) showPongChoice(app, generation);
   else if (meta.id === "asteroids") showHangar(app);
   else await startGame(app, generation);
 }
 
 function showPongChoice(app, generation) {
+  const orb = meta.id === "orb-rush";
   const overlay = document.createElement("div");
   overlay.className = "go-overlay oh-pop";
   overlay.id = "pong-choice";
   overlay.setAttribute("role", "dialog");
-  overlay.setAttribute("aria-label", "Choose Pong mode");
+  overlay.setAttribute("aria-label", orb ? "Join Orb Rush" : "Choose Pong mode");
   overlay.innerHTML = `
     <div class="go-panel pong-choice-panel">
-      <div class="go-title">HAND PONG</div>
-      <p class="input-choice-copy">Play the classic solo run or challenge one friend to a live match. First to 7 wins.</p>
-      <button class="btn btn-accent" id="pong-solo">Solo vs AI</button>
+      <div class="go-title">${orb ? "ORB RUSH" : "HAND PONG"}</div>
+      <p class="input-choice-copy">${orb ? "Race a friend to capture orbs in a 60-second online duel. Stay inside an orb to claim it; pinch to boost." : "Play the classic solo run or challenge one friend to a live match. First to 7 wins."}</p>
+      ${orb ? "" : `<button class="btn btn-accent" id="pong-solo">Solo vs AI</button>`}
       ${isOnline() ? `
         <div class="pong-choice-divider">ONLINE 1 VS 1</div>
-        <button class="btn" id="pong-create">Create invite lobby</button>
+        <button class="btn ${orb ? "btn-accent" : ""}" id="pong-create">Create invite lobby</button>
         <form id="pong-join" class="pong-join-form">
           <label for="pong-code">Join with a code</label>
           <div class="pong-join-row">
             <input id="pong-code" name="code" maxlength="10" pattern="[A-Fa-f0-9]{10}" autocomplete="off" spellcheck="false" required value="${inviteCode && /^[A-F0-9]{10}$/.test(inviteCode) ? inviteCode : ""}">
             <button class="btn" type="submit">Join</button>
           </div>
-        </form>` : `<p class="go-hint">Online play needs a Supabase connection.</p>`}
+        </form>` : `<p class="go-hint">Online play needs a Supabase connection.</p>${orb ? `<button class="btn" id="orb-hub">Back to hub</button>` : ""}`}
       <div class="input-choice-error" id="pong-error" role="status" aria-live="polite"></div>
     </div>`;
   app.querySelector("#canvas-wrap").appendChild(overlay);
   startHandCursor();
-  overlay.querySelector(inviteCode ? "#pong-code" : "#pong-solo")?.focus();
-  overlay.querySelector("#pong-solo").addEventListener("click", () => {
+  overlay.querySelector(inviteCode ? "#pong-code" : orb ? "#pong-create, #orb-hub" : "#pong-solo")?.focus();
+  overlay.querySelector("#orb-hub")?.addEventListener("click", () => navigate("/hub"));
+  overlay.querySelector("#pong-solo")?.addEventListener("click", () => {
     overlay.remove();
     stopHandCursor();
     startGame(app, generation);
@@ -339,23 +343,27 @@ function showPongChoice(app, generation) {
     errorEl.textContent = "Connecting…";
     try {
       const room = await action();
-      if (generation !== mountGeneration) { await leavePongLobby(room.code); return; }
+      if (generation !== mountGeneration) { await leaveOnlineRoom(room, orb ? "orb-rush" : "pong"); return; }
       onlineRoom = room;
       overlay.remove();
       stopHandCursor();
       await startGame(app, generation);
       if (generation !== mountGeneration) return;
-      app.querySelector("#run-stat-label").textContent = "Online duel";
-      app.querySelector("#run-stat-value").textContent = "1 vs 1";
-      app.querySelector("#run-stat-detail").textContent = `Lobby ${room.code} · first to 7`;
+      if (!orb) {
+        app.querySelector("#run-stat-label").textContent = "Online duel";
+        app.querySelector("#run-stat-value").textContent = "1 vs 1";
+        app.querySelector("#run-stat-detail").textContent = `Lobby ${room.code} · first to 7`;
+      }
       app.querySelector(".hint-bar .esc").textContent = "ESC — leave lobby";
-      const guide = app.querySelectorAll(".gesture-guide .guide-chip");
-      guide[2]?.querySelector("b")?.replaceChildren("DUEL");
-      guide[2]?.querySelector("em")?.replaceChildren("first to 7");
+      if (!orb) {
+        const guide = app.querySelectorAll(".gesture-guide .guide-chip");
+        guide[2]?.querySelector("b")?.replaceChildren("DUEL");
+        guide[2]?.querySelector("em")?.replaceChildren("first to 7");
+      }
     } catch (error) {
       if (generation !== mountGeneration) return;
       if (onlineRoom) {
-        await leavePongLobby(onlineRoom.code);
+        await leaveOnlineRoom(onlineRoom, orb ? "orb-rush" : "pong");
         onlineRoom = null;
         app.querySelector("#canvas-wrap").appendChild(overlay);
         startHandCursor();
@@ -365,11 +373,11 @@ function showPongChoice(app, generation) {
       delete overlay.dataset.busy;
     }
   };
-  overlay.querySelector("#pong-create").addEventListener("click", () => run(createPongLobby));
+  overlay.querySelector("#pong-create")?.addEventListener("click", () => run(orb ? createOrbRushLobby : createPongLobby));
   overlay.querySelector("#pong-join").addEventListener("submit", (event) => {
     event.preventDefault();
     const code = overlay.querySelector("#pong-code").value.trim().toUpperCase();
-    run(() => joinPongLobby(code));
+    run(() => orb ? joinOrbRushLobby(code) : joinPongLobby(code));
   });
 }
 
@@ -497,9 +505,9 @@ async function startGame(app, generation = mountGeneration) {
     mode: onlineRoom ? "online" : dailyMode ? "daily" : challenge ? "challenge" : "free",
     input: inputMode || "camera",
   });
-  const module = onlineRoom ? await import("../games/pong/online.js") : await meta.load();
+  const module = onlineRoom ? await (meta.id === "orb-rush" ? import("../games/orb-rush/online.js") : import("../games/pong/online.js")) : await meta.load();
   if (generation !== mountGeneration || !canvas.isConnected) return;
-  activeGame = await module.default.mount({
+  const mounted = await module.default.mount({
     canvas,
     onHandUpdate: onGameHandUpdate,
     handState,
@@ -531,7 +539,8 @@ async function startGame(app, generation = mountGeneration) {
       showGameOver(app, score, submitted, newBadges, runStats, clipResult, previousBest);
     },
   });
-  if (generation !== mountGeneration) { activeGame?.unmount?.(); activeGame = null; return; }
+  if (generation !== mountGeneration) { mounted?.unmount?.(); return; }
+  activeGame = mounted;
   if (!onlineRoom) prepareCreatorClip(canvas);
 }
 
@@ -877,7 +886,7 @@ export function unmount() {
   unsubPause = null;
   ro?.disconnect();
   ro = null;
-  if (onlineRoom && !activeGame) leavePongLobby(onlineRoom.code);
+  if (onlineRoom && !activeGame) leaveOnlineRoom(onlineRoom, meta.id);
   activeGame?.unmount?.();
   activeGame = null;
   onlineRoom = null;

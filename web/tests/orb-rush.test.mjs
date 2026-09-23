@@ -1,0 +1,32 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import { createMatch, stepMatch } from "../src/games/orb-rush/physics.js";
+
+test("exclusive capture, contest, exit, pulse cooldown, and clock", () => {
+  const m = createMatch(), at = { ...m.orb, active: true, pinch: false }, away = { x: 0, y: 0, active: true, pinch: false };
+  for (let i = 0; i < 20; i++) stepMatch(m, [at, at], 0.02);
+  assert.deepEqual(m.progress, [0, 0]);
+  for (let i = 0; i < 15; i++) stepMatch(m, [at, away], 0.02);
+  assert.ok(m.progress[0] > 0);
+  stepMatch(m, [away, away], 0.02);
+  assert.equal(m.progress[0], 0);
+  stepMatch(m, [{ ...at, pinch: true }, away], 0.02);
+  assert.equal(m.players[0].cooldown, 5);
+  assert.equal(m.players[0].pulse, 0.8);
+  for (let i = 0; i < 18; i++) stepMatch(m, [{ ...at, pinch: true }, away], 0.02);
+  assert.deepEqual(m.scores, [1, 0]);
+  assert.ok(m.players[0].cooldown < 5);
+  for (let i = 0; i < 250; i++) stepMatch(m, [{ ...away, pinch: true }, away], 0.02);
+  assert.equal(m.players[0].pulse, 0);
+  assert.equal(m.players[0].cooldown, 0);
+  stepMatch(m, [{ ...away, pinch: false }, away], 0.02);
+  stepMatch(m, [{ ...away, pinch: true }, away], 0.02);
+  assert.equal(m.players[0].pulse, 0.8);
+  m.remaining = 0.01;
+  assert.equal(stepMatch(m, [away, away], 0.02), "end");
+  assert.equal(m.winner, 0);
+  const tied = createMatch();
+  tied.remaining = 0.01;
+  stepMatch(tied, [away, away], 0.02);
+  assert.equal(tied.winner, 2);
+});
