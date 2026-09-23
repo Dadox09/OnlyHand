@@ -171,7 +171,7 @@ export default {
         if (event === "point" || event === "win") sfx.score();
         if (++frame % 3 === 0 || event) sendState();
         if (event === "win") showOverlay("finished");
-      } else if (++frame % 3 === 0) {
+      } else if (++frame % 2 === 0) {
         send("input", { y: localY, smash: localSmash });
       }
     });

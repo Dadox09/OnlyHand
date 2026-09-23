@@ -37,8 +37,8 @@ export function sampleMatch(snapshots, at) {
 
 export function stepMatch(m, leftTarget, rightTarget, leftSmash = false, rightSmash = false) {
   if (m.winner !== null) return null;
-  m.left += (clamp(leftTarget, 0, H - PADDLE_H) - m.left) * 0.3;
-  m.right += (clamp(rightTarget, 0, H - PADDLE_H) - m.right) * 0.3;
+  m.left = clamp(leftTarget, 0, H - PADDLE_H);
+  m.right = clamp(rightTarget, 0, H - PADDLE_H);
   const b = m.ball;
   if (m.serve > 0) {
     if (--m.serve === 0) {

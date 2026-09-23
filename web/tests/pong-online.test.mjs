@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { createMatch, stepMatch, sampleMatch, H, PADDLE_H, LEFT_X, PADDLE_W, BALL_R } from "../src/games/pong/onlinePhysics.js";
+import { createMatch, stepMatch, sampleMatch, H, PADDLE_H, LEFT_X, RIGHT_X, PADDLE_W, BALL_R } from "../src/games/pong/onlinePhysics.js";
 
 test("Pong online scores a miss and ends at seven", () => {
   const m = createMatch();
@@ -21,6 +21,16 @@ test("Pong online bounces a fast ball at the paddle plane", () => {
   assert.equal(stepMatch(m, 190, 190), "hit");
   assert.ok(m.ball.vx > 0);
   assert.equal(m.scores[1], 0);
+});
+
+test("Pong guest collision follows a rapid paddle move", () => {
+  const m = createMatch();
+  m.serve = 0;
+  m.right = 0;
+  m.ball = { x: RIGHT_X - BALL_R - 5, y: 300, vx: 16, vy: 0 };
+  assert.equal(stepMatch(m, 0, 250), "hit");
+  assert.equal(m.right, 250);
+  assert.ok(m.ball.vx < 0);
 });
 
 test("Pong guest renders between snapshots without changing the authoritative state", () => {
