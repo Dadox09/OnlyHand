@@ -6,7 +6,7 @@ import { recordPlay, getBest, getStats, getPracticeBest, getPracticeStats, getLe
 import { icon } from "../core/icon.js";
 import { setupCanvas, sfx } from "../core/gameKit.js";
 import { startHandCursor, stopHandCursor } from "../core/handCursor.js";
-import { isOnline, fetchLeaderboard, fetchMyRank, fetchDailyBoard } from "../core/backend.js";
+import { isOnline, fetchLeaderboard, fetchMyRank, fetchDailyBoard, createPongLobby, joinPongLobby, leavePongLobby } from "../core/backend.js";
 import { syncProfile } from "../core/backend.js";
 import { getProfile, updateProfile } from "../core/profile.js";
 import { PLAYER_SHIPS, isShipUnlocked, DEFAULT_SHIP } from "../games/asteroids/fleet.js";
@@ -33,6 +33,8 @@ let clipSession = null;
 let clipButton = null;
 let inputMode = null;
 let inputStarting = false;
+let onlineRoom = null;
+let inviteCode = null;
 
 const AUTO_PAUSE_MS = 2000; // hand gone this long → auto-pause
 
@@ -53,6 +55,7 @@ export async function mount(app, { params }) {
   meta = games.find((g) => g.id === params.id);
   if (!meta) { navigate("/hub"); return; }
   challenge = readChallenge(params, meta);
+  inviteCode = meta.id === "pong" ? params.code?.toUpperCase() ?? null : null;
   appRef = app;
 
   const stats = getStats(meta.id);
@@ -120,9 +123,11 @@ export async function mount(app, { params }) {
     showPointerCard(app.querySelector("#cam-panel"));
     startPointerInput(app.querySelector("#game-canvas"));
     if (paused && autoPaused) setPaused(false);
-    app.querySelector("#run-stat-label").textContent = "Practice best";
-    app.querySelector("#run-stat-value").textContent = getPracticeBest(meta.id);
-    app.querySelector("#run-stat-detail").textContent = "Mouse / touch run";
+    if (!onlineRoom) {
+      app.querySelector("#run-stat-label").textContent = "Practice best";
+      app.querySelector("#run-stat-value").textContent = getPracticeBest(meta.id);
+      app.querySelector("#run-stat-detail").textContent = "Mouse / touch run";
+    }
   });
 
   ro = new ResizeObserver(() => {
@@ -275,7 +280,7 @@ function wireInputFeedback(app) {
 
   // Auto-pause only matters for camera tracking loss.
   unsubPause = onHandUpdate((s) => {
-    if (inputMode === "pointer" || !activeGame || document.getElementById("creator-consent")) return;
+    if (inputMode === "pointer" || onlineRoom || !activeGame || document.getElementById("creator-consent")) return;
     if (!s.isDetected) {
       if (handLostAt === null) handLostAt = Date.now();
       else if (!paused && Date.now() - handLostAt > AUTO_PAUSE_MS) setPaused(true, true);
@@ -289,12 +294,87 @@ function wireInputFeedback(app) {
 async function launchGameExperience(app, generation) {
   if (generation !== mountGeneration) return;
   // Asteroids opens on the hangar; other games start straight away.
-  if (meta.id === "asteroids") showHangar(app);
+  if (meta.id === "pong" && !challenge) showPongChoice(app, generation);
+  else if (meta.id === "asteroids") showHangar(app);
   else await startGame(app, generation);
 }
 
+function showPongChoice(app, generation) {
+  const overlay = document.createElement("div");
+  overlay.className = "go-overlay oh-pop";
+  overlay.id = "pong-choice";
+  overlay.setAttribute("role", "dialog");
+  overlay.setAttribute("aria-label", "Choose Pong mode");
+  overlay.innerHTML = `
+    <div class="go-panel pong-choice-panel">
+      <div class="go-title">HAND PONG</div>
+      <p class="input-choice-copy">Play the classic solo run or challenge one friend to a live match. First to 7 wins.</p>
+      <button class="btn btn-accent" id="pong-solo">Solo vs AI</button>
+      ${isOnline() ? `
+        <div class="pong-choice-divider">ONLINE 1 VS 1</div>
+        <button class="btn" id="pong-create">Create invite lobby</button>
+        <form id="pong-join" class="pong-join-form">
+          <label for="pong-code">Join with a code</label>
+          <div class="pong-join-row">
+            <input id="pong-code" name="code" maxlength="10" pattern="[A-Fa-f0-9]{10}" autocomplete="off" spellcheck="false" required value="${inviteCode && /^[A-F0-9]{10}$/.test(inviteCode) ? inviteCode : ""}">
+            <button class="btn" type="submit">Join</button>
+          </div>
+        </form>` : `<p class="go-hint">Online play needs a Supabase connection.</p>`}
+      <div class="input-choice-error" id="pong-error" role="status" aria-live="polite"></div>
+    </div>`;
+  app.querySelector("#canvas-wrap").appendChild(overlay);
+  startHandCursor();
+  overlay.querySelector(inviteCode ? "#pong-code" : "#pong-solo")?.focus();
+  overlay.querySelector("#pong-solo").addEventListener("click", () => {
+    overlay.remove();
+    stopHandCursor();
+    startGame(app, generation);
+  });
+  if (!isOnline()) return;
+  const errorEl = overlay.querySelector("#pong-error");
+  const run = async (action) => {
+    if (overlay.dataset.busy) return;
+    overlay.dataset.busy = "1";
+    overlay.querySelectorAll("button, input").forEach((el) => { el.disabled = true; });
+    errorEl.textContent = "Connecting…";
+    try {
+      const room = await action();
+      if (generation !== mountGeneration) { await leavePongLobby(room.code); return; }
+      onlineRoom = room;
+      overlay.remove();
+      stopHandCursor();
+      await startGame(app, generation);
+      if (generation !== mountGeneration) return;
+      app.querySelector("#run-stat-label").textContent = "Online duel";
+      app.querySelector("#run-stat-value").textContent = "1 vs 1";
+      app.querySelector("#run-stat-detail").textContent = `Lobby ${room.code} · first to 7`;
+      app.querySelector(".hint-bar .esc").textContent = "ESC — leave lobby";
+      const guide = app.querySelectorAll(".gesture-guide .guide-chip");
+      guide[2]?.querySelector("b")?.replaceChildren("DUEL");
+      guide[2]?.querySelector("em")?.replaceChildren("first to 7");
+    } catch (error) {
+      if (generation !== mountGeneration) return;
+      if (onlineRoom) {
+        await leavePongLobby(onlineRoom.code);
+        onlineRoom = null;
+        app.querySelector("#canvas-wrap").appendChild(overlay);
+        startHandCursor();
+      }
+      errorEl.textContent = error.message || "Could not connect to the lobby.";
+      overlay.querySelectorAll("button, input").forEach((el) => { el.disabled = false; });
+      delete overlay.dataset.busy;
+    }
+  };
+  overlay.querySelector("#pong-create").addEventListener("click", () => run(createPongLobby));
+  overlay.querySelector("#pong-join").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const code = overlay.querySelector("#pong-code").value.trim().toUpperCase();
+    run(() => joinPongLobby(code));
+  });
+}
+
 function setPaused(on, auto = false) {
-  if (!activeGame || on === paused) return;
+  if (!activeGame || onlineRoom || on === paused) return;
   paused = on;
   autoPaused = on && auto;
   if (on) {
@@ -414,15 +494,16 @@ async function startGame(app, generation = mountGeneration) {
   startTime = Date.now();
   track("Game Started", {
     game: meta.id,
-    mode: dailyMode ? "daily" : challenge ? "challenge" : "free",
+    mode: onlineRoom ? "online" : dailyMode ? "daily" : challenge ? "challenge" : "free",
     input: inputMode || "camera",
   });
-  const module = await meta.load();
+  const module = onlineRoom ? await import("../games/pong/online.js") : await meta.load();
   if (generation !== mountGeneration || !canvas.isConnected) return;
   activeGame = await module.default.mount({
     canvas,
     onHandUpdate: onGameHandUpdate,
     handState,
+    room: onlineRoom,
     daily: dailyMode && meta.id === "asteroids",
     onScore(score, runStats = null) {
       if (generation !== mountGeneration) return;
@@ -450,7 +531,8 @@ async function startGame(app, generation = mountGeneration) {
       showGameOver(app, score, submitted, newBadges, runStats, clipResult, previousBest);
     },
   });
-  prepareCreatorClip(canvas);
+  if (generation !== mountGeneration) { activeGame?.unmount?.(); activeGame = null; return; }
+  if (!onlineRoom) prepareCreatorClip(canvas);
 }
 
 function prepareCreatorClip(canvas) {
@@ -758,7 +840,8 @@ function onKey(e) {
   if (e.key !== "Escape") return;
   if (document.getElementById("creator-consent")) return;
   // During a game: ESC toggles pause. On game over (no active game): exit.
-  if (activeGame) setPaused(!paused);
+  if (onlineRoom) navigate("/hub");
+  else if (activeGame) setPaused(!paused);
   else navigate("/hub");
 }
 
@@ -774,6 +857,7 @@ export function unmount() {
   document.getElementById("input-choice")?.remove();
   document.getElementById("pause-overlay")?.remove();
   document.getElementById("hangar-overlay")?.remove();
+  document.getElementById("pong-choice")?.remove();
   document.getElementById("creator-consent")?.remove();
   paused = false;
   autoPaused = false;
@@ -793,7 +877,10 @@ export function unmount() {
   unsubPause = null;
   ro?.disconnect();
   ro = null;
+  if (onlineRoom && !activeGame) leavePongLobby(onlineRoom.code);
   activeGame?.unmount?.();
   activeGame = null;
+  onlineRoom = null;
+  inviteCode = null;
   appRef = null;
 }

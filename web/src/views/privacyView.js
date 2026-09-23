@@ -39,7 +39,7 @@ export function mount(app) {
           Your tag, avatar, scores, badges and settings are saved in this browser's
           <code>localStorage</code> until you delete your profile or clear site data.
           If the online leaderboard is enabled, saving your tag creates an anonymous Supabase
-          account and sends the tag and avatar before your first game. Camera-mode runs also send
+          account and sends the tag and avatar before your first game. Eligible solo camera-mode runs also send
           the game and score. Supabase stores the submission time, an anonymous account ID, profile
           creation and update times, and every submitted score. No email or video is sent.
           This supports the game features you request and the operator's legitimate interest
@@ -58,6 +58,16 @@ export function mount(app) {
           when available, the anonymous account and its scores. If deletion fails or you need
           help, email the controller before clearing browser data. You may also request access,
           correction or deletion by email.
+        </p>
+
+        <h2>Pong 1 vs 1</h2>
+        <p>
+          Supabase stores a short invitation code and the two anonymous account IDs. A lobby expires
+          after two hours and an hourly job removes expired rooms. Supabase relays paddle position,
+          pinch state and match state live to the other player.
+          The host's browser computes the ball and score. Camera images are not sent. Leaving
+          closes a lobby immediately when the host
+          leaves. Online match scores are not added to the leaderboard.
         </p>
 
         <h2>Hosting</h2>

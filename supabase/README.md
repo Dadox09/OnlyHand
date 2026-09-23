@@ -1,6 +1,6 @@
 # Supabase setup — global profiles + leaderboard
 
-The web app works fully offline without this. With it, every finished run is
+The web app works fully offline without this. With it, eligible solo runs are
 submitted to a global per-game leaderboard and the Game Over screen shows the
 real TOP HANDS.
 
@@ -29,6 +29,22 @@ real TOP HANDS.
      row-level security does the real gatekeeping)
 
 5. Restart `npm run dev`. Done — scores now sync.
+
+## Pong 1 vs 1 invite lobbies
+
+After the base schema, run [`pong_lobbies.sql`](pong_lobbies.sql) in the
+production SQL Editor. Supabase Cron must be enabled; the script schedules
+hourly cleanup of rooms older than two hours. Both players use anonymous auth.
+The code is 10 hexadecimal characters; only the creator and one joined guest
+can subscribe to the private Realtime channel. In **Realtime Settings**, disable
+**Allow public access** to require the private-channel policies. Deploy the
+matching frontend only after the SQL succeeds. Pong online matches are casual
+and do not submit leaderboard scores.
+
+Check with two private browser profiles: create a lobby, join by code or link,
+play to 7, request a rematch on both sides, then leave. A third anonymous
+profile must get "Lobby unavailable or full" for the same code. Check the
+`onlyhand-pong-lobbies` Cron job and its first successful run in Supabase.
 
 ## What the schema enforces
 

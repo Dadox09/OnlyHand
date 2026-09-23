@@ -98,6 +98,22 @@
 
 .canvas-wrap { position: relative; width: fit-content; }
 
+.pong-choice-panel { width: min(390px, 100%); }
+.pong-choice-panel > .btn { min-height: 44px; width: min(270px, 100%); }
+.pong-choice-divider { color: var(--text-muted); font-size: var(--text-tag); letter-spacing: 0.12em; margin-top: 0.3rem; }
+.pong-join-form { width: min(270px, 100%); text-align: left; }
+.pong-join-form label { display: block; margin-bottom: 0.3rem; font-size: var(--text-tag); color: var(--text-muted); }
+.pong-join-row { display: flex; gap: 0.5rem; }
+.pong-join-row input {
+  min-width: 0; flex: 1; padding: 0.55rem; border: 1px solid var(--border);
+  border-radius: var(--radius-control); background: var(--surface); color: var(--text);
+  font: inherit; text-transform: uppercase; letter-spacing: 0.1em;
+}
+.pong-join-row .btn { min-height: 44px; }
+.pong-code { font-family: var(--font-display); color: var(--accent); letter-spacing: 0.2em; }
+.pong-choice-panel .input-choice-error:empty { display: none; }
+.go-overlay[hidden] { display: none; }
+
 #game-canvas {
   background: var(--canvas);
   border-radius: var(--radius-box);

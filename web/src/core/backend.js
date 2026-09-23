@@ -146,3 +146,34 @@ export async function deleteMyAccount() {
     if (signOutError) console.warn("[backend] local sign-out failed:", signOutError.message);
   }
 }
+
+export async function createPongLobby() {
+  if (!await ensureSession()) throw new Error("Online play is unavailable");
+  const { data, error } = await supabase.rpc("create_pong_lobby");
+  if (error) throw error;
+  return data;
+}
+
+export async function joinPongLobby(code) {
+  if (!/^[A-F0-9]{10}$/.test(code)) throw new Error("Enter a 10-character lobby code");
+  if (!await ensureSession()) throw new Error("Online play is unavailable");
+  const { data, error } = await supabase.rpc("join_pong_lobby", { invite_code: code });
+  if (error) throw error;
+  return data;
+}
+
+export async function leavePongLobby(code) {
+  if (!supabase || !code) return;
+  const { error } = await supabase.rpc("leave_pong_lobby", { invite_code: code });
+  if (error) console.warn("[pong] leaving lobby failed:", error.message);
+}
+
+export async function openPongChannel(room) {
+  const session = await ensureSession();
+  if (!session) throw new Error("Online session unavailable");
+  await supabase.realtime.setAuth();
+  const channel = supabase.channel(`pong:${room.code}`, {
+    config: { private: true, presence: { key: session.user.id } },
+  });
+  return { channel, userId: session.user.id, close: () => supabase.removeChannel(channel) };
+}
