@@ -20,6 +20,21 @@ export function createMatch() {
 
 const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 
+export function sampleMatch(snapshots, at) {
+  if (!snapshots.length) return null;
+  const next = snapshots.findIndex((s) => s.at >= at);
+  if (next <= 0) return snapshots[next < 0 ? snapshots.length - 1 : 0].model;
+  const a = snapshots[next - 1], b = snapshots[next];
+  const t = clamp((at - a.at) / (b.at - a.at), 0, 1);
+  const mix = (x, y) => x + (y - x) * t;
+  return {
+    ...b.model,
+    left: mix(a.model.left, b.model.left),
+    right: mix(a.model.right, b.model.right),
+    ball: { ...b.model.ball, x: mix(a.model.ball.x, b.model.ball.x), y: mix(a.model.ball.y, b.model.ball.y) },
+  };
+}
+
 export function stepMatch(m, leftTarget, rightTarget, leftSmash = false, rightSmash = false) {
   if (m.winner !== null) return null;
   m.left += (clamp(leftTarget, 0, H - PADDLE_H) - m.left) * 0.3;

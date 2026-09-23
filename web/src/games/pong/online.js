@@ -1,6 +1,6 @@
 import { NEON, setupCanvas, createFixedStep, drawHudText, hudFont, sfx } from "../../core/gameKit.js";
 import { openPongChannel, leavePongLobby } from "../../core/backend.js";
-import { W, H, PADDLE_H, PADDLE_W, LEFT_X, RIGHT_X, BALL_R, createMatch, stepMatch } from "./onlinePhysics.js";
+import { W, H, PADDLE_H, PADDLE_W, LEFT_X, RIGHT_X, BALL_R, createMatch, stepMatch, sampleMatch } from "./onlinePhysics.js";
 import { navigate } from "../../router.js";
 import { startHandCursor, stopHandCursor } from "../../core/handCursor.js";
 
@@ -16,6 +16,7 @@ export default {
     let peerOnline = false;
     let peerId = null;
     let model = createMatch();
+    const snapshots = [];
     let seq = 0;
     let lastSeq = -1;
     let frame = 0;
@@ -114,9 +115,10 @@ export default {
       if (newPeer) {
         peerId = other.user_id;
         if (isHost) model = createMatch();
+        else snapshots.length = 0;
       }
       if (peerOnline && isHost && (newPeer || !wasOnline)) sendState();
-      if (!peerOnline) { myReady = false; peerReady = false; }
+      if (!peerOnline) { myReady = false; peerReady = false; snapshots.length = 0; }
       showOverlay(!subscribed ? "lost" : peerOnline ? model.winner !== null ? "finished" : "" : "waiting");
     }
 
@@ -137,6 +139,9 @@ export default {
           || ![null, 0, 1].includes(m.winner)) return;
         lastSeq = payload.seq;
         const restarted = model.winner !== null && m.winner === null;
+        if (restarted || m.scores.some((score, i) => score !== model.scores[i])) snapshots.length = 0;
+        snapshots.push({ at: performance.now(), model: m });
+        if (snapshots.length > 4) snapshots.shift();
         model = m;
         if (restarted) { myReady = false; peerReady = false; }
         showOverlay(!peerOnline ? "waiting" : model.winner !== null ? "finished" : "");
@@ -164,7 +169,6 @@ export default {
         const event = stepMatch(model, localY, remoteY, localSmash, remoteSmash);
         if (event === "hit") sfx.hit();
         if (event === "point" || event === "win") sfx.score();
-        // ponytail: 20 Hz snapshots can look choppy at high latency; interpolate if playtests show it.
         if (++frame % 3 === 0 || event) sendState();
         if (event === "win") showOverlay("finished");
       } else if (++frame % 3 === 0) {
@@ -172,7 +176,8 @@ export default {
       }
     });
 
-    function draw() {
+    function draw(ts) {
+      const display = isHost ? model : sampleMatch(snapshots, ts - 75) || model;
       ctx.fillStyle = NEON.canvas;
       ctx.fillRect(0, 0, W, H);
       ctx.strokeStyle = "rgba(74,222,128,0.2)";
@@ -180,8 +185,8 @@ export default {
       ctx.beginPath(); ctx.moveTo(W / 2, 0); ctx.lineTo(W / 2, H); ctx.stroke();
       ctx.setLineDash([]);
       for (const [x, y, color] of [
-        [LEFT_X, isHost ? localY : model.left, NEON.accent],
-        [RIGHT_X, isHost ? model.right : localY, NEON.cyan],
+        [LEFT_X, isHost ? localY : display.left, NEON.accent],
+        [RIGHT_X, isHost ? display.right : localY, NEON.cyan],
       ]) {
         ctx.fillStyle = color;
         ctx.shadowColor = color;
@@ -189,7 +194,7 @@ export default {
         ctx.beginPath(); ctx.roundRect(x, y, PADDLE_W, PADDLE_H, 6); ctx.fill();
       }
       ctx.shadowBlur = 0;
-      const b = model.ball;
+      const b = display.ball;
       ctx.fillStyle = "#fff";
       ctx.shadowColor = NEON.cyan;
       ctx.shadowBlur = 20;
@@ -209,7 +214,7 @@ export default {
 
     function tick(ts) {
       fixed.tick(ts);
-      draw();
+      draw(ts);
       if (running) raf = requestAnimationFrame(tick);
     }
     showOverlay("waiting");
