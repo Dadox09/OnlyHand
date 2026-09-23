@@ -2,12 +2,23 @@
 
 Revisione statica del 23 settembre 2026. Lo stato del deployment, di Plausible e di Supabase di produzione va verificato prima di considerare risolte le attività che li riguardano.
 
+Il deployment Production Vercel indica `2f511bb` (confermato dall'utente); l'asset JavaScript pubblicato coincide con una build locale dello stesso commit con la configurazione pubblica di produzione.
+
+## Supabase di produzione — verifiche HTTP del 23 settembre 2026
+
+- [x] **Limitare la lettura delle tabelle grezze.** Prima della correzione una richiesta senza sessione leggeva `profiles` (16 righe) e `scores` (63 righe) tramite REST. Dopo l'esecuzione SQL dell'utente entrambe rispondono 401 (`42501`). Due account anonimi temporanei non potevano leggere o inserire le righe grezze dell'altro; entrambi sono stati cancellati.
+- [ ] **Valutare l'esposizione precedente come potenziale violazione di dati personali.** Registrare quando la lettura pubblica è iniziata e terminata, quali campi erano accessibili (ID anonimo, tag, avatar, date e cronologia dei punteggi), se i log mostrano accessi non previsti e il rischio per gli interessati. Non è stata accertata una consultazione da parte di terzi. Usare la [procedura del Garante](https://www.garanteprivacy.it/data-breach) per valutare documentazione ed eventuali obblighi di notifica; la decisione spetta al titolare.
+- [x] **Allineare viste e cancellazione allo schema pubblicato.** `leaderboard` e `daily_leaderboard` rispondono alle richieste pubbliche. Con un account anonimo di test, creazione di profilo e punteggio, `delete_my_account()` e verifica della cancellazione a cascata sono riuscite.
+- [x] **Verificare la configurazione del job Cron** `onlyhand-anonymous-retention`: il 23 settembre l'utente ha eseguito la query su `cron.job` e confermato una riga con `active = true`, `function_exists = true`, pianificazione `0 3 1 * *` e comando atteso.
+- [ ] **Verificare la prima esecuzione Cron** nella cronologia del job dopo la prossima scadenza mensile; la configurazione attiva non prova ancora che l'esecuzione riesca.
+
 ## Priorità alta — sito pubblico
 
 - [ ] **Completare l'informativa privacy** in `web/src/views/privacyView.js`: identità e contatti del titolare, finalità e basi giuridiche per ciascun trattamento, destinatari, eventuali trasferimenti, conservazione, diritti esercitabili e reclamo al Garante. Documentare la configurazione effettiva di hosting e servizi attivi. [Requisiti dell'informativa](https://www.garanteprivacy.it/home/principi-fondamentali-del-trattamento).
+- [ ] **Verificare le condizioni dei fornitori e i trasferimenti prima di precisare l'informativa.** La [pagina DPA di Vercel](https://vercel.com/legal/dpa) dichiara che l'addendum si applica ai piani Pro ed Enterprise, mentre OnlyHand usa Hobby: verificare quale accordo e quali garanzie valgono effettivamente per questo account. Verificare anche l'applicabilità del [DPA Supabase](https://supabase.com/downloads/docs/Supabase%2BDPA%2B260317.pdf) e i rispettivi subfornitori. La regione primaria Supabase Irlanda, da sola, non descrive tutti i trattamenti o trasferimenti.
 - [x] **Correggere le promesse sui dati**: il video non viene caricato, ma Creator Clip lo registra localmente dopo una scelta esplicita; il profilo resta solo locale *se Supabase è disattivato*. Con Supabase attivo il tag viene inviato già durante l'onboarding, mentre il database conserva anche ID anonimo, date e risultati delle partite. Riferimenti: `web/src/views/onboarding.js`, `web/src/core/backend.js`, `supabase/schema.sql`.
-- [x] **Rendere l'informativa raggiungibile prima della raccolta**: aggiungere un collegamento nella schermata iniziale e prima di salvare il tag. Verificare anche l'accesso diretto a `#/hub`, che può avviare la fotocamera automaticamente. Riferimenti: `web/src/views/onboarding.js`, `web/src/views/menu.js`.
-- [ ] **Verificare Plausible disattivato in produzione**: dopo il deployment, controllare l'assenza dello script e degli eventi verso Plausible e rimuovere `VITE_PLAUSIBLE_DOMAIN` da Vercel. Rivalutare consenso e informativa solo se si riattiva l'analisi, secondo le [indicazioni del Garante](https://www.garanteprivacy.it/faq/cookie).
+- [x] **Rendere l'informativa raggiungibile prima della raccolta**: collegamento nella schermata iniziale e prima di salvare il tag; il 23 settembre l'utente ha aperto "Privacy details" sul sito pubblicato e visto l'informativa aggiornata. Aprendo direttamente `#/hub` in una finestra privata, il link Privacy era visibile e non è apparsa una richiesta automatica di accesso alla fotocamera. Riferimenti: `web/src/views/onboarding.js`, `web/src/views/menu.js`.
+- [x] **Verificare Plausible disattivato in produzione**: il 23 settembre HTML, bundle JavaScript e service worker pubblicati non contenevano riferimenti a Plausible; l'utente ha ricaricato il sito in un browser reale e non ha visto richieste a `plausible.io` nella scheda Network. Ha anche confermato l'assenza di `VITE_PLAUSIBLE_DOMAIN` in Vercel. Rivalutare consenso e informativa solo se si riattiva l'analisi, secondo le [indicazioni del Garante](https://www.garanteprivacy.it/faq/cookie).
 
 ## Priorità alta — se si abilita Supabase
 
@@ -32,5 +43,5 @@ Revisione statica del 23 settembre 2026. Lo stato del deployment, di Plausible e
 
 ## Chiusura della revisione
 
-- [ ] Confrontare build e impostazioni del deployment con questo repository; verificare se Supabase e Plausible sono realmente attivi.
-- [ ] Provare su browser e dispositivi reali i percorsi fotocamera, mouse/touch, registrazione, classifica e cancellazione. I rilievi sopra derivano da analisi statica, senza test del deployment.
+- [x] Confrontare build e impostazioni del deployment con questo repository: Vercel Production indica `2f511bb`, il bundle pubblicato coincide con la build locale con configurazione pubblica, Supabase è attivo e Plausible non viene caricato secondo la verifica Network dell'utente.
+- [ ] Provare su browser e dispositivi reali tutti i percorsi: il 23 settembre l'utente ha confermato che passando dai comandi a mano a mouse/touch o spegnendo la fotocamera l'indicatore si spegne. Restano Creator Clip (non provabile ora), classifica e cancellazione tramite UI; la cancellazione cloud via API è già stata provata con un account temporaneo.
