@@ -1,8 +1,8 @@
 import { visibleGames as games } from "../games/registry.js";
 import { getProfile } from "../core/profile.js";
 import { getBest, getDailyProgress } from "../core/scores.js";
-import { getCameraVideo, getStream, initCamera, isCameraDeferred } from "../core/camera.js";
-import { startHandInput, onHandUpdate } from "../input/handInput.js";
+import { getCameraVideo, getStream, initCamera, stopCamera } from "../core/camera.js";
+import { startHandInput, stopHandInput, onHandUpdate } from "../input/handInput.js";
 import { icon } from "../core/icon.js";
 import { startHandCursor, stopHandCursor } from "../core/handCursor.js";
 import { attachCardPreview, stopCardPreviews } from "../core/cardPreviews.js";
@@ -14,7 +14,7 @@ let cleanup = null;
 export async function mount(app) {
   const profile = getProfile();
   const daily = getDailyProgress();
-  const cameraDeferred = isCameraDeferred() && !getStream();
+  const cameraDeferred = !getStream();
 
   app.innerHTML = `
     <nav>
@@ -56,7 +56,8 @@ export async function mount(app) {
           <video id="preview-video" autoplay playsinline muted></video>
           <canvas id="overlay-canvas"></canvas>
           <div class="status-bar" id="status">
-            ${cameraDeferred ? `<button class="status-camera-btn" id="hub-camera">${icon("camera", { size: 14 })} Enable hand control</button>` : "Initializing camera…"}
+            <span id="camera-status">${cameraDeferred ? "Camera off" : "Initializing camera…"}</span>
+            <button class="status-camera-btn" id="hub-camera">${cameraDeferred ? "Enable hand control" : "Turn off camera"}</button>
           </div>
         </div>
         <div class="live-row">
@@ -128,6 +129,8 @@ export async function mount(app) {
   const ro = new ResizeObserver(resizeOverlay);
   ro.observe(panel);
   let cancelled = false;
+  let cameraRequest = 0;
+  let startingCamera = false;
   let unsub = () => {};
 
   // Render the catalogue before camera setup. A pending/ignored permission
@@ -158,6 +161,7 @@ export async function mount(app) {
   startHandCursor();
   cleanup = () => {
     cancelled = true;
+    if (startingCamera) { stopHandInput(); stopCamera(); }
     unsub();
     ro.disconnect();
     stopHandCursor();
@@ -166,37 +170,55 @@ export async function mount(app) {
     clearInterval(dailyTimer);
   };
 
-  const statusEl = app.querySelector("#status");
+  const statusEl = app.querySelector("#camera-status");
+  const cameraButton = app.querySelector("#hub-camera");
   const trackingDot = app.querySelector("#tracking-dot");
   const trackingLabel = app.querySelector("#tracking-label");
   const trackingMeta = app.querySelector("#tracking-meta");
+  const turnOffCamera = () => {
+    cameraRequest++;
+    startingCamera = false;
+    stopHandInput();
+    stopCamera();
+    preview.srcObject = null;
+    statusEl.textContent = "Camera off";
+    cameraButton.textContent = "Enable hand control";
+    trackingDot.classList.remove("oh-live-dot");
+    trackingLabel.textContent = "CAMERA OFF";
+    trackingMeta.textContent = "Browse first · enable anytime";
+  };
   const startHubCamera = async (source = "automatic") => {
+    const request = ++cameraRequest;
+    startingCamera = true;
     statusEl.textContent = "Starting camera…";
+    cameraButton.textContent = "Turn off camera";
     try {
       const stream = await initCamera();
-      if (cancelled) return;
+      if (cancelled || request !== cameraRequest) return;
       preview.srcObject = stream;
       statusEl.textContent = "Loading hand model…";
       await startHandInput(getCameraVideo());
-      if (cancelled) return;
+      if (cancelled || request !== cameraRequest) return;
+      startingCamera = false;
       statusEl.textContent = "Ready — show your hand";
       trackingDot.classList.add("oh-live-dot");
       trackingLabel.textContent = "TRACKING LIVE";
       trackingMeta.textContent = "MediaPipe · 60 fps";
       if (source === "hub") track("Camera Enabled", { source: "hub" });
     } catch (err) {
-      if (cancelled) return;
+      if (cancelled || request !== cameraRequest) return;
+      turnOffCamera();
       statusEl.textContent = "Error: " + (err?.message || err);
-      trackingDot.classList.remove("oh-live-dot");
-      trackingLabel.textContent = "CAMERA OFF";
       trackingMeta.textContent = "Games still work with mouse / touch";
       if (source === "hub") track("Camera Denied", { source: "hub", reason: err?.name || "unknown" });
     }
   };
 
-  if (cameraDeferred) {
-    app.querySelector("#hub-camera")?.addEventListener("click", () => startHubCamera("hub"));
-  } else {
+  cameraButton.addEventListener("click", () => {
+    if (getStream() || startingCamera) turnOffCamera();
+    else startHubCamera("hub");
+  });
+  if (!cameraDeferred) {
     await startHubCamera();
   }
 

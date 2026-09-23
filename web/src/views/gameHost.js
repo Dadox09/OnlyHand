@@ -1,7 +1,7 @@
 import { games } from "../games/registry.js";
 import { navigate } from "../router.js";
-import { deferCamera, getCameraVideo, initCamera } from "../core/camera.js";
-import { startHandInput, startPointerInput, stopPointerInput, onHandUpdate, handState, mapToActiveBox } from "../input/handInput.js";
+import { getCameraVideo, initCamera, stopCamera } from "../core/camera.js";
+import { startHandInput, stopHandInput, startPointerInput, stopPointerInput, onHandUpdate, handState, mapToActiveBox } from "../input/handInput.js";
 import { recordPlay, getBest, getStats, getPracticeBest, getPracticeStats, getLeaderboard, updateDailyProgress, getDailyProgress } from "../core/scores.js";
 import { icon } from "../core/icon.js";
 import { setupCanvas, sfx } from "../core/gameKit.js";
@@ -63,6 +63,7 @@ export async function mount(app, { params }) {
         <span class="title">${meta.icon} <span class="name">${meta.name}</span></span>
         ${challenge ? `<span class="challenge-pill">${icon("zap", { size: 12 })} Beat ${esc(challenge.challenger)} · ${challenge.score}</span>` : ""}
         <button class="creator-clip-btn" id="creator-clip" hidden>${icon("video", { size: 13 })} <span>REC CLIP</span></button>
+        <button class="btn btn-ghost" id="camera-off" hidden>Camera off · mouse / touch</button>
         <span class="hand-indicator" id="hand-ind"><span class="dot"></span> Choose controls</span>
       </div>
       <div class="game-host-body">
@@ -106,6 +107,23 @@ export async function mount(app, { params }) {
   setupCanvas(app.querySelector("#game-canvas"), 800, 500);
   clipButton = app.querySelector("#creator-clip");
   clipButton.addEventListener("click", onCreatorClipClick);
+  app.querySelector("#camera-off").addEventListener("click", () => {
+    if (inputMode !== "camera") return;
+    clipSession?.cancel();
+    clipSession = null;
+    clipButton.hidden = true;
+    stopHandInput();
+    stopCamera();
+    app.querySelector("#game-preview").srcObject = null;
+    app.querySelector("#camera-off").hidden = true;
+    inputMode = "pointer";
+    showPointerCard(app.querySelector("#cam-panel"));
+    startPointerInput(app.querySelector("#game-canvas"));
+    if (paused && autoPaused) setPaused(false);
+    app.querySelector("#run-stat-label").textContent = "Practice best";
+    app.querySelector("#run-stat-value").textContent = getPracticeBest(meta.id);
+    app.querySelector("#run-stat-detail").textContent = "Mouse / touch run";
+  });
 
   ro = new ResizeObserver(() => {
     const r = panel.getBoundingClientRect();
@@ -151,8 +169,13 @@ function showInputChoice(app, generation, error = "") {
     track("Camera Prompt Requested", { source: "game", game: meta.id });
     try {
       await startCameraSession(app, generation);
+      if (generation !== mountGeneration) return;
+      inputStarting = false;
       track("Camera Enabled", { source: "game", game: meta.id });
     } catch (cameraError) {
+      if (generation !== mountGeneration) return;
+      stopHandInput();
+      stopCamera();
       track("Camera Denied", { source: "game", game: meta.id, reason: cameraError?.name || "unknown" });
       showInputChoice(app, generation, `Camera unavailable: ${cameraError?.message || cameraError}`);
     }
@@ -162,6 +185,7 @@ function showInputChoice(app, generation, error = "") {
     inputStarting = true;
     track("Pointer Mode Selected", { game: meta.id, challenge: !!challenge });
     await startPointerSession(app, generation);
+    inputStarting = false;
   });
 }
 
@@ -174,6 +198,7 @@ async function startCameraSession(app, generation) {
   preview.srcObject = stream;
   await startHandInput(getCameraVideo());
   if (generation !== mountGeneration) return;
+  app.querySelector("#camera-off").hidden = false;
   document.getElementById("input-choice")?.remove();
   wireInputFeedback(app);
   await launchGameExperience(app, generation);
@@ -182,19 +207,13 @@ async function startCameraSession(app, generation) {
 async function startPointerSession(app, generation) {
   if (generation !== mountGeneration) return;
   inputMode = "pointer";
-  deferCamera();
+  stopHandInput();
+  stopCamera();
+  app.querySelector("#camera-off").hidden = true;
   document.getElementById("input-choice")?.remove();
   const canvas = app.querySelector("#game-canvas");
   const panel = app.querySelector("#cam-panel");
-  panel.classList.add("pointer-mode");
-  panel.insertAdjacentHTML("beforeend", `
-    <div class="pointer-mode-card">
-      ${icon("pointer", { size: 30 })}
-      <b>MOUSE / TOUCH</b>
-      <span>move · hold = pinch</span>
-      <span>Space = fist</span>
-    </div>
-  `);
+  showPointerCard(panel);
   if (!challenge) {
     const practice = getPracticeStats(meta.id);
     app.querySelector("#run-stat-label").innerHTML = `${icon("pointer", { size: 11 })} Practice best`;
@@ -204,6 +223,18 @@ async function startPointerSession(app, generation) {
   wireInputFeedback(app);
   startPointerInput(canvas);
   await launchGameExperience(app, generation);
+}
+
+function showPointerCard(panel) {
+  panel.classList.add("pointer-mode");
+  panel.insertAdjacentHTML("beforeend", `
+    <div class="pointer-mode-card">
+      ${icon("pointer", { size: 30 })}
+      <b>MOUSE / TOUCH</b>
+      <span>move · hold = pinch</span>
+      <span>Space = fist</span>
+    </div>
+  `);
 }
 
 function wireInputFeedback(app) {
@@ -555,7 +586,7 @@ function showGameOver(app, score, submitted, newBadges = [], runStats = null, cl
   const officialRun = inputMode === "camera";
   const online = isOnline() && officialRun;
   const daily = !!runStats?.daily;
-  const boardTitle = daily ? "TODAY'S RUN" : "TOP HANDS · GLOBAL";
+  const boardTitle = daily ? "TODAY'S RUN · CASUAL" : "TOP HANDS · GLOBAL CASUAL";
   const challengeWon = challenge && score > challenge.score;
   const dailyProgress = daily ? getDailyProgress() : null;
   const profile = getProfile();
@@ -582,7 +613,7 @@ function showGameOver(app, score, submitted, newBadges = [], runStats = null, cl
             : `${challenge.score - score + 1} more to beat ${esc(challenge.challenger)}.`}</span>
         </div>` : ""}
       ${dailyProgress ? `<div class="daily-result">${icon("flame", { size: 14 })} ${dailyProgress.streak} day streak · best ${dailyProgress.bestStreak}</div>` : ""}
-      ${officialRun ? "" : `<div class="practice-result">${icon("pointer", { size: 13 })} POINTER PRACTICE · official boards require hand control</div>`}
+      ${officialRun ? "" : `<div class="practice-result">${icon("pointer", { size: 13 })} POINTER PRACTICE · global boards require hand control</div>`}
       ${runStats ? runStatsHtml(runStats) : ""}
       ${newBadges.length ? `
         <div class="go-badges">
@@ -596,7 +627,7 @@ function showGameOver(app, score, submitted, newBadges = [], runStats = null, cl
         ${online ? `
           <div class="board-head">${icon("trophy", { size: 13 })} ${boardTitle}</div>
           <div class="board-row"><span class="rank">…</span><span class="nm">Loading…</span></div>
-        ` : houseBoard(score, officialRun ? "TOP HANDS" : "POINTER PRACTICE", !officialRun)}
+        ` : houseBoard(score, officialRun ? "LOCAL DEMO" : "POINTER PRACTICE · LOCAL DEMO", !officialRun)}
       </div>
       <a class="go-board-link" href="#/board/${meta.id}">${icon("trophy", { size: 12 })} Hall of Fame</a>
       ${score > 0 || clipResult ? `
@@ -685,21 +716,27 @@ function showGameOver(app, score, submitted, newBadges = [], runStats = null, cl
     const gameId = meta.id;
     (async () => {
       await submitted;
-      const [rows, rank] = daily
-        ? [await fetchDailyBoard(`${gameId}-daily`, 5), null]
-        : await Promise.all([
-          fetchLeaderboard(gameId, 5),
-          fetchMyRank(gameId),
-        ]);
+      let rows = null;
+      let rank = null;
+      try {
+        [rows, rank] = daily
+          ? [await fetchDailyBoard(`${gameId}-daily`, 5), null]
+          : await Promise.all([
+            fetchLeaderboard(gameId, 5),
+            fetchMyRank(gameId),
+          ]);
+      } catch (error) {
+        console.warn("[leaderboard] global standings unavailable:", error);
+      }
       const boardEl = overlay.querySelector(".board");
       if (!boardEl || !boardEl.isConnected) return;
-      if (!rows?.length) {
-        boardEl.innerHTML = houseBoard(score);
+      if (rows === null) {
+        boardEl.innerHTML = houseBoard(score, "LOCAL DEMO · GLOBAL UNAVAILABLE");
         return;
       }
       boardEl.innerHTML = `
         <div class="board-head">${icon("trophy", { size: 13 })} ${boardTitle}</div>
-        ${boardRows(rows)}
+        ${rows.length ? boardRows(rows) : `<div class="board-row"><span class="nm">No ${daily ? "daily" : "global"} scores yet.</span></div>`}
         ${rank && !rows.some((r) => r.you) ? `
           <div class="board-row lead">
             <span class="rank">${rank.rank}</span>
@@ -726,6 +763,7 @@ function onKey(e) {
 }
 
 export function unmount() {
+  if (inputStarting) { stopHandInput(); stopCamera(); }
   mountGeneration += 1;
   window.removeEventListener("keydown", onKey);
   const canvas = appRef?.querySelector("#game-canvas");

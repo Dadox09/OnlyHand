@@ -3,8 +3,8 @@
 // actually requests the camera + warms the hand model before entering the hub.
 // First access ever also asks for a player tag (name + avatar) before the hub.
 import { navigate } from "../router.js";
-import { deferCamera, initCamera, getCameraVideo } from "../core/camera.js";
-import { startHandInput } from "../input/handInput.js";
+import { deferCamera, initCamera, getCameraVideo, stopCamera } from "../core/camera.js";
+import { startHandInput, stopHandInput } from "../input/handInput.js";
 import { icon } from "../core/icon.js";
 import { getProfile, updateProfile } from "../core/profile.js";
 import { syncProfile } from "../core/backend.js";
@@ -22,6 +22,7 @@ export function mount(app) {
 }
 
 export function unmount() {
+  if (busy || location.hash !== "#/hub") { stopHandInput(); stopCamera(); }
   busy = false;
   stopHandCursor();
 }
@@ -76,6 +77,7 @@ function render(app, phase, errorMsg) {
           <div class="onboard-privacy">
             <span class="ic">${icon("shield-check", { size: 15 })}</span>
             Camera processing stays on this device. No video is uploaded.
+            <a href="#/privacy">Privacy details</a>
           </div>
         </div>
 
@@ -132,7 +134,8 @@ function renderNameStep(app) {
 
         <div class="onboard-privacy">
           <span class="ic">${icon("user", { size: 15 })}</span>
-          No account needed — you can change this anytime in your profile.
+          Your tag and avatar are sent to the online leaderboard when enabled.
+          <a href="#/privacy">Read privacy details</a> before continuing.
         </div>
       </div>
     </div>
@@ -215,9 +218,12 @@ async function enable(app) {
     render(app, "loading");
     await startHandInput(getCameraVideo());
     track("Camera Enabled");
-    if (busy) enterHub(app);
+    if (busy) { busy = false; enterHub(app); }
   } catch (err) {
+    if (!busy) return;
     track("Camera Denied", { reason: err?.name || "unknown" });
+    stopHandInput();
+    stopCamera();
     busy = false;
     render(app, "idle", "Camera unavailable: " + err.message);
   }

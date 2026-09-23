@@ -1,10 +1,11 @@
-import { getProfile, updateProfile, updateSettings } from "../core/profile.js";
+import { getProfile, updateProfile, updateSettings, deleteLocalProfile } from "../core/profile.js";
+import { navigate } from "../router.js";
 import { getStats, getPracticeStats } from "../core/scores.js";
 import { getBadges, getLevel } from "../core/badges.js";
 import { visibleGames as games } from "../games/registry.js";
 import { icon } from "../core/icon.js";
 import { startHandCursor, stopHandCursor } from "../core/handCursor.js";
-import { syncProfile } from "../core/backend.js";
+import { syncProfile, deleteMyAccount } from "../core/backend.js";
 import { PLAYER_SHIPS, isShipUnlocked } from "../games/asteroids/fleet.js";
 
 const AVATARS = ["🎮", "🤖", "👾", "🕹️", "🦾", "🧠", "🐉", "🦅", "🔥", "⚡"];
@@ -95,6 +96,8 @@ function render(app) {
               Show hand landmarks
             </label>
           </div>
+          <p><button class="btn btn-ghost" id="delete-data">Delete my profile and scores</button></p>
+          <p id="delete-status" role="status"></p>
         </section>
 
       </div>
@@ -182,5 +185,20 @@ function render(app) {
   });
   app.querySelector("#landmarks").addEventListener("change", (e) => {
     updateSettings({ showLandmarks: e.target.checked });
+  });
+  app.querySelector("#delete-data").addEventListener("click", async (event) => {
+    if (!window.confirm("Delete your local profile and, if connected, your anonymous account and all scores? This cannot be undone.")) return;
+    const button = event.currentTarget;
+    button.disabled = true;
+    const status = app.querySelector("#delete-status");
+    status.textContent = "Deleting…";
+    try {
+      await deleteMyAccount();
+      deleteLocalProfile();
+      navigate("/");
+    } catch (error) {
+      status.textContent = `Could not delete cloud data. Nothing was removed locally. Contact rizzodavidege@gmail.com. ${error.message}`;
+      button.disabled = false;
+    }
   });
 }

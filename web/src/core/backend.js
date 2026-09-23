@@ -34,6 +34,12 @@ async function ensureSession() {
   return sessionPromise;
 }
 
+async function existingUserId() {
+  if (!supabase) return null;
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.user.id ?? null;
+}
+
 // Push the local profile (name + avatar) to the cloud.
 export async function syncProfile() {
   const session = await ensureSession();
@@ -66,7 +72,7 @@ export async function submitScore(gameId, score) {
 // Global top N for a game: [{ name, avatar, best, you }]
 export async function fetchLeaderboard(gameId, limit = 10) {
   if (!supabase) return null;
-  const session = await ensureSession();
+  const userId = await existingUserId();
   const { data, error } = await supabase
     .from("leaderboard")
     .select("user_id, name, avatar, best")
@@ -81,7 +87,7 @@ export async function fetchLeaderboard(gameId, limit = 10) {
     name: r.name,
     avatar: r.avatar,
     score: r.best,
-    you: session ? r.user_id === session.user.id : false,
+    you: r.user_id === userId,
   }));
 }
 
@@ -89,45 +95,34 @@ export async function fetchLeaderboard(gameId, limit = 10) {
 // "TODAY" board. gameId here is the cloud id (e.g. "asteroids-daily").
 export async function fetchDailyBoard(gameId, limit = 5) {
   if (!supabase) return null;
-  const session = await ensureSession();
-  const dayStart = new Date();
-  dayStart.setUTCHours(0, 0, 0, 0);
+  const userId = await existingUserId();
   const { data, error } = await supabase
-    .from("scores")
-    .select("user_id, score, profiles(name, avatar)")
+    .from("daily_leaderboard")
+    .select("user_id, name, avatar, best")
     .eq("game_id", gameId)
-    .gte("created_at", dayStart.toISOString())
-    .order("score", { ascending: false })
-    .limit(60);
+    .order("best", { ascending: false })
+    .limit(limit);
   if (error) {
     console.warn("[backend] daily board fetch failed:", error.message);
     return null;
   }
-  const seen = new Set();
-  const rows = [];
-  for (const r of data) {
-    if (seen.has(r.user_id)) continue; // best per player: rows arrive sorted
-    seen.add(r.user_id);
-    rows.push({
-      name: r.profiles?.name ?? "???",
-      avatar: r.profiles?.avatar ?? "🎮",
-      score: r.score,
-      you: session ? r.user_id === session.user.id : false,
-    });
-    if (rows.length >= limit) break;
-  }
-  return rows;
+  return data.map((r) => ({
+    name: r.name,
+    avatar: r.avatar,
+    score: r.best,
+    you: r.user_id === userId,
+  }));
 }
 
 // Your global rank in a game (1-based), or null.
 export async function fetchMyRank(gameId) {
-  const session = await ensureSession();
-  if (!session) return null;
+  const userId = await existingUserId();
+  if (!userId) return null;
   const { data: mine } = await supabase
     .from("leaderboard")
     .select("best")
     .eq("game_id", gameId)
-    .eq("user_id", session.user.id)
+    .eq("user_id", userId)
     .maybeSingle();
   if (!mine) return null;
   const { count, error } = await supabase
@@ -137,4 +132,17 @@ export async function fetchMyRank(gameId) {
     .gt("best", mine.best);
   if (error) return null;
   return { rank: (count ?? 0) + 1, best: mine.best };
+}
+
+export async function deleteMyAccount() {
+  if (!supabase) return;
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  if (sessionError) throw sessionError;
+  if (session) {
+    const { error } = await supabase.rpc("delete_my_account");
+    if (error) throw error;
+    sessionPromise = null;
+    const { error: signOutError } = await supabase.auth.signOut({ scope: "local" });
+    if (signOutError) console.warn("[backend] local sign-out failed:", signOutError.message);
+  }
 }

@@ -32,11 +32,14 @@ real TOP HANDS.
 
 ## What the schema enforces
 
-- **RLS everywhere**: users can only insert their own rows; scores are
-  immutable from the client (no update/delete policies).
+- **RLS everywhere**: users can read their own raw rows and insert their own
+  scores. Raw tables are not public; scores are immutable from the client.
 - **Sanity checks**: score 0–100 000, known `game_id`s only, name ≤ 24 chars.
 - **Rate limit**: max 1 score per 5 s per user (trigger).
-- **`leaderboard` view**: best score per player per game — what the app queries.
+- **`leaderboard` and `daily_leaderboard` views**: public best scores per player,
+  with anonymous ID, tag and avatar; individual score history is not exposed.
+- **`delete_my_account()`**: an anonymous player can remove their auth user,
+  profile and scores. The profile screen calls it before clearing local data.
 
 ## Migrations for existing projects
 
@@ -55,10 +58,10 @@ alter table public.scores add constraint scores_game_id_check
 
 Asteroids' DAILY RUN mode (hangar toggle) submits scores as
 `game_id = 'asteroids-daily'`, so daily attempts never touch the all-time
-Asteroids board. The in-game **TODAY'S RUN** board queries `scores` filtered
-to `created_at >= today (UTC)` and keeps each player's best. No extra tables
-or views needed. Without the migration above, daily submits fail silently
-(console warning) and the Game Over overlay falls back to the house board.
+Asteroids board. The in-game **TODAY'S RUN** board queries the
+`daily_leaderboard` view, which groups each player's best score since midnight
+UTC before the client limits the result. Apply the full current `schema.sql`
+before deploying the matching frontend.
 
 ## Data model
 
@@ -67,3 +70,4 @@ or views needed. Without the migration above, daily submits fail silently
 | `profiles` | `id` (= auth uid), `name`, `avatar` |
 | `scores` | one row per finished run: `user_id`, `game_id`, `score` |
 | `leaderboard` (view) | best per player per game, joined with profile |
+| `daily_leaderboard` (view) | today's UTC best per player and game |

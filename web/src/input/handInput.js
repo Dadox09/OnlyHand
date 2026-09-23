@@ -8,6 +8,7 @@ let rafHandle = null;
 let video = null;
 let lastVideoTime = -1;
 let pointerCleanup = null;
+let inputGeneration = 0;
 
 export const handState = {
   x: 0.5,
@@ -162,11 +163,29 @@ function loop() {
 }
 
 export async function startHandInput(videoElement) {
+  const generation = ++inputGeneration;
   stopPointerInput();
   await ensureModel();
+  if (generation !== inputGeneration) throw new DOMException("Hand input stopped", "AbortError");
   video = videoElement;
   if (!rafHandle) {
     rafHandle = requestAnimationFrame(loop);
+  }
+}
+
+export function stopHandInput() {
+  inputGeneration++;
+  if (rafHandle !== null) cancelAnimationFrame(rafHandle);
+  rafHandle = null;
+  video = null;
+  lastVideoTime = -1;
+  if (handState.source === "camera") {
+    handState.isDetected = false;
+    handState.landmarks = null;
+    handState.gesture = null;
+    handState.pinch = false;
+    handState.source = null;
+    emitState();
   }
 }
 
@@ -175,8 +194,7 @@ export async function startHandInput(videoElement) {
 // mirrored camera coordinates, hold/click maps to pinch and Space maps to fist.
 export function startPointerInput(element) {
   stopPointerInput();
-  if (rafHandle !== null) cancelAnimationFrame(rafHandle);
-  rafHandle = null;
+  stopHandInput();
   let pointerDown = false;
   let spaceDown = false;
   let pinchReleaseRaf = null;

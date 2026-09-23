@@ -15,8 +15,9 @@ alter table public.profiles enable row level security;
 
 -- create policy has no "if not exists" — drop first so re-runs don't error
 drop policy if exists "profiles are readable by everyone" on public.profiles;
-create policy "profiles are readable by everyone"
-  on public.profiles for select using (true);
+drop policy if exists "users read own profile" on public.profiles;
+create policy "users read own profile"
+  on public.profiles for select to authenticated using ((select auth.uid()) = id);
 
 drop policy if exists "users insert own profile" on public.profiles;
 create policy "users insert own profile"
@@ -42,14 +43,19 @@ create index if not exists scores_user on public.scores (user_id, game_id);
 alter table public.scores enable row level security;
 
 drop policy if exists "scores are readable by everyone" on public.scores;
-create policy "scores are readable by everyone"
-  on public.scores for select using (true);
+drop policy if exists "users read own scores" on public.scores;
+create policy "users read own scores"
+  on public.scores for select to authenticated using ((select auth.uid()) = user_id);
 
 drop policy if exists "users insert own scores" on public.scores;
 create policy "users insert own scores"
   on public.scores for insert with check (auth.uid() = user_id);
 
 -- No update/delete policies: submitted scores are immutable from the client.
+-- Visitors can read only the aggregate leaderboard views below, not raw rows.
+revoke all on public.profiles, public.scores from public, anon, authenticated;
+grant select, insert, update on public.profiles to authenticated;
+grant select, insert on public.scores to authenticated;
 
 -- ── Basic anti-spam: max 1 score per 5 seconds per user ────────
 create or replace function public.enforce_score_rate()
@@ -95,3 +101,39 @@ select
 from public.scores s
 join public.profiles p on p.id = s.user_id
 group by s.game_id, s.user_id, p.name, p.avatar;
+
+-- Today's UTC best per player is aggregated before the client applies LIMIT.
+create or replace view public.daily_leaderboard as
+select
+  s.game_id,
+  s.user_id,
+  p.name,
+  p.avatar,
+  max(s.score) as best
+from public.scores s
+join public.profiles p on p.id = s.user_id
+where s.created_at >= date_trunc('day', now() at time zone 'UTC') at time zone 'UTC'
+group by s.game_id, s.user_id, p.name, p.avatar;
+
+-- These views intentionally expose only tag, avatar, anonymous ID and best score.
+-- The owner evaluates the aggregates; raw tables remain owner-only under RLS.
+grant select on public.leaderboard, public.daily_leaderboard to anon, authenticated;
+
+-- An authenticated anonymous player can erase their auth user. Cascading FKs
+-- remove the profile and scores. The client clears its local copy only on success.
+create or replace function public.delete_my_account()
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  delete from auth.users
+  where id = (select auth.uid()) and is_anonymous is true;
+  if not found then
+    raise exception 'No anonymous account to delete';
+  end if;
+end;
+$$;
+revoke execute on function public.delete_my_account() from public, anon;
+grant execute on function public.delete_my_account() to authenticated;

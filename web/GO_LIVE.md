@@ -13,9 +13,12 @@ before the consent step below is complete.
 - The current Vercel URL uses HTTPS, which provides the secure context needed for camera access.
   A custom domain is optional for beta; use one before domain verification or site-ad monetization.
 - Keep the canonical, Open Graph, Twitter and sitemap URLs on `https://only-hand-two.vercel.app/`.
-- Supabase is optional. To enable global boards and cross-device score sync, set
+- Supabase is optional. To enable global casual boards, set
   `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in Vercel and apply `../supabase/schema.sql`
-  to that production Supabase project. Without it, scores stay local.
+  to that production Supabase project. Without it, scores stay local. Anonymous
+  accounts are tied to one browser; the app does not restore a profile or scores
+  on another device. Re-run the schema before deploying the new daily leaderboard
+  query and account-deletion button.
 - The production build reads `VITE_PLAUSIBLE_DOMAIN=only-hand-two.vercel.app` from
   `.env.production` (Vercel environment variables can override it). Add this domain to
   Plausible and create custom-event goals for `Pointer Mode Selected`, `Camera Enabled`,

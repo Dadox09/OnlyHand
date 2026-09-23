@@ -18,5 +18,7 @@ export function track(name, props = {}) {
   // Always emit a local event so another first-party analytics adapter can be
   // attached later without changing game code. Plausible is optional/cookieless.
   window.dispatchEvent(new CustomEvent("onlyhand:analytics", { detail: { name, props } }));
-  if (domain && navigator.doNotTrack !== "1") window.plausible?.(name, { props });
+  if (domain && navigator.doNotTrack !== "1") {
+    window.plausible?.(name, { props, url: `${location.origin}${location.pathname}${location.search}` });
+  }
 }

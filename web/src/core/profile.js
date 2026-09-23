@@ -43,6 +43,10 @@ export function saveProfile(profile) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
 }
 
+export function deleteLocalProfile() {
+  localStorage.removeItem(STORAGE_KEY);
+}
+
 export function updateProfile(patch) {
   const p = { ...getProfile(), ...patch };
   saveProfile(p);

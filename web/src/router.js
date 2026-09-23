@@ -23,7 +23,7 @@ export function navigate(path) {
 
 function dispatch() {
   const path = location.hash.slice(1) || "/";
-  track("Page Viewed", { path });
+  track("Page Viewed", { path: path.startsWith("/challenge/") ? "/challenge" : path });
   for (const { re, keys, handler } of routes) {
     const m = path.match(re);
     if (m) {

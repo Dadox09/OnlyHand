@@ -32,7 +32,7 @@ export function mount(app, { params } = {}) {
     <div class="lb-wrap">
       <div class="page-header oh-fade-up">
         <h1>${icon("trophy", { size: 22 })} HALL OF FAME</h1>
-        <p class="subtitle">All-time top hands${isOnline() ? " · global" : " · this device"}</p>
+        <p class="subtitle" id="board-source">All-time top hands · ${isOnline() ? "loading global standings" : "local demo standings"}</p>
       </div>
       <div class="lb-tabs oh-fade-up" id="lb-tabs">
         ${games.map((g) => `
@@ -97,13 +97,21 @@ async function renderBoard(app) {
   let rows = null;
   let myRank = null;
   if (isOnline()) {
-    [rows, myRank] = await Promise.all([
-      fetchLeaderboard(gameId, 10),
-      fetchMyRank(gameId),
-    ]);
+    try {
+      [rows, myRank] = await Promise.all([
+        fetchLeaderboard(gameId, 10),
+        fetchMyRank(gameId),
+      ]);
+    } catch (error) {
+      console.warn("[leaderboard] global standings unavailable:", error);
+    }
   }
   if (token !== loadToken || !board.isConnected) return; // stale tab switch
-  if (!rows?.length) rows = getLeaderboard(gameId, 0, 10);
+  const fallback = rows === null;
+  app.querySelector("#board-source").textContent = fallback
+    ? `All-time top hands · ${isOnline() ? "local demo (global unavailable)" : "local demo standings"}`
+    : "All-time top hands · global casual standings";
+  if (fallback) rows = getLeaderboard(gameId, 0, 10);
 
   const podium = rows.slice(0, 3);
   const rest = rows.slice(3);
@@ -126,7 +134,8 @@ async function renderBoard(app) {
           <span class="sc">${myRank.best}</span>
         </div>
       </div>` : ""}
-    ${!youOnBoard && !myRank && best === 0 ? `
+    ${!fallback && !rows.length ? `<p class="lb-cta">No global scores yet.</p>` : ""}
+    ${!youOnBoard && !myRank && best === 0 && rows.length > 0 ? `
       <p class="lb-cta">No score yet — <a href="#/games/${gameId}">play a run</a> to claim your spot.</p>` : ""}
   `;
 }

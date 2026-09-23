@@ -115,8 +115,8 @@ def visualizeFaces(
     for keypoint in detection.keypoints:
       keypoint_px = _normalized_to_pixel_coordinates(keypoint.x, keypoint.y,
                                                      width, height)
-      color, thickness, radius = (0, 255, 0), 2, 2
-      cv2.circle(annotated_image, keypoint_px, thickness, color, radius)
+      if keypoint_px is not None:
+        cv2.circle(annotated_image, keypoint_px, 2, (0, 255, 0), 2)
 
     # Draw label and score
     category = detection.categories[0]
