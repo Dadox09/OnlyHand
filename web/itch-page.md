@@ -31,7 +31,7 @@ OnlyHand is a free browser arcade controlled with hand gestures. Point to move a
 
 Hand tracking runs locally in your browser. OnlyHand does not upload webcam video. If you explicitly start a Creator Clip, the video is composed locally and leaves your device only if you choose to save or share it. Personal records are stored locally; the global leaderboard is optional.
 
-Best with decent lighting and your hand about 50 cm from the camera. Mobile play is landscape.
+Best with decent lighting and your hand about 50 cm from the camera. Mobile play works in portrait or landscape.
 
 Play the current beta: https://only-hand-two.vercel.app/
 

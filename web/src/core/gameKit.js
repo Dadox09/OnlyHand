@@ -33,18 +33,36 @@ export function bodyFont(size, weight = 400) {
 // re-fits on any container/viewport change, so games never handle resize.
 const MAX_BACKING_W = 2560; // perf cap for 2D canvas on 4K screens
 
-export function setupCanvas(canvas, W, H) {
+// Solo games can use a taller logical field on phones. Keep a fixed logical
+// width so object sizes and collision radii stay consistent; the height follows
+// the actual stage, within limits that leave room for the HUD and game rules.
+export function portraitGameSize(boxW, boxH, W, H) {
+  if (!window.matchMedia("(orientation: portrait) and (max-width: 760px)").matches) return { W, H };
+  const portraitW = 600;
+  const portraitH = Math.max(650, Math.min(780, Math.round((portraitW * boxH / Math.max(boxW, 1)) / 20) * 20));
+  return { W: portraitW, H: portraitH };
+}
+
+export function setupCanvas(canvas, W, H, { logicalSize, onWorldResize } = {}) {
   const box = canvas.closest(".stage-box") || canvas.parentElement;
   const ctx = canvas.getContext("2d");
+  let worldW = W;
+  let worldH = H;
 
   const fit = () => {
     const r = box.getBoundingClientRect();
     // borders on .canvas-wrap/canvas eat ~2px; keep a tiny safety margin
     const boxW = Math.max(r.width - 4, 50);
     const boxH = Math.max(r.height - 4, 50);
-    const s = Math.min(boxW / W, boxH / H);
-    const cssW = Math.floor(W * s);
-    const cssH = Math.floor(H * s);
+    const next = logicalSize?.(boxW, boxH, W, H) ?? { W, H };
+    if (next.W !== worldW || next.H !== worldH) {
+      onWorldResize?.(worldW, worldH, next.W, next.H);
+      worldW = next.W;
+      worldH = next.H;
+    }
+    const s = Math.min(boxW / worldW, boxH / worldH);
+    const cssW = Math.floor(worldW * s);
+    const cssH = Math.floor(worldH * s);
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const scale = Math.min(dpr, MAX_BACKING_W / cssW);
     // explicit px on both axes: the backing store must never feed back
@@ -53,7 +71,7 @@ export function setupCanvas(canvas, W, H) {
     canvas.style.height = cssH + "px";
     canvas.width = Math.round(cssW * scale);
     canvas.height = Math.round(cssH * scale);
-    ctx.setTransform((cssW * scale) / W, 0, 0, (cssH * scale) / H, 0, 0);
+    ctx.setTransform((cssW * scale) / worldW, 0, 0, (cssH * scale) / worldH, 0, 0);
   };
 
   fit();

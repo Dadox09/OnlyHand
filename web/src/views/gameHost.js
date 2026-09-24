@@ -4,7 +4,7 @@ import { getCameraVideo, initCamera, stopCamera } from "../core/camera.js";
 import { startHandInput, stopHandInput, startPointerInput, stopPointerInput, onHandUpdate, handState, mapToActiveBox } from "../input/handInput.js";
 import { recordPlay, getBest, getStats, getPracticeBest, getPracticeStats, getLeaderboard, updateDailyProgress, getDailyProgress } from "../core/scores.js";
 import { icon } from "../core/icon.js";
-import { setupCanvas, sfx } from "../core/gameKit.js";
+import { setupCanvas, portraitGameSize, sfx } from "../core/gameKit.js";
 import { startHandCursor, stopHandCursor } from "../core/handCursor.js";
 import { isOnline, fetchLeaderboard, fetchMyRank, fetchDailyBoard, createPongLobby, joinPongLobby, leavePongLobby, createOrbRushLobby, joinOrbRushLobby, leaveOrbRushLobby } from "../core/backend.js";
 import { syncProfile } from "../core/backend.js";
@@ -67,7 +67,7 @@ export async function mount(app, { params }) {
         <span class="title">${meta.icon} <span class="name">${meta.name}</span></span>
         ${challenge ? `<span class="challenge-pill">${icon("zap", { size: 12 })} Beat ${esc(challenge.challenger)} · ${challenge.score}</span>` : ""}
         <button class="creator-clip-btn" id="creator-clip" hidden>${icon("video", { size: 13 })} <span>REC CLIP</span></button>
-        <button class="btn btn-ghost" id="camera-off" hidden>Camera off · mouse / touch</button>
+        <button class="btn btn-ghost" id="camera-off" aria-label="Turn camera off and switch to mouse or touch controls" hidden>Camera off</button>
         <span class="hand-indicator" id="hand-ind"><span class="dot"></span> Choose controls</span>
       </div>
       <div class="game-host-body">
@@ -85,6 +85,7 @@ export async function mount(app, { params }) {
           <div class="webcam-panel game-webcam" id="cam-panel">
             <video id="game-preview" autoplay playsinline muted></video>
             <canvas id="game-overlay"></canvas>
+            <span class="game-camera-state" id="camera-state" role="status" aria-live="polite">CAMERA OFF</span>
           </div>
           <div class="gesture-guide" role="note" aria-label="Hand controls for ${meta.name}">
             <span class="guide-title">${icon("hand", { size: 13 })} CONTROLS</span>
@@ -108,7 +109,7 @@ export async function mount(app, { params }) {
   const panel = app.querySelector("#cam-panel");
   // Fit the pre-game controller choice before a game module owns the canvas.
   // The game calls setupCanvas again with its exact logical dimensions.
-  setupCanvas(app.querySelector("#game-canvas"), 800, 500);
+  setupCanvas(app.querySelector("#game-canvas"), 800, 500, { logicalSize: portraitGameSize });
   clipButton = app.querySelector("#creator-clip");
   clipButton.addEventListener("click", onCreatorClipClick);
   app.querySelector("#camera-off").addEventListener("click", () => {
@@ -164,6 +165,7 @@ function showInputChoice(app, generation, error = "") {
         <button class="btn" id="use-pointer">${icon("pointer", { size: 16 })} Try mouse / touch</button>
       </div>
       <div class="go-hint">Camera processing stays on this device · no video is uploaded</div>
+      <p class="choice-privacy"><a href="#/privacy" target="_blank" rel="noopener">Privacy details</a></p>
     </div>
   `;
   wrap.appendChild(overlay);
@@ -205,6 +207,7 @@ async function startCameraSession(app, generation) {
   preview.srcObject = stream;
   await startHandInput(getCameraVideo());
   if (generation !== mountGeneration) return;
+  app.querySelector("#camera-state").textContent = "CAMERA LIVE";
   app.querySelector("#camera-off").hidden = false;
   document.getElementById("input-choice")?.remove();
   wireInputFeedback(app);
@@ -234,6 +237,7 @@ async function startPointerSession(app, generation) {
 
 function showPointerCard(panel) {
   panel.classList.add("pointer-mode");
+  panel.querySelector("#camera-state").textContent = "CAMERA OFF";
   panel.insertAdjacentHTML("beforeend", `
     <div class="pointer-mode-card">
       ${icon("pointer", { size: 30 })}
@@ -272,9 +276,15 @@ function wireInputFeedback(app) {
     ctx.fillStyle = "#4ade80";
     ctx.shadowColor = "rgba(74,222,128,0.8)";
     ctx.shadowBlur = 6;
+    const preview = app.querySelector("#game-preview");
+    const videoW = preview.videoWidth || W;
+    const videoH = preview.videoHeight || H;
+    const scale = Math.min(W / videoW, H / videoH);
+    const imageW = videoW * scale, imageH = videoH * scale;
+    const left = (W - imageW) / 2, top = (H - imageH) / 2;
     for (const lm of s.landmarks) {
       ctx.beginPath();
-      ctx.arc(lm.x * W, lm.y * H, 4, 0, Math.PI * 2);
+      ctx.arc(left + lm.x * imageW, top + lm.y * imageH, 4, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.shadowBlur = 0;
@@ -323,6 +333,7 @@ function showPongChoice(app, generation) {
             <button class="btn" type="submit">Join</button>
           </div>
         </form>` : `<p class="go-hint">Online play needs a Supabase connection.</p>${orb ? `<button class="btn" id="orb-hub">Back to hub</button>` : ""}`}
+      <p class="choice-privacy">Online matches use an anonymous account. <a href="#/privacy" target="_blank" rel="noopener">Privacy details</a></p>
       <div class="input-choice-error" id="pong-error" role="status" aria-live="polite"></div>
     </div>`;
   app.querySelector("#canvas-wrap").appendChild(overlay);

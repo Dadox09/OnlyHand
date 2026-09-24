@@ -11,12 +11,12 @@ export function mount(app) {
   app.innerHTML = `
     <nav>
       <a class="logo" href="#/hub">ONLY<span class="lit">HAND</span></a>
-      <a href="#/hub">${icon("chevron-right", { size: 14 })} Back to games</a>
+      <a href="#/hub" aria-label="Back to games">${icon("chevron-right", { size: 14 })}<span class="nav-label">Back to games</span></a>
     </nav>
     <div class="page">
       <div class="page-header oh-fade-up">
         <h1>PRIVACY</h1>
-        <p class="subtitle">How OnlyHand handles your data · updated 23 September 2026</p>
+        <p class="subtitle">How OnlyHand handles your data · updated 24 September 2026</p>
       </div>
       <div class="privacy-body oh-fade-up" style="animation-delay:0.05s">
         <h2>Controller</h2>
@@ -38,10 +38,14 @@ export function mount(app) {
         <p>
           Your tag, avatar, scores, badges and settings are saved in this browser's
           <code>localStorage</code> until you delete your profile or clear site data.
+          When Supabase is active, its access and refresh tokens are also saved in this browser's
+          <code>localStorage</code> to keep your anonymous cloud account available on later visits.
           If the online leaderboard is enabled, saving your tag creates an anonymous Supabase
           account and sends the tag and avatar before your first game. Eligible solo camera-mode runs also send
           the game and score. Supabase stores the submission time, an anonymous account ID, profile
           creation and update times, and every submitted score. No email or video is sent.
+          Authentication and API records may also include connection details such as your IP
+          address and browser information.
           This supports the game features you request and the operator's legitimate interest
           in running a casual leaderboard (Article 6(1)(b) and 6(1)(f) GDPR).
         </p>
@@ -49,7 +53,7 @@ export function mount(app) {
           Rankings are casual: client-submitted scores are not independently verified. The
           leaderboard publicly shows player tags, avatars, anonymous IDs and best scores.
           The current Supabase project is in Ireland. Anonymous accounts, profiles and scores
-          are kept until you request deletion; a monthly cleanup also removes accounts with no
+          are kept until you request deletion; a monthly job is scheduled to remove accounts with no
           cloud profile or score update for 12 months. Clearing browser storage alone does not remove
           cloud data and may remove your ability to identify the anonymous account.
         </p>
@@ -60,26 +64,31 @@ export function mount(app) {
           correction or deletion by email.
         </p>
 
-        <h2>Pong 1 vs 1</h2>
+        <h2>Online matches: Pong and Orb Rush</h2>
         <p>
-          Supabase stores a short invitation code and the two anonymous account IDs. A lobby expires
-          after two hours and an hourly job removes expired rooms. Supabase relays paddle position,
-          pinch state and match state live to the other player.
-          The host's browser computes the ball and score. Camera images are not sent. Leaving
-          closes a lobby immediately when the host
-          leaves. Online match scores are not added to the leaderboard.
+          If you create or join an online match, a Supabase anonymous account is created if you
+          do not have one already. Supabase stores the match invitation code, the host's
+          anonymous account ID and, after joining, the guest's anonymous account ID, along with
+          creation and expiry times. A lobby expires after two hours; a scheduled cleanup job
+          removes expired rooms when it runs. Supabase relays live controls and match state to the other player:
+          paddle position and pinch state in Pong, or player position, activity and pinch state
+          in Orb Rush. The host's browser computes the match. Camera images and microphone audio
+          are not sent. This processing provides the online match you request (Article 6(1)(b)
+          GDPR). Online match scores are not added to the leaderboard.
         </p>
 
         <h2>Hosting</h2>
         <p>
           Vercel hosts <code>only-hand-two.vercel.app</code> and processes technical requests
-          needed to serve and secure the site. On the Hobby plan, runtime logs are available for
-          one hour. OnlyHand does not load an analytics service.
+          needed to serve and secure the site. On the current Hobby plan, edge request data is
+          available in Vercel Observability for 12 hours. That dashboard window does not establish
+          when Vercel deletes all underlying records. OnlyHand does not load client-side analytics
+          or advertising trackers.
         </p>
 
         <h2>Recipients and transfers</h2>
         <p>
-          Vercel (hosting) and Supabase (anonymous accounts and scores)
+          Vercel (hosting) and Supabase (anonymous accounts, scores and online matches)
           process the data described above. Supabase's primary project data is currently in
           Ireland; Vercel may process requests in other countries. Provider terms and applicable
           transfer safeguards govern processing outside the EEA. Contact the controller for

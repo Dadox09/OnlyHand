@@ -1,12 +1,12 @@
 import {
-  NEON, setupCanvas, createParticles, createShake, createFlash,
+  NEON, setupCanvas, portraitGameSize, createParticles, createShake, createFlash,
   createCountdown, createFixedStep, createMusic, STEP_MS, drawHudText, drawHandLostBanner, drawLives, sfx, hudFont,
 } from "../../core/gameKit.js";
 import { getProfile } from "../../core/profile.js";
 import { getShipDef, ENEMY_FIGHTERS } from "./fleet.js";
 
-const W = 800;
-const H = 550;
+let W = 800;
+let H = 550;
 const TAU = Math.PI * 2;
 
 /* ── Tuning ───────────────────────────────────────────────────── */
@@ -269,7 +269,36 @@ function makeCarrier() {
 
 export default {
   async mount({ canvas, onHandUpdate, handState, onScore, daily = false }) {
-    const ctx = setupCanvas(canvas, W, H);
+    W = 800;
+    H = 550;
+    fallbackBgs.clear();
+    let state = null;
+    const ctx = setupCanvas(canvas, W, H, {
+      logicalSize: portraitGameSize,
+      onWorldResize(oldW, oldH, nextW, nextH) {
+        const sx = nextW / oldW, sy = nextH / oldH;
+        W = nextW;
+        H = nextH;
+        fallbackBgs.clear();
+        if (!state) return;
+        const move = (object) => {
+          if (!object) return;
+          for (const key of ["x", "baseX", "targetX", "offX", "vx"]) {
+            if (Number.isFinite(object[key])) object[key] *= sx;
+          }
+          for (const key of ["y", "targetY", "hoverY", "offY", "vy"]) {
+            if (Number.isFinite(object[key])) object[key] *= sy;
+          }
+        };
+        move(state.ship);
+        for (const key of ["asteroids", "bullets", "shotImpacts", "enemyBullets", "monsterDeaths", "powerups", "bosses", "fighters", "popups"]) {
+          for (const object of state[key]) move(object);
+        }
+        move(state.ufo);
+        state.bombX *= sx;
+        state.bombY *= sy;
+      },
+    });
 
     // Daily run: sim RNG seeded from the UTC day — everyone flies the same
     // sectors today. Free flight keeps plain Math.random.
@@ -310,7 +339,7 @@ export default {
       targetX: W / 2, targetY: H * 0.8,
     };
 
-    const state = {
+    state = {
       ship,
       asteroids: [],
       bullets: [],

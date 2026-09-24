@@ -99,6 +99,8 @@
 .canvas-wrap { position: relative; width: fit-content; }
 
 .pong-choice-panel { width: min(390px, 100%); }
+.choice-privacy { margin: 0; color: var(--text-muted); font-size: var(--text-tag); }
+.choice-privacy a { color: var(--accent); text-decoration: underline; }
 .pong-choice-panel > .btn { min-height: 44px; width: min(270px, 100%); }
 .pong-choice-divider { color: var(--text-muted); font-size: var(--text-tag); letter-spacing: 0.12em; margin-top: 0.3rem; }
 .pong-join-form { width: min(270px, 100%); text-align: left; }
@@ -142,6 +144,23 @@
   gap: 0.75rem;
 }
 .host-sidebar .game-webcam { width: 100%; }
+.game-webcam video { object-fit: contain; }
+.game-camera-state {
+  position: absolute;
+  z-index: 2;
+  top: 0.45rem;
+  left: 0.45rem;
+  padding: 0.2rem 0.4rem;
+  border: 1px solid rgba(74, 222, 128, 0.55);
+  border-radius: 999px;
+  color: var(--accent);
+  background: rgba(0, 0, 0, 0.76);
+  font-family: var(--font-display);
+  font-size: 0.55rem;
+  letter-spacing: 0.08em;
+  pointer-events: none;
+}
+.game-webcam.pointer-mode .game-camera-state { color: var(--text-muted); border-color: var(--border); }
 .game-webcam.pointer-mode video,
 .game-webcam.pointer-mode canvas { display: none; }
 .pointer-mode-card {
@@ -174,7 +193,7 @@
 }
 
 /* short landscape screens (phones): compress chrome, keep webcam */
-@media (max-height: 480px) {
+@media (orientation: landscape) and (max-height: 480px) {
   .game-host {
     padding: 0.5rem 0.75rem max(0.5rem, env(safe-area-inset-bottom));
     gap: 0;
@@ -187,8 +206,12 @@
   .host-sidebar .stat-card { display: none; }
 }
 
+@media (orientation: landscape) and (max-height: 480px) and (max-width: 760px) {
+  .game-host-header { flex-wrap: wrap; row-gap: 0.25rem; }
+}
+
 /* very short landscape (compact phones): every px goes to the stage */
-@media (max-height: 420px) {
+@media (orientation: landscape) and (max-height: 420px) {
   .game-host { padding-top: 0.35rem; }
   .game-host-header { margin-bottom: 0.15rem; }
   .game-host-header .btn { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
@@ -264,7 +287,7 @@
 .go-hangar .ship-card .ship-name { font-size: 0.6rem; }
 
 /* short landscape: hangar must fit inside the shrunken stage */
-@media (max-height: 480px) {
+@media (orientation: landscape) and (max-height: 480px) {
   .input-choice-panel { gap: 0.35rem; }
   .input-choice-copy { line-height: 1.25; }
   .go-hangar .hangar-grid {
@@ -275,4 +298,98 @@
   .go-hangar .ship-card { padding: 0.3rem 0.25rem; }
   .go-hangar .ship-card .ship-thumb { width: 28px; height: 28px; }
   .go-hangar .ship-card .ship-perk { display: none; }
+}
+
+/* Portrait phones and tablets: the stage owns the remaining viewport; game
+   overlays use its full area even when a fixed online court is letterboxed. */
+@media (max-width: 760px) and (orientation: portrait) {
+  .game-host {
+    height: 100dvh;
+    min-height: 100svh;
+    padding: max(0.45rem, env(safe-area-inset-top)) 0.65rem max(0.55rem, env(safe-area-inset-bottom));
+    gap: 0.35rem;
+  }
+  .game-host-header {
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin: 0;
+    padding-right: 50px;
+    align-content: flex-start;
+  }
+  .game-host-header .btn { min-height: 44px; padding: 0.4rem 0.6rem; }
+  .game-host-header .title { flex: 1 1 105px; min-width: 0; gap: 0.35rem; }
+  .game-host-header .title .name { font-size: 0.78rem; }
+  .challenge-pill { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .creator-clip-btn { min-height: 44px; padding: 0.35rem 0.55rem; }
+  .hand-indicator { min-height: 38px; margin-left: auto; }
+
+  .game-host-body { flex-direction: column; gap: 0.4rem; }
+  .game-stage { flex: 1 1 0; min-height: 0; }
+  .stage-box { width: 100%; }
+  .canvas-wrap {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .hint-bar { display: none; }
+
+  .host-sidebar {
+    width: 100%;
+    flex: 0 0 auto;
+    display: grid;
+    grid-template-columns: minmax(0, 55%) minmax(0, 1fr);
+    align-items: start;
+    gap: 0.4rem;
+  }
+  .host-sidebar .game-webcam { grid-column: 1; grid-row: 1 / span 2; width: 100%; }
+  .host-sidebar .gesture-guide {
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+    margin: 0;
+    padding: 0.4rem;
+    gap: 0.3rem;
+    align-content: start;
+  }
+  .host-sidebar .guide-title { font-size: 0.6rem; }
+  .host-sidebar .guide-chip { max-width: 100%; padding: 0.35rem 0.45rem; gap: 0.3rem; flex-wrap: wrap; }
+  .host-sidebar .guide-chip b { font-size: 0.6rem; }
+  .host-sidebar .guide-chip em { font-size: 0.68rem; }
+  .host-sidebar .stat-card {
+    grid-column: 2;
+    grid-row: 2;
+    min-width: 0;
+    padding: 0.35rem 0.55rem;
+  }
+  .host-sidebar .stat-card .value { font-size: 1rem; }
+  .host-sidebar .stat-card .label { font-size: 0.68rem; overflow-wrap: anywhere; }
+
+  .pointer-mode-card { gap: 0.2rem; padding: 0.35rem; }
+  .pointer-mode-card svg { width: 26px; height: 26px; }
+  .pointer-mode-card b { font-size: 0.62rem; }
+  .pointer-mode-card span { font-size: 0.62rem; }
+
+  .input-choice-actions { gap: 0.35rem; }
+  .input-choice-actions .btn {
+    min-width: 0;
+    min-height: 44px;
+    justify-content: center;
+    padding: 0.4rem 0.35rem;
+    white-space: normal;
+    line-height: 1.2;
+    text-align: center;
+  }
+  .go-hangar .hangar-grid { grid-template-columns: repeat(auto-fill, minmax(74px, 1fr)); gap: 0.35rem; }
+  .fs-btn {
+    top: max(0.5rem, env(safe-area-inset-top));
+    right: max(0.65rem, env(safe-area-inset-right));
+    bottom: auto;
+  }
+}
+
+@media (max-width: 350px) and (orientation: portrait) {
+  /* The in-canvas HUD already carries the score; reclaim this row for play. */
+  .host-sidebar .stat-card { display: none; }
 }

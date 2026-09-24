@@ -83,6 +83,11 @@ immediately. The monthly job deletes anonymous auth users; the foreign keys
 in `schema.sql` delete their profiles and scores. Confirm the job appears under
 **Integrations → Cron → Jobs** and check its history after the first run.
 
+For a read-only production audit of all three Cron jobs, their recent runs,
+RLS switches and policies, run [`audit_readonly.sql`](audit_readonly.sql) in
+the SQL Editor. It does not read player rows. Realtime's **Allow public access**
+switch and the provider agreements still require separate dashboard checks.
+
 ## Migrations for existing projects
 
 If you deployed the schema **before Jelly Yeet** (or before the Asteroids

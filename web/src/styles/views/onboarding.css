@@ -5,6 +5,7 @@
   align-items: center;
   justify-content: center;
   padding: var(--space-page);
+  padding-block: max(var(--space-page), env(safe-area-inset-top)) max(var(--space-page), env(safe-area-inset-bottom));
 }
 .onboard-panel {
   width: 460px;
@@ -173,10 +174,23 @@
 
 @media (max-width: 780px) {
   .onboard-panel.onboard-hero { grid-template-columns: 1fr; width: min(560px, 100%); }
-  .onboard-demo-col { order: -1; }
+  .onboard-hero-copy { order: 0; }
+  .onboard-demo-col { order: 1; }
   .onboard-hero-copy { align-items: center; text-align: center; }
   .onboard-hero .onboard-copy, .onboard-hero .onboard-privacy { text-align: center; }
   .onboard-hero .onboard-cta { align-items: center; }
+}
+
+@media (max-width: 560px) {
+  .onboard-panel:not(.onboard-hero) {
+    padding: 1.5rem 1rem 1.25rem;
+    gap: 0.55rem;
+  }
+  .onboard-panel .form-row { width: 100%; gap: 0.4rem; }
+  .onboard-panel .form-row .input { min-width: 0; flex: 1; }
+  .onboard-panel .form-row .btn { padding-inline: 0.7rem; }
+  .onboard-hero .onboard-benefits { justify-content: center; }
+  .onboard-hero .onboard-privacy { flex-wrap: wrap; justify-content: center; line-height: 1.45; }
 }
 
 @media (max-height: 520px) and (min-width: 781px) {

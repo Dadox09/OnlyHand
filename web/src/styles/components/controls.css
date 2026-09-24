@@ -124,7 +124,7 @@
   position: fixed;
   right: max(0.75rem, env(safe-area-inset-right));
   bottom: max(0.75rem, env(safe-area-inset-bottom));
-  z-index: 900; /* under hand cursor (1000) and rotate overlay (1200) */
+  z-index: 900; /* under hand cursor (1000) */
   width: 42px;
   height: 42px;
   display: none;

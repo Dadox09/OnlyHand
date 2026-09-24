@@ -96,16 +96,16 @@
   letter-spacing: 0.09em;
 }
 
-/* phones portrait: roomier previews and copy */
+/* phones portrait: keep previews compact so more game choices fit onscreen */
 @media (max-width: 560px) {
-  .card-preview { height: 148px; }
-  .card-copy { padding: 1.1rem 1.2rem 1.2rem; }
-  .game-card h3 { font-size: 1.05rem; }
-  .game-card p { font-size: 0.95rem; }
+  .card-preview { height: 112px; }
+  .card-copy { gap: 0.55rem; padding: 0.85rem 0.95rem 0.95rem; }
+  .game-card h3 { font-size: 1rem; }
+  .game-card p { font-size: 0.9rem; }
 }
 
 /* short landscape phones: keep the description visible in compact cards */
-@media (max-height: 480px) {
+@media (orientation: landscape) and (max-height: 480px) {
   .card-preview { height: 72px; }
   .card-copy { gap: 0.45rem; padding: 0.7rem 0.8rem; }
   .game-card .chips { padding-top: 0.45rem; }

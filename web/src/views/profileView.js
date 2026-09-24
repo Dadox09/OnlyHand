@@ -28,8 +28,8 @@ function render(app) {
   app.innerHTML = `
     <nav>
       <a class="logo" href="#/hub">ONLY<span class="lit">HAND</span></a>
-      <a href="#/board">${icon("trophy", { size: 14 })} Hall of Fame</a>
-      <a href="#/hub" class="active">${icon("arrow-left", { size: 14 })} Back</a>
+      <a href="#/board" aria-label="Hall of Fame">${icon("trophy", { size: 14 })}<span class="nav-label">Hall of Fame</span></a>
+      <a href="#/hub" class="active" aria-label="Back to games">${icon("arrow-left", { size: 14 })}<span class="nav-label">Back</span></a>
     </nav>
     <div class="profile-wrap">
       <div class="profile-grid oh-stagger">
