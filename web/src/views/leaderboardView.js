@@ -26,8 +26,8 @@ export function mount(app, { params } = {}) {
   app.innerHTML = `
     <nav>
       <a class="logo" href="#/hub">ONLY<span class="lit">HAND</span></a>
-      <a href="#/hub">${icon("arrow-left", { size: 14 })} Hub</a>
-      <a href="#/profile">${profile.avatar} ${esc(profile.name)} · LV ${lvl.level}</a>
+      <a href="#/hub" aria-label="Back to games">${icon("arrow-left", { size: 14 })}<span class="nav-label">Hub</span></a>
+      <a href="#/profile" aria-label="Player profile">${profile.avatar} <span class="nav-label">${esc(profile.name)} · LV ${lvl.level}</span></a>
     </nav>
     <div class="lb-wrap">
       <div class="page-header oh-fade-up">

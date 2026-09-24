@@ -28,7 +28,7 @@ Test on Chrome/Edge desktop, Android Chrome and iPhone Safari:
 
 1. Landing page explains the camera before the permission prompt.
 2. The animated gameplay demo loads promptly on mobile data; the primary CTA and privacy promise
-   remain visible in landscape, with no horizontal overflow.
+   remain visible in portrait, with no horizontal overflow.
 3. Camera permission leads to the first game without a reload.
 4. “Explore games first” reaches the hub without opening a camera permission prompt.
 5. Opening a game without an active camera shows the controller choice before any permission prompt.
@@ -39,7 +39,8 @@ Test on Chrome/Edge desktop, Android Chrome and iPhone Safari:
 10. Opening that challenge in a private window shows the target and can start with mouse/touch.
 11. The 9:16 result card downloads and contains only the gameplay canvas, never webcam video.
 12. Creator Clip asks for explicit opt-in, records no microphone, stops at 30 seconds and saves a playable video.
-13. “Add to Home Screen”/Install launches in landscape standalone mode.
+13. “Add to Home Screen”/Install launches in portrait and landscape standalone modes; each mode
+    keeps the game canvas, camera preview and controls usable without horizontal overflow.
 
 TikTok bio link: `https://only-hand-two.vercel.app/?utm_source=tiktok&utm_medium=organic_social&utm_campaign=beta_launch&utm_content=profile_bio`
 

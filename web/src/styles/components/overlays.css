@@ -164,7 +164,7 @@
 }
 
 /* short landscape phones: pause/game-over must fit the shrunken stage */
-@media (max-height: 480px) {
+@media (orientation: landscape) and (max-height: 480px) {
   .go-panel { gap: 0.3rem; padding: 0.6rem; }
   .go-title { font-size: 1.05rem; }
   .go-score { font-size: 1.8rem; }
@@ -193,45 +193,6 @@
     repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.028) 0 1px, transparent 1px 3px);
 }
 .go-overlay { z-index: 2; }
-
-/* ── Landscape-only rotate overlay ───────────────────────────────
-   Shown on portrait phones/tablets (≤920px wide). Desktop portrait
-   monitors / snapped windows stay usable. Above hand cursor (1000). */
-#rotate-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 1200;
-  background: var(--bg);
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  color: var(--accent);
-}
-#rotate-overlay .rotate-box {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.8rem;
-  padding: 2rem;
-}
-#rotate-overlay svg { filter: drop-shadow(var(--glow-accent-sm)); }
-#rotate-overlay .rotate-title {
-  font-family: var(--font-display);
-  font-weight: var(--weight-bold);
-  letter-spacing: var(--track-display);
-  font-size: 1rem;
-  color: var(--text);
-}
-#rotate-overlay p {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: var(--text-body);
-  max-width: 260px;
-}
-@media (orientation: portrait) and (max-width: 920px) {
-  #app:has(.game-host) ~ #rotate-overlay { display: flex; }
-}
 
 /* ── Route transition ────────────────────────────────────────── */
 html[data-oh-anim] #app > * {

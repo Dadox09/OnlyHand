@@ -51,7 +51,7 @@ nav {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
+  padding: max(0.75rem, env(safe-area-inset-top)) 1.5rem 0.75rem;
   border-bottom: var(--border-default);
 }
 
@@ -78,11 +78,34 @@ nav a:not(.logo) {
   align-items: center;
   gap: 0.4rem;
 }
+nav .nav-label { white-space: nowrap; }
 nav a:not(.logo):hover,
 nav a:not(.logo).active { color: var(--text); }
 
 /* short landscape phones: slimmer nav bar */
-@media (max-height: 480px) {
-  nav { padding: 0.35rem 0.75rem; }
+@media (orientation: landscape) and (max-height: 480px) {
+  nav { padding: max(0.35rem, env(safe-area-inset-top)) 0.75rem 0.35rem; }
   nav a:not(.logo) { font-size: var(--text-sub); }
+}
+
+@media (max-width: 560px) {
+  nav {
+    flex-wrap: wrap;
+    gap: 0.15rem 0.35rem;
+    padding-inline: var(--space-page);
+  }
+  nav .logo { min-height: 44px; display: inline-flex; align-items: center; }
+  nav a:not(.logo),
+  nav .nav-install { min-height: 44px; padding: 0.45rem 0.55rem; }
+}
+
+@media (min-width: 561px) and (max-width: 720px) {
+  nav { flex-wrap: wrap; }
+}
+
+@media (pointer: coarse) {
+  .btn { min-height: 44px; }
+  .input { min-height: 44px; font-size: 16px; }
+  nav a:not(.logo),
+  nav .nav-install { min-height: 44px; }
 }

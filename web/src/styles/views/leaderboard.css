@@ -6,6 +6,7 @@
   display: flex;
   flex-direction: column;
   gap: 1.2rem;
+  padding-bottom: max(var(--space-page), env(safe-area-inset-bottom));
 }
 .lb-wrap .page-header h1 {
   display: inline-flex;
@@ -21,6 +22,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
+  min-height: 44px;
   padding: 0.45rem 0.8rem;
   background: var(--surface);
   border: var(--border-default);
@@ -129,6 +131,12 @@
 .lb-cta a { color: var(--accent); }
 
 @media (max-width: 560px) {
-  .lb-tab .nm { display: none; }
-  .lb-tab { padding: 0.45rem 0.6rem; }
+  .lb-tabs { gap: 0.35rem; }
+  .lb-tab { padding: 0.45rem 0.65rem; font-size: 0.66rem; }
+  .lb-podium { gap: 0.35rem; }
+  .lb-podium-slot .medal { font-size: 1.3rem; }
+  .lb-podium-slot .av { font-size: 1.75rem; }
+  .lb-podium-slot.p1 .av { font-size: 2rem; }
+  .lb-podium-slot .sc { font-size: 0.95rem; }
+  .lb-list { padding: 0.5rem 0.6rem; }
 }

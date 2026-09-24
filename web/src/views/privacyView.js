@@ -11,7 +11,7 @@ export function mount(app) {
   app.innerHTML = `
     <nav>
       <a class="logo" href="#/hub">ONLY<span class="lit">HAND</span></a>
-      <a href="#/hub">${icon("chevron-right", { size: 14 })} Back to games</a>
+      <a href="#/hub" aria-label="Back to games">${icon("chevron-right", { size: 14 })}<span class="nav-label">Back to games</span></a>
     </nav>
     <div class="page">
       <div class="page-header oh-fade-up">

@@ -19,9 +19,9 @@ export async function mount(app) {
   app.innerHTML = `
     <nav>
       <a class="logo" href="#/hub">ONLY<span class="lit">HAND</span></a>
-      <a href="#/board">${icon("trophy", { size: 14 })} Hall of Fame</a>
-      <button class="nav-install" id="install-app" hidden>${icon("download", { size: 14 })} Install</button>
-      <a href="#/profile">${profile.avatar} <span id="player-name"></span> ${icon("chevron-right", { size: 14 })}</a>
+      <a href="#/board" aria-label="Hall of Fame">${icon("trophy", { size: 14 })}<span class="nav-label">Hall of Fame</span></a>
+      <button class="nav-install" id="install-app" aria-label="Install OnlyHand" hidden>${icon("download", { size: 14 })}<span class="nav-label">Install</span></button>
+      <a href="#/profile" aria-label="Player profile">${profile.avatar} <span class="nav-label" id="player-name"></span> ${icon("chevron-right", { size: 14 })}</a>
     </nav>
     <div class="page">
       <div class="page-header oh-fade-up">

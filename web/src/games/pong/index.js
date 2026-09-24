@@ -1,15 +1,15 @@
 import {
-  NEON, setupCanvas, createParticles, createShake, createFlash,
+  NEON, setupCanvas, portraitGameSize, createParticles, createShake, createFlash,
   createCountdown, createFixedStep, createMusic, drawHudText, drawHandLostBanner,
   drawLives, hudFont, sfx,
 } from "../../core/gameKit.js";
 
-const W = 800;
-const H = 500;
+let W = 800;
+let H = 500;
 const PADDLE_W = 14;
 const PADDLE_H = 100;
 const PADDLE_X = 30;
-const AI_X = W - 30 - PADDLE_W;
+let AI_X = W - 30 - PADDLE_W;
 const BALL_R = 9;
 
 const SERVE_SPEED = 6.5;
@@ -75,7 +75,29 @@ function makeBall(x, y, vx, vy, lastHit = null) {
 
 export default {
   async mount({ canvas, onHandUpdate, handState, onScore }) {
-    const ctx = setupCanvas(canvas, W, H);
+    W = 800;
+    H = 500;
+    let state = null;
+    const ctx = setupCanvas(canvas, W, H, {
+      logicalSize: portraitGameSize,
+      onWorldResize(oldW, oldH, nextW, nextH) {
+        const sx = nextW / oldW, sy = nextH / oldH;
+        W = nextW;
+        H = nextH;
+        AI_X = W - 30 - PADDLE_W;
+        if (!state) return;
+        for (const key of ["paddleY", "targetY", "prevPaddleY", "aiY"]) state[key] *= sy;
+        for (const ball of state.balls) {
+          ball.x *= sx; ball.y *= sy; ball.vx *= sx; ball.vy *= sy;
+          for (const point of ball.trail) { point.x *= sx; point.y *= sy; }
+        }
+        if (state.orb) {
+          state.orb.x *= sx; state.orb.y *= sy;
+          state.orb.vx *= sx; state.orb.vy *= sy;
+        }
+        for (const popup of state.popups) { popup.x *= sx; popup.y *= sy; }
+      },
+    });
 
     const particles = createParticles();
     const shake = createShake();
@@ -83,7 +105,7 @@ export default {
     const music = createMusic();
     const countdown = createCountdown((label) => (label === "GO" ? sfx.go() : sfx.tick()));
 
-    const state = {
+    state = {
       paddleY: H / 2 - PADDLE_H / 2,
       targetY: H / 2 - PADDLE_H / 2,
       prevPaddleY: H / 2 - PADDLE_H / 2,

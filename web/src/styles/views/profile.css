@@ -1,5 +1,10 @@
 /* Profile panels keep the hub's dark, signal-green arcade language. */
-.profile-wrap { max-width: var(--page-max); margin: 0 auto; padding: var(--space-page); }
+.profile-wrap {
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: var(--space-page);
+  padding-bottom: max(var(--space-page), env(safe-area-inset-bottom));
+}
 .profile-grid { display: grid; gap: 1.15rem; }
 
 .profile-header {

@@ -1,7 +1,6 @@
 // OnlyHand · Fullscreen (mobile)
-// On phone browsers the URL bar + tab strip eat the short edge of a
-// landscape screen. The Fullscreen API reclaims it, and while fullscreen
-// we best-effort lock the orientation to landscape (Android).
+// On phone browsers the URL bar + tab strip reduce the play area. The
+// Fullscreen API reclaims it without changing the user's device orientation.
 // iPhone Safari has no element Fullscreen API — there the toggle never
 // mounts and the PWA meta tags in index.html ("Add to Home Screen" →
 // standalone, no browser chrome) are the fallback.
@@ -23,11 +22,9 @@ export async function enterFullscreen() {
   } catch {
     return; // not a trusted user gesture (e.g. hand-cursor pinch) — skip
   }
-  try { await screen.orientation?.lock?.("landscape"); } catch {} // desktop rejects
 }
 
 export async function exitFullscreen() {
-  try { screen.orientation?.unlock?.(); } catch {}
   try { await (document.exitFullscreen?.() ?? document.webkitExitFullscreen?.()); } catch {}
 }
 

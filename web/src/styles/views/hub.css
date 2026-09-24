@@ -4,6 +4,7 @@
   grid-template-columns: clamp(200px, 26vw, 340px) 1fr;
   gap: clamp(0.75rem, 1.5vw, 1.5rem);
   padding: var(--space-page);
+  padding-bottom: max(var(--space-page), env(safe-area-inset-bottom));
   max-width: var(--page-max);
   margin: 0 auto;
 }
@@ -203,29 +204,35 @@
   .hero-visual { position: absolute; right: -0.5rem; bottom: -1rem; width: 180px; margin: 0; opacity: 0.42; }
 }
 
-/* very narrow: single column, webcam on top — still visible */
+/* very narrow: single column, game choices first, camera details below */
 @media (max-width: 560px) {
-  .page { grid-template-columns: 1fr; }
-  .page-header { min-height: 210px; padding: 1.3rem; }
+  .page { grid-template-columns: 1fr; gap: 0.9rem; }
+  .page-header { min-height: 220px; padding: 1.15rem; }
   .page-header h1 { font-size: clamp(1.65rem, 8vw, 2.5rem); }
   .page-header .subtitle { max-width: 24ch; font-size: 0.85rem; }
-  .hero-visual { position: absolute; right: -0.6rem; bottom: -1rem; width: 142px; margin: 0; opacity: 0.68; }
+  .hero-random { width: min(100%, 230px); }
+  .hero-visual { position: absolute; right: -0.6rem; bottom: -1rem; width: 142px; margin: 0; opacity: 0.5; }
   .hero-visual-core { width: 54px; height: 54px; border-radius: 16px; }
   .hero-visual-core svg { width: 28px; height: 28px; }
   .hero-coordinate { font-size: 0.42rem; }
   .catalogue-head { align-items: flex-start; flex-direction: column; gap: 0.35rem; }
+  .daily-drop { order: 1; }
+  .game-grid { order: 2; }
+  .page .webcam-col { order: 3; }
+  .hub-footer { order: 4; padding-top: 0.3rem; }
   .page .webcam-col {
     max-width: 340px;
     width: 100%;
     margin: 0 auto;
   }
-  .game-grid { grid-template-columns: 1fr; gap: 0.9rem; }
+  .game-grid { grid-template-columns: 1fr; gap: 0.75rem; }
   .daily-drop { align-items: flex-start; flex-direction: column; }
-  .daily-meta { align-items: flex-start; }
+  .daily-meta { width: 100%; align-items: center; flex-direction: row; flex-wrap: wrap; gap: 0.45rem 0.7rem; white-space: normal; }
+  .daily-play { margin-left: auto; }
 }
 
 /* short landscape (phones sideways): compress chrome, keep webcam + grid */
-@media (max-height: 480px) {
+@media (orientation: landscape) and (max-height: 480px) {
   .page {
     grid-template-columns: clamp(150px, 24vw, 230px) 1fr;
     gap: 0.5rem 0.75rem;
