@@ -268,6 +268,14 @@ export function drawLives(ctx, lives, x, y, { color = NEON.danger, r = 5, gap = 
 /* ── WebAudio synth SFX (zero assets) ─────────────────────────── */
 let actx = null;
 let master = null;
+let audioMuted = false;
+
+export function isAudioMuted() { return audioMuted; }
+
+export function setAudioMuted(muted) {
+  audioMuted = muted;
+  if (master) master.gain.setTargetAtTime(muted ? 0 : 0.22, actx.currentTime, 0.01);
+}
 
 function ensureAudio() {
   if (!actx) {
@@ -275,7 +283,7 @@ function ensureAudio() {
     if (!AC) return null;
     actx = new AC();
     master = actx.createGain();
-    master.gain.value = 0.22;
+    master.gain.value = audioMuted ? 0 : 0.22;
     master.connect(actx.destination);
   }
   if (actx.state === "suspended") actx.resume().catch(() => {});

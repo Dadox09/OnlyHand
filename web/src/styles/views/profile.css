@@ -123,31 +123,47 @@
 .profile-wrap .badge-card .badge-desc { font-size: 0.75rem; }
 
 .hangar-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 145px), 1fr)); gap: 0.75rem; }
+.ship-card[data-ship="viper"] { --ship-rgb: 251 113 133; }
+.ship-card[data-ship="comet"] { --ship-rgb: 56 189 248; }
+.ship-card[data-ship="titan"] { --ship-rgb: 251 191 36; }
+.ship-card[data-ship="phantom"] { --ship-rgb: 192 132 252; }
+.ship-card[data-ship="pip"] { --ship-rgb: 74 222 128; }
+.ship-card[data-ship="goliath"] { --ship-rgb: 251 146 60; }
+.ship-card[data-ship="nova"] { --ship-rgb: 45 212 191; }
 .ship-card {
+  --ship-rgb: 74 222 128;
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
+  font-family: var(--font-display);
   gap: 0.45rem;
-  min-height: 168px;
+  min-height: 184px;
   padding: 1rem 0.7rem;
-  border: var(--border-default);
+  border: 1px solid rgb(var(--ship-rgb) / 0.32);
   border-radius: var(--radius-box);
-  background: var(--surface);
+  background: radial-gradient(circle at 50% 23%, rgb(var(--ship-rgb) / 0.17), transparent 58%), var(--surface);
   color: var(--text);
   cursor: pointer;
   transition: var(--ease-prop);
 }
-.ship-card .ship-thumb { width: 64px; height: 64px; flex: none; background-size: 600% auto; background-position: var(--ship-pos) 1.3%; background-repeat: no-repeat; image-rendering: pixelated; }
-.ship-card:hover { border-color: var(--accent); background: var(--surface-hover); }
-.ship-card .ship-name { font: 700 0.7rem var(--font-display); letter-spacing: 0.12em; }
+.ship-card::before { content: ""; position: absolute; inset: 0.35rem 0.35rem auto; height: 2px; background: rgb(var(--ship-rgb) / 0.7); border-radius: 2px; }
+.ship-card .ship-thumb { width: 64px; height: 64px; flex: none; border: 1px solid rgb(var(--ship-rgb) / 0.3); border-radius: 6px; background-size: 600% auto; background-position: var(--ship-pos) 1.3%; background-repeat: no-repeat; image-rendering: pixelated; box-shadow: 0 0 18px rgb(var(--ship-rgb) / 0.14); }
+.ship-card:hover:not(.locked) { border-color: rgb(var(--ship-rgb) / 0.8); box-shadow: 0 0 20px rgb(var(--ship-rgb) / 0.17); transform: translateY(-3px); }
+.ship-card:focus-visible { outline: 2px solid var(--neon-cyan); outline-offset: 3px; }
+.ship-card .ship-name { color: rgb(var(--ship-rgb)); font: 700 0.7rem var(--font-display); letter-spacing: 0.12em; }
 .ship-card .ship-desc { color: var(--text-muted); font-size: 0.75rem; line-height: 1.4; text-align: center; }
 .ship-card .ship-desc b { color: var(--text); }
-.ship-card.selected { border-color: var(--accent); box-shadow: var(--glow-accent-sm); }
-.ship-card.selected .ship-name { color: var(--accent); }
-.ship-card.selected:not(.locked)::after { content: "SELECTED"; margin-top: auto; color: var(--accent); font: 700 0.65rem var(--font-display); letter-spacing: 0.08em; }
-.ship-card.locked { cursor: not-allowed; opacity: 0.7; }
-.ship-card.locked .ship-thumb { filter: grayscale(1) brightness(0.7); }
-.ship-card.locked:hover { border-color: var(--border); background: var(--surface); }
+.ship-card .ship-perk { margin-top: auto; padding: 0.25rem 0.4rem; border: 1px solid rgb(var(--ship-rgb) / 0.35); border-radius: var(--radius-chip); color: rgb(var(--ship-rgb)); background: rgb(var(--ship-rgb) / 0.1); font-size: 0.6rem; font-weight: 700; letter-spacing: 0.04em; }
+.ship-card.selected { border-color: rgb(var(--ship-rgb)); box-shadow: inset 0 0 0 1px rgb(var(--ship-rgb) / 0.75), 0 0 20px rgb(var(--ship-rgb) / 0.25); }
+.ship-card.selected:not(.locked)::after { content: "SELECTED"; margin-top: auto; color: rgb(var(--ship-rgb)); font: 700 0.65rem var(--font-display); letter-spacing: 0.08em; }
+.ship-card.locked { cursor: not-allowed; border-color: var(--border); background: var(--surface); }
+.ship-card.locked.selected { box-shadow: none; }
+.ship-card.locked::before { background: var(--border-hover); }
+.ship-card.locked .ship-thumb { filter: grayscale(1) brightness(0.7); box-shadow: none; }
+.ship-card.locked .ship-name, .ship-card.locked .ship-perk { color: var(--text-muted); }
+.ship-card.locked .ship-perk { border-color: var(--border-hover); background: var(--bg); }
+@media (prefers-reduced-motion: reduce) { .ship-card:hover:not(.locked) { transform: none; } }
 
 .settings-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 0.75rem; }
 .settings-list .switch { min-height: 56px; padding: 0.8rem; border: var(--border-default); border-radius: var(--radius-box); background: var(--surface); }

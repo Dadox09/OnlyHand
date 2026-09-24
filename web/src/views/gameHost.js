@@ -4,7 +4,7 @@ import { getCameraVideo, initCamera, stopCamera } from "../core/camera.js";
 import { startHandInput, stopHandInput, startPointerInput, stopPointerInput, onHandUpdate, handState, mapToActiveBox } from "../input/handInput.js";
 import { recordPlay, getBest, getStats, getPracticeBest, getPracticeStats, getLeaderboard, updateDailyProgress, getDailyProgress } from "../core/scores.js";
 import { icon } from "../core/icon.js";
-import { setupCanvas, portraitGameSize, sfx } from "../core/gameKit.js";
+import { setupCanvas, portraitGameSize, sfx, isAudioMuted, setAudioMuted } from "../core/gameKit.js";
 import { startHandCursor, stopHandCursor } from "../core/handCursor.js";
 import { isOnline, fetchLeaderboard, fetchMyRank, fetchDailyBoard, createPongLobby, joinPongLobby, leavePongLobby, createOrbRushLobby, joinOrbRushLobby, leaveOrbRushLobby } from "../core/backend.js";
 import { syncProfile } from "../core/backend.js";
@@ -76,6 +76,7 @@ export async function mount(app, { params }) {
         <button class="btn btn-ghost" id="back-btn">${icon("arrow-left", { size: 15 })} Menu</button>
         <span class="title">${meta.icon} <span class="name">${meta.name}</span></span>
         <button class="btn btn-ghost" id="pause-btn" type="button" aria-pressed="false" hidden>${icon("pause", { size: 15 })} Pause</button>
+        <button class="btn btn-ghost" id="mute-btn" type="button" aria-pressed="${isAudioMuted()}" hidden></button>
         ${challenge ? `<span class="challenge-pill">${icon("zap", { size: 12 })} Beat ${esc(challenge.challenger)} · ${challenge.score}</span>` : ""}
         <button class="creator-clip-btn" id="creator-clip" hidden>${icon("video", { size: 13 })} <span>REC CLIP</span></button>
         <button class="btn btn-ghost" id="camera-off" aria-label="Turn camera off and switch to mouse or touch controls" hidden>Camera off</button>
@@ -128,6 +129,17 @@ export async function mount(app, { params }) {
   clipButton = app.querySelector("#creator-clip");
   app.querySelector("#pause-btn").addEventListener("click", () => {
     if (!document.getElementById("creator-consent")) setPaused(!paused);
+  });
+  const muteButton = app.querySelector("#mute-btn");
+  const updateMuteButton = () => {
+    const muted = isAudioMuted();
+    muteButton.setAttribute("aria-pressed", String(muted));
+    muteButton.innerHTML = `${icon(muted ? "volume-x" : "volume-2", { size: 15 })} ${muted ? "Unmute" : "Mute"}`;
+  };
+  updateMuteButton();
+  muteButton.addEventListener("click", () => {
+    setAudioMuted(!isAudioMuted());
+    updateMuteButton();
   });
   clipButton.addEventListener("click", onCreatorClipClick);
   app.querySelector("#camera-off").addEventListener("click", () => {
@@ -530,6 +542,7 @@ async function startGame(app, generation = mountGeneration) {
   clearGameOver();
   paused = false;
   app.querySelector("#pause-btn").hidden = true;
+  app.querySelector("#mute-btn").hidden = true;
   const bombButton = app.querySelector("#touch-bomb");
   if (bombButton) bombButton.disabled = true;
   autoPaused = false;
@@ -568,6 +581,7 @@ async function startGame(app, generation = mountGeneration) {
       activeGame?.unmount?.();
       activeGame = null;
       app.querySelector("#pause-btn").hidden = true;
+      app.querySelector("#mute-btn").hidden = true;
       if (bombButton) bombButton.disabled = true;
       track("Game Finished", {
         game: meta.id,
@@ -581,6 +595,7 @@ async function startGame(app, generation = mountGeneration) {
   });
   if (generation !== mountGeneration) { mounted?.unmount?.(); return; }
   activeGame = mounted;
+  app.querySelector("#mute-btn").hidden = false;
   if (bombButton) bombButton.disabled = false;
   if (!onlineRoom) app.querySelector("#pause-btn").hidden = false;
   if (!onlineRoom) prepareCreatorClip(canvas);
