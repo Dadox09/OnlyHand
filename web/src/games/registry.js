@@ -2,6 +2,20 @@
 // { icon: core/icon.js name, gesture: short caps label, action: what it does }
 export const games = [
   {
+    id: "asteroids",
+    name: "Asteroids",
+    icon: "🚀",
+    category: "SPACE SHOOTER",
+    description: "Dodge asteroids and fight enemy fleets. Pinch for rapid fire; make a fist to drop a bomb.",
+    controls: [
+      { icon: "pointer", gesture: "MOVE", action: "steer · auto-fire upward" },
+      { icon: "pinch", gesture: "PINCH", action: "rapid fire" },
+      { icon: "fist", gesture: "FIST", action: "smart bomb" },
+    ],
+    requires: ["hand", "mouse / touch"],
+    load: () => import("./asteroids/index.js"),
+  },
+  {
     id: "orb-rush",
     name: "Orb Rush",
     icon: "🔮",
@@ -94,20 +108,6 @@ export const games = [
     requires: ["hand", "mouse / touch"],
     hidden: true,
     load: () => import("./jelly/index.js"),
-  },
-  {
-    id: "asteroids",
-    name: "Asteroids",
-    icon: "🚀",
-    category: "SPACE SHOOTER",
-    description: "Dodge asteroids and fight enemy fleets. Pinch for rapid fire; make a fist to drop a bomb.",
-    controls: [
-      { icon: "pointer", gesture: "MOVE", action: "steer · auto-fire upward" },
-      { icon: "pinch", gesture: "PINCH", action: "rapid fire" },
-      { icon: "fist", gesture: "FIST", action: "smart bomb" },
-    ],
-    requires: ["hand", "mouse / touch"],
-    load: () => import("./asteroids/index.js"),
   },
 ];
 

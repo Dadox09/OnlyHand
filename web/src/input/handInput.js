@@ -192,13 +192,14 @@ export function stopHandInput() {
 // Camera-free fallback used by shared links and curious visitors. Games keep
 // receiving the same hand-state contract: pointer position behaves like the
 // mirrored camera coordinates, hold/click maps to pinch and Space maps to fist.
-export function startPointerInput(element) {
+export function startPointerInput(element, { fistButton } = {}) {
   stopPointerInput();
   stopHandInput();
   let pointerDown = false;
   let spaceDown = false;
   let pinchReleaseRaf = null;
   let fistReleaseRaf = null;
+  let activePointerId = null;
 
   const updatePosition = (event) => {
     const rect = element.getBoundingClientRect();
@@ -212,8 +213,13 @@ export function startPointerInput(element) {
     handState.source = "pointer";
     emitState();
   };
-  const onPointerMove = (event) => updatePosition(event);
+  const onPointerMove = (event) => {
+    if (event.pointerType === "touch" && event.pointerId !== activePointerId) return;
+    updatePosition(event);
+  };
   const onPointerDown = (event) => {
+    if (activePointerId !== null) return;
+    activePointerId = event.pointerId;
     pointerDown = true;
     if (pinchReleaseRaf !== null) cancelAnimationFrame(pinchReleaseRaf);
     handState.pinch = true;
@@ -222,6 +228,8 @@ export function startPointerInput(element) {
     event.preventDefault();
   };
   const onPointerUp = (event) => {
+    if (event.pointerId !== activePointerId) return;
+    activePointerId = null;
     pointerDown = false;
     updatePosition(event);
     // Keep a click pinched through at least one game frame so quick taps are
@@ -233,16 +241,13 @@ export function startPointerInput(element) {
       emitState();
     });
   };
-  const onKeyDown = (event) => {
-    if (event.code !== "Space" || event.repeat) return;
+  const pressFist = () => {
     spaceDown = true;
     if (fistReleaseRaf !== null) cancelAnimationFrame(fistReleaseRaf);
     handState.gesture = "Closed_Fist";
     emitState();
-    event.preventDefault();
   };
-  const onKeyUp = (event) => {
-    if (event.code !== "Space") return;
+  const releaseFist = () => {
     spaceDown = false;
     fistReleaseRaf = requestAnimationFrame(() => {
       fistReleaseRaf = null;
@@ -250,7 +255,27 @@ export function startPointerInput(element) {
       handState.gesture = null;
       emitState();
     });
+  };
+  const onKeyDown = (event) => {
+    if (event.code !== "Space" || event.repeat) return;
+    pressFist();
     event.preventDefault();
+  };
+  const onKeyUp = (event) => {
+    if (event.code !== "Space") return;
+    releaseFist();
+    event.preventDefault();
+  };
+  const onFistDown = (event) => {
+    fistButton.setPointerCapture?.(event.pointerId);
+    pressFist();
+    event.preventDefault();
+  };
+  const onFistUp = () => releaseFist();
+  const onFistClick = (event) => {
+    if (event.detail !== 0) return;
+    pressFist();
+    releaseFist();
   };
 
   element.style.touchAction = "none";
@@ -260,6 +285,10 @@ export function startPointerInput(element) {
   window.addEventListener("pointercancel", onPointerUp);
   window.addEventListener("keydown", onKeyDown);
   window.addEventListener("keyup", onKeyUp);
+  fistButton?.addEventListener("pointerdown", onFistDown);
+  fistButton?.addEventListener("pointerup", onFistUp);
+  fistButton?.addEventListener("pointercancel", onFistUp);
+  fistButton?.addEventListener("click", onFistClick);
 
   Object.assign(handState, {
     x: 0.5,
@@ -279,6 +308,10 @@ export function startPointerInput(element) {
     window.removeEventListener("pointercancel", onPointerUp);
     window.removeEventListener("keydown", onKeyDown);
     window.removeEventListener("keyup", onKeyUp);
+    fistButton?.removeEventListener("pointerdown", onFistDown);
+    fistButton?.removeEventListener("pointerup", onFistUp);
+    fistButton?.removeEventListener("pointercancel", onFistUp);
+    fistButton?.removeEventListener("click", onFistClick);
     if (pinchReleaseRaf !== null) cancelAnimationFrame(pinchReleaseRaf);
     if (fistReleaseRaf !== null) cancelAnimationFrame(fistReleaseRaf);
     element.style.touchAction = "";

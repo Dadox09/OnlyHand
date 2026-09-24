@@ -5,6 +5,7 @@
    overlays and the CRT ::after keep tracking it exactly. */
 .game-host {
   height: 100dvh;
+  overscroll-behavior: none;
   display: flex;
   flex-direction: column;
   padding: var(--space-page);
@@ -97,6 +98,8 @@
 }
 
 .canvas-wrap { position: relative; width: fit-content; }
+.touch-actions { display: none; }
+#pause-btn[hidden] { display: none; }
 
 .pong-choice-panel { width: min(390px, 100%); }
 .choice-privacy { margin: 0; color: var(--text-muted); font-size: var(--text-tag); }
@@ -122,6 +125,7 @@
   border: 1px solid var(--border);
   box-shadow: 0 0 28px rgba(74, 222, 128, 0.12);
   display: block;
+  touch-action: none;
 }
 
 .hint-bar {
@@ -190,6 +194,17 @@
 /* touch devices: ESC hint is meaningless (pause = hand lost / back button) */
 @media (pointer: coarse) {
   .hint-bar { display: none; }
+  .mode-chip, .go-actions .btn, .viral-actions .btn { min-height: 44px; }
+  .game-host.pointer-mode .touch-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding-top: 0.35rem;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+  }
+  .touch-actions .btn { min-height: 48px; min-width: 88px; justify-content: center; touch-action: none; }
 }
 
 /* short landscape screens (phones): compress chrome, keep webcam */
@@ -317,11 +332,13 @@
     align-content: flex-start;
   }
   .game-host-header .btn { min-height: 44px; padding: 0.4rem 0.6rem; }
+  #pause-btn { margin-left: auto; }
   .game-host-header .title { flex: 1 1 105px; min-width: 0; gap: 0.35rem; }
   .game-host-header .title .name { font-size: 0.78rem; }
   .challenge-pill { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .creator-clip-btn { min-height: 44px; padding: 0.35rem 0.55rem; }
   .hand-indicator { min-height: 38px; margin-left: auto; }
+  .game-host.pointer-mode .hand-indicator { display: none; }
 
   .game-host-body { flex-direction: column; gap: 0.4rem; }
   .game-stage { flex: 1 1 0; min-height: 0; }
@@ -339,11 +356,11 @@
     width: 100%;
     flex: 0 0 auto;
     display: grid;
-    grid-template-columns: minmax(0, 55%) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 32%) minmax(0, 1fr);
     align-items: start;
     gap: 0.4rem;
   }
-  .host-sidebar .game-webcam { grid-column: 1; grid-row: 1 / span 2; width: 100%; }
+  .host-sidebar .game-webcam { grid-column: 1; grid-row: 1; width: 100%; }
   .host-sidebar .gesture-guide {
     grid-column: 2;
     grid-row: 1;
@@ -353,23 +370,14 @@
     gap: 0.3rem;
     align-content: start;
   }
-  .host-sidebar .guide-title { font-size: 0.6rem; }
-  .host-sidebar .guide-chip { max-width: 100%; padding: 0.35rem 0.45rem; gap: 0.3rem; flex-wrap: wrap; }
-  .host-sidebar .guide-chip b { font-size: 0.6rem; }
-  .host-sidebar .guide-chip em { font-size: 0.68rem; }
-  .host-sidebar .stat-card {
-    grid-column: 2;
-    grid-row: 2;
-    min-width: 0;
-    padding: 0.35rem 0.55rem;
-  }
-  .host-sidebar .stat-card .value { font-size: 1rem; }
-  .host-sidebar .stat-card .label { font-size: 0.68rem; overflow-wrap: anywhere; }
-
-  .pointer-mode-card { gap: 0.2rem; padding: 0.35rem; }
-  .pointer-mode-card svg { width: 26px; height: 26px; }
-  .pointer-mode-card b { font-size: 0.62rem; }
-  .pointer-mode-card span { font-size: 0.62rem; }
+  .host-sidebar .guide-title { font-size: 0.7rem; }
+  .host-sidebar .guide-chip { max-width: 100%; padding: 0.3rem 0.4rem; gap: 0.3rem; }
+  .host-sidebar .guide-chip b { font-size: 0.68rem; }
+  .host-sidebar .guide-chip em { font-size: 0.75rem; }
+  .host-sidebar .stat-card { display: none; }
+  .game-host.pointer-mode .host-sidebar { display: block; }
+  .game-host.pointer-mode .host-sidebar .game-webcam { display: none; }
+  .game-host.pointer-mode .host-sidebar .gesture-guide { display: none; }
 
   .input-choice-actions { gap: 0.35rem; }
   .input-choice-actions .btn {
@@ -387,9 +395,4 @@
     right: max(0.65rem, env(safe-area-inset-right));
     bottom: auto;
   }
-}
-
-@media (max-width: 350px) and (orientation: portrait) {
-  /* The in-canvas HUD already carries the score; reclaim this row for play. */
-  .host-sidebar .stat-card { display: none; }
 }

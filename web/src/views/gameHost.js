@@ -38,6 +38,16 @@ let inviteCode = null;
 const leaveOnlineRoom = (room, gameId) => gameId === "orb-rush" ? leaveOrbRushLobby(room.code) : leavePongLobby(room.code);
 
 const AUTO_PAUSE_MS = 2000; // hand gone this long → auto-pause
+const touchHints = {
+  asteroids: "Drag to steer · hold for rapid fire",
+  pong: "Drag vertically · hold to smash",
+  "orb-rush": "Drag to chase orbs · hold to boost",
+  breakout: "Drag left or right to move",
+  snake: "Drag away from center to steer",
+  slash: "Swipe through fruit",
+  beat: "Tap orbs as rings close",
+  jelly: "Drag a jelly · release to fling",
+};
 
 // In-game sensitivity: mapToActiveBox (see handInput.js) lets the hand reach
 // the play-area edge while still well inside the camera frame.
@@ -65,6 +75,7 @@ export async function mount(app, { params }) {
       <div class="game-host-header">
         <button class="btn btn-ghost" id="back-btn">${icon("arrow-left", { size: 15 })} Menu</button>
         <span class="title">${meta.icon} <span class="name">${meta.name}</span></span>
+        <button class="btn btn-ghost" id="pause-btn" type="button" aria-pressed="false" hidden>${icon("pause", { size: 15 })} Pause</button>
         ${challenge ? `<span class="challenge-pill">${icon("zap", { size: 12 })} Beat ${esc(challenge.challenger)} · ${challenge.score}</span>` : ""}
         <button class="creator-clip-btn" id="creator-clip" hidden>${icon("video", { size: 13 })} <span>REC CLIP</span></button>
         <button class="btn btn-ghost" id="camera-off" aria-label="Turn camera off and switch to mouse or touch controls" hidden>Camera off</button>
@@ -76,6 +87,10 @@ export async function mount(app, { params }) {
             <div class="canvas-wrap" id="canvas-wrap">
               <canvas id="game-canvas" width="800" height="500"></canvas>
             </div>
+          </div>
+          <div class="touch-actions">
+            <span>${touchHints[meta.id]}</span>
+            ${meta.id === "asteroids" ? `<button class="btn btn-accent" id="touch-bomb" type="button" disabled>${icon("zap", { size: 16 })} Bomb</button>` : ""}
           </div>
           <div class="hint-bar">
             <span class="esc">ESC — pause</span>
@@ -111,6 +126,9 @@ export async function mount(app, { params }) {
   // The game calls setupCanvas again with its exact logical dimensions.
   setupCanvas(app.querySelector("#game-canvas"), 800, 500, { logicalSize: portraitGameSize });
   clipButton = app.querySelector("#creator-clip");
+  app.querySelector("#pause-btn").addEventListener("click", () => {
+    if (!document.getElementById("creator-consent")) setPaused(!paused);
+  });
   clipButton.addEventListener("click", onCreatorClipClick);
   app.querySelector("#camera-off").addEventListener("click", () => {
     if (inputMode !== "camera") return;
@@ -122,8 +140,9 @@ export async function mount(app, { params }) {
     app.querySelector("#game-preview").srcObject = null;
     app.querySelector("#camera-off").hidden = true;
     inputMode = "pointer";
+    app.querySelector(".game-host").classList.add("pointer-mode");
     showPointerCard(app.querySelector("#cam-panel"));
-    startPointerInput(app.querySelector("#game-canvas"));
+    startPointerInput(app.querySelector("#game-canvas"), { fistButton: app.querySelector("#touch-bomb") });
     if (paused && autoPaused) setPaused(false);
     if (!onlineRoom) {
       app.querySelector("#run-stat-label").textContent = "Practice best";
@@ -201,6 +220,7 @@ function showInputChoice(app, generation, error = "") {
 async function startCameraSession(app, generation) {
   stopPointerInput();
   inputMode = "camera";
+  app.querySelector(".game-host").classList.remove("pointer-mode");
   const preview = app.querySelector("#game-preview");
   const stream = await initCamera();
   if (generation !== mountGeneration) return;
@@ -217,6 +237,7 @@ async function startCameraSession(app, generation) {
 async function startPointerSession(app, generation) {
   if (generation !== mountGeneration) return;
   inputMode = "pointer";
+  app.querySelector(".game-host").classList.add("pointer-mode");
   stopHandInput();
   stopCamera();
   app.querySelector("#camera-off").hidden = true;
@@ -231,7 +252,7 @@ async function startPointerSession(app, generation) {
     app.querySelector("#run-stat-detail").textContent = practice ? `${practice.plays} practice plays` : "first practice run";
   }
   wireInputFeedback(app);
-  startPointerInput(canvas);
+  startPointerInput(canvas, { fistButton: app.querySelector("#touch-bomb") });
   await launchGameExperience(app, generation);
 }
 
@@ -407,6 +428,9 @@ function setPaused(on, auto = false) {
     document.getElementById("pause-overlay")?.remove();
     stopHandCursor();
   }
+  appRef?.querySelector("#pause-btn")?.setAttribute("aria-pressed", String(paused));
+  const bombButton = appRef?.querySelector("#touch-bomb");
+  if (bombButton) bombButton.disabled = paused;
 }
 
 function showPauseOverlay(auto) {
@@ -505,6 +529,9 @@ async function startGame(app, generation = mountGeneration) {
   }
   clearGameOver();
   paused = false;
+  app.querySelector("#pause-btn").hidden = true;
+  const bombButton = app.querySelector("#touch-bomb");
+  if (bombButton) bombButton.disabled = true;
   autoPaused = false;
   handLostAt = null;
   document.getElementById("pause-overlay")?.remove();
@@ -540,6 +567,8 @@ async function startGame(app, generation = mountGeneration) {
         });
       activeGame?.unmount?.();
       activeGame = null;
+      app.querySelector("#pause-btn").hidden = true;
+      if (bombButton) bombButton.disabled = true;
       track("Game Finished", {
         game: meta.id,
         score,
@@ -552,6 +581,8 @@ async function startGame(app, generation = mountGeneration) {
   });
   if (generation !== mountGeneration) { mounted?.unmount?.(); return; }
   activeGame = mounted;
+  if (bombButton) bombButton.disabled = false;
+  if (!onlineRoom) app.querySelector("#pause-btn").hidden = false;
   if (!onlineRoom) prepareCreatorClip(canvas);
 }
 

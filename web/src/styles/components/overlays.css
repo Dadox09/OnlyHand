@@ -192,6 +192,9 @@
     radial-gradient(ellipse at center, transparent 62%, rgba(0, 0, 0, 0.28) 100%),
     repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.028) 0 1px, transparent 1px 3px);
 }
+@media (pointer: coarse) {
+  .canvas-wrap::after { display: none; }
+}
 .go-overlay { z-index: 2; }
 
 /* ── Route transition ────────────────────────────────────────── */

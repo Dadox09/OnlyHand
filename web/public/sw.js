@@ -30,19 +30,26 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (request.method !== "GET" || url.origin !== location.origin) return;
 
+  const remember = (key, response) => {
+    if (response.ok) {
+      const copy = response.clone();
+      event.waitUntil(caches.open(CACHE).then((cache) => cache.put(key, copy)).catch(() => {}));
+    }
+    return response;
+  };
+
   if (request.mode === "navigate") {
-    event.respondWith(fetch(request).then((response) => {
-      if (response.ok) caches.open(CACHE).then((cache) => cache.put(new URL("./index.html", scope).href, response.clone()));
-      return response;
-    }).catch(() => caches.match(new URL("./index.html", scope).href)));
+    const index = new URL("./index.html", scope).href;
+    event.respondWith(fetch(request)
+      .then((response) => remember(index, response))
+      .catch(() => caches.match(index)));
     return;
   }
 
   event.respondWith(caches.match(request).then((cached) => {
-    const network = fetch(request).then((response) => {
-      if (response.ok) caches.open(CACHE).then((cache) => cache.put(request, response.clone()));
-      return response;
-    });
-    return cached || network;
+    const network = fetch(request).then((response) => remember(request, response));
+    if (!cached) return network;
+    event.waitUntil(network.catch(() => {}));
+    return cached;
   }));
 });
