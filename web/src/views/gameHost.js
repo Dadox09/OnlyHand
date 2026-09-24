@@ -165,6 +165,7 @@ function showInputChoice(app, generation, error = "") {
         <button class="btn" id="use-pointer">${icon("pointer", { size: 16 })} Try mouse / touch</button>
       </div>
       <div class="go-hint">Camera processing stays on this device · no video is uploaded</div>
+      <p class="choice-privacy"><a href="#/privacy" target="_blank" rel="noopener">Privacy details</a></p>
     </div>
   `;
   wrap.appendChild(overlay);
@@ -332,6 +333,7 @@ function showPongChoice(app, generation) {
             <button class="btn" type="submit">Join</button>
           </div>
         </form>` : `<p class="go-hint">Online play needs a Supabase connection.</p>${orb ? `<button class="btn" id="orb-hub">Back to hub</button>` : ""}`}
+      <p class="choice-privacy">Online matches use an anonymous account. <a href="#/privacy" target="_blank" rel="noopener">Privacy details</a></p>
       <div class="input-choice-error" id="pong-error" role="status" aria-live="polite"></div>
     </div>`;
   app.querySelector("#canvas-wrap").appendChild(overlay);

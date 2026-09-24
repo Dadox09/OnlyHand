@@ -99,6 +99,8 @@
 .canvas-wrap { position: relative; width: fit-content; }
 
 .pong-choice-panel { width: min(390px, 100%); }
+.choice-privacy { margin: 0; color: var(--text-muted); font-size: var(--text-tag); }
+.choice-privacy a { color: var(--accent); text-decoration: underline; }
 .pong-choice-panel > .btn { min-height: 44px; width: min(270px, 100%); }
 .pong-choice-divider { color: var(--text-muted); font-size: var(--text-tag); letter-spacing: 0.12em; margin-top: 0.3rem; }
 .pong-join-form { width: min(270px, 100%); text-align: left; }
