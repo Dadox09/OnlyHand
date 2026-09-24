@@ -19,6 +19,9 @@ before the consent step below is complete.
   accounts are tied to one browser; the app does not restore a profile or scores
   on another device. Re-run the schema before deploying the new daily leaderboard
   query and account-deletion button.
+- Before deploying the two-mode build to an existing Supabase project, run
+  `../supabase/pointer_leaderboards.sql` in its SQL Editor. It adds mouse/touch game IDs
+  to the score constraint; the existing leaderboard views group them separately.
 - Plausible is disabled. Remove the unused `VITE_PLAUSIBLE_DOMAIN` setting in Vercel
   and deploy this version before publishing the matching privacy notice.
 
@@ -33,7 +36,8 @@ Test on Chrome/Edge desktop, Android Chrome and iPhone Safari:
 4. “Explore games first” reaches the hub without opening a camera permission prompt.
 5. Opening a game without an active camera shows the controller choice before any permission prompt.
 6. Mouse/touch mode can finish a run: move steers, hold/click pinches, and Space triggers fist actions.
-7. Pointer results are labelled practice and never enter global or daily hand-control boards.
+7. Hands and mouse/touch runs earn separate XP and badges, and appear only on their matching
+   global or daily leaderboard. Switching controller during a run starts a new run.
 8. Returning from pointer mode keeps the hub camera off until “Enable hand control” is selected.
 9. A completed run shows a shareable challenge.
 10. Opening that challenge in a private window shows the target and can start with mouse/touch.

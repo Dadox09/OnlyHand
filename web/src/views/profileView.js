@@ -21,10 +21,11 @@ export function unmount() {
 
 function render(app) {
   const profile = getProfile();
-  const lvl = getLevel(profile);
-  const badges = getBadges(profile);
-  const unlockedCount = badges.filter((b) => b.unlocked).length;
-  const handRuns = Object.values(profile.stats).reduce((total, stat) => total + (stat.plays ?? 0), 0);
+  const modes = [
+    { id: "camera", name: "Hands", stats: profile.stats, getStats },
+    { id: "pointer", name: "Mouse / touch", stats: profile.practiceStats, getStats: getPracticeStats },
+  ].map((mode) => ({ ...mode, level: getLevel(profile, mode.id), badges: getBadges(profile, mode.id) }));
+  const hangarLevel = Math.max(...modes.map((mode) => mode.level.level));
 
   app.innerHTML = `
     <nav>
@@ -39,7 +40,7 @@ function render(app) {
           <div class="profile-heading">
             <span class="profile-kicker">${icon("user", { size: 14 })} PLAYER PROFILE</span>
             <h1>Your arcade record</h1>
-            <p>Make it yours. Track every hand-controlled run.</p>
+            <p>Two ways to play. Each has its own XP, badges and leaderboard.</p>
           </div>
           <div class="profile-identity">
             <div class="avatar-control">
@@ -55,41 +56,32 @@ function render(app) {
               <p class="profile-since">Playing since ${new Date(profile.createdAt).toLocaleDateString()}</p>
               <span class="profile-saved" id="name-status" role="status"></span>
             </div>
-            <div class="level-card">
-              <div class="level-line">
-                <span class="lv">LV ${lvl.level}</span>
-                <span class="xp">${lvl.intoLevel} / ${lvl.span} XP</span>
-              </div>
-              <div class="level-bar" role="progressbar" aria-label="Progress to next level" aria-valuenow="${lvl.intoLevel}" aria-valuemin="0" aria-valuemax="${lvl.span}"><div class="fill" style="width:${Math.round(lvl.pct * 100)}%"></div></div>
-              <span class="level-next">NEXT UP · LEVEL ${lvl.level + 1}</span>
-            </div>
           </div>
           <div class="avatar-picker oh-pop" id="avatar-picker" aria-label="Choose avatar" hidden>
             ${AVATARS.map((e) => `<button class="avatar sm${e === profile.avatar ? " selected" : ""}" type="button" aria-label="Avatar ${e}" aria-pressed="${e === profile.avatar}" data-emoji="${e}">${e}</button>`).join("")}
           </div>
         </header>
 
-        <div class="profile-overview oh-fade-up" role="group" aria-label="Player overview">
-          <div><span>HAND RUNS</span><strong>${handRuns}</strong></div>
-          <div><span>BADGES EARNED</span><strong>${unlockedCount}<small> / ${badges.length}</small></strong></div>
-          <div><span>TOTAL XP</span><strong>${lvl.xp}</strong></div>
-        </div>
+        ${modes.map((mode, index) => `
+        <section class="oh-fade-up profile-mode" aria-labelledby="mode-${mode.id}">
+          <div class="profile-section-head"><div><span class="profile-kicker">0${index + 1} · YOUR ARCADE</span><h2 id="mode-${mode.id}">${icon(mode.id === "camera" ? "hand" : "pointer", { size: 20 })} ${mode.name}</h2></div><a class="btn" href="#/board/${games[0].id}/${mode.id}">${icon("trophy", { size: 14 })} Leaderboard</a></div>
+          <div class="profile-overview" role="group" aria-label="${mode.name} progress">
+            <div><span>RUNS</span><strong>${Object.values(mode.stats).reduce((total, stat) => total + (stat.plays ?? 0), 0)}</strong></div>
+            <div><span>BADGES</span><strong>${mode.badges.filter((b) => b.unlocked).length}<small> / ${mode.badges.length}</small></strong></div>
+            <div><span>XP · LV ${mode.level.level}</span><strong>${mode.level.xp}</strong></div>
+          </div>
+          <div class="level-bar" role="progressbar" aria-label="${mode.name} progress to next level" aria-valuenow="${mode.level.intoLevel}" aria-valuemin="0" aria-valuemax="${mode.level.span}"><div class="fill" style="width:${Math.round(mode.level.pct * 100)}%"></div></div>
+          <h3 class="profile-subhead">Game stats</h3>
+          <div class="stats-grid" id="stats-${mode.id}"></div>
+          <h3 class="profile-subhead">Badges</h3>
+          <div class="badge-grid" id="badges-${mode.id}"></div>
+        </section>`).join("")}
 
         <section class="oh-fade-up">
-          <div class="profile-section-head"><div><span class="profile-kicker">01 · THE SCOREBOARD</span><h2>${icon("trophy", { size: 20 })} Game stats</h2></div><p>Personal bests from hand play, with practice tracked separately.</p></div>
-          <div class="stats-grid" id="stats-grid"></div>
-        </section>
-
-        <section class="oh-fade-up">
-          <div class="profile-section-head"><div><span class="profile-kicker">02 · THE COLLECTION</span><h2>${icon("shield-check", { size: 20 })} Badges <small>${unlockedCount}/${badges.length}</small></h2></div><p>Unlock milestones as you play.</p></div>
-          <div class="badge-grid" id="badge-grid"></div>
-        </section>
-
-        <section class="oh-fade-up">
-          <div class="profile-section-head"><div><span class="profile-kicker">03 · YOUR LOADOUT</span><h2>${icon("rocket", { size: 20 })} Asteroids hangar</h2></div><p>Choose the ship for your next Asteroids run.</p></div>
+          <div class="profile-section-head"><div><span class="profile-kicker">03 · YOUR LOADOUT</span><h2>${icon("rocket", { size: 20 })} Asteroids hangar</h2></div><p>Ships unlock with your higher mode level.</p></div>
           <div class="hangar-grid" id="hangar-grid">
             ${PLAYER_SHIPS.map((s) => {
-              const locked = !isShipUnlocked(s, lvl.level);
+              const locked = !isShipUnlocked(s, hangarLevel);
               return `
               <button class="ship-card${s.id === (profile.ship || "viper") ? " selected" : ""}${locked ? " locked" : ""}"
                       type="button" data-ship="${s.id}" aria-pressed="${s.id === (profile.ship || "viper")}" ${locked ? `data-locked="1" aria-disabled="true"` : ""}>
@@ -126,28 +118,23 @@ function render(app) {
   app.querySelector("#name-input").value = profile.name;
   app.querySelector("#avatar-btn").textContent = profile.avatar;
 
-  // Stats per game
-  const grid = app.querySelector("#stats-grid");
-  for (const g of games) {
-    const s = getStats(g.id);
-    const practice = getPracticeStats(g.id);
-    const card = document.createElement("div");
-    card.className = "stat-card";
-    card.innerHTML = `
-      <div class="stat-game"><span aria-hidden="true">${g.icon}</span><strong>${g.name}</strong></div>
-      ${s
-        ? `<div class="stat-best"><span>HAND BEST</span><strong>${s.best}</strong></div>
-           <div class="stat-detail"><span>${s.plays} hand runs</span><span>${s.totalScore} total points</span></div>`
-        : `<div class="stat-empty">No hand runs yet</div>`}
-      ${practice ? `
-        <div class="stat-practice"><span>MOUSE / TOUCH PRACTICE</span><strong>Best ${practice.best}</strong><small>${practice.plays} plays · ${practice.totalScore} total points</small></div>` : ""}
-    `;
-    grid.appendChild(card);
-  }
-
-  // Badges — unlocked glow with earned date, locked show live progress
-  const badgeGrid = app.querySelector("#badge-grid");
-  for (const b of badges) {
+  for (const mode of modes) {
+    const grid = app.querySelector(`#stats-${mode.id}`);
+    for (const g of games) {
+      const stat = mode.getStats(g.id);
+      const card = document.createElement("div");
+      card.className = "stat-card";
+      card.innerHTML = `
+        <div class="stat-game"><span aria-hidden="true">${g.icon}</span><strong>${g.name}</strong></div>
+        ${stat
+          ? `<div class="stat-best"><span>BEST</span><strong>${stat.best}</strong></div>
+             <div class="stat-detail"><span>${stat.plays} runs</span><span>${stat.totalScore} total points</span></div>`
+          : `<div class="stat-empty">No runs yet</div>`}
+      `;
+      grid.appendChild(card);
+    }
+    const badgeGrid = app.querySelector(`#badges-${mode.id}`);
+    for (const b of mode.badges) {
     const card = document.createElement("div");
     card.className = `badge-card ${b.unlocked ? "unlocked" : "locked"}`;
     card.innerHTML = `
@@ -163,7 +150,8 @@ function render(app) {
              </div>`}
       </div>
     `;
-    badgeGrid.appendChild(card);
+      badgeGrid.appendChild(card);
+    }
   }
 
   // Avatar picker

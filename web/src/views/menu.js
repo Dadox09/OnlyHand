@@ -1,6 +1,6 @@
 import { visibleGames as games } from "../games/registry.js";
 import { getProfile } from "../core/profile.js";
-import { getBest, getDailyProgress } from "../core/scores.js";
+import { getBest, getPracticeBest, getDailyProgress } from "../core/scores.js";
 import { getCameraVideo, getStream, initCamera, stopCamera } from "../core/camera.js";
 import { startHandInput, stopHandInput, onHandUpdate } from "../input/handInput.js";
 import { icon } from "../core/icon.js";
@@ -42,10 +42,10 @@ export async function mount(app) {
         <div class="daily-copy">
           <span class="daily-kicker">${icon("calendar", { size: 13 })} TODAY'S DROP</span>
           <h2>Same galaxy. One shot. Everyone.</h2>
-          <p>Play the seeded Asteroids run and challenge the world before it resets.</p>
+          <p>Play the seeded Asteroids run in either mode and challenge its leaderboard before it resets.</p>
         </div>
         <div class="daily-meta">
-          <span class="daily-streak">${icon("flame", { size: 15 })} ${daily.streak || 0} day streak</span>
+          <span class="daily-streak">${icon("flame", { size: 15 })} Day streaks · Hands ${daily.streak || 0} · Mouse / touch ${getDailyProgress("pointer").streak || 0}</span>
           <span class="daily-reset" id="daily-reset">Resets in --:--:--</span>
           <span class="daily-play">PLAY DAILY ${icon("chevron-right", { size: 15 })}</span>
         </div>
@@ -138,6 +138,7 @@ export async function mount(app) {
   const grid = app.querySelector("#game-grid");
   for (const g of games) {
     const best = getBest(g.id);
+    const pointerBest = getPracticeBest(g.id);
     const preview = g.id === "asteroids" ? "asteroids/card-preview" : g.id === "pong" ? "pong-card-preview" : null;
     const card = document.createElement("a");
     card.className = "game-card oh-fade-up";
@@ -159,7 +160,8 @@ export async function mount(app) {
         <p>${g.description}</p>
         <div class="chips">
           ${g.requires.map((r) => `<span class="tag">${r}</span>`).join("")}
-          ${best > 0 ? `<span class="tag chip-best">Best: ${best}</span>` : ""}
+          ${best > 0 ? `<span class="tag chip-best">Hands best: ${best}</span>` : ""}
+          ${pointerBest > 0 ? `<span class="tag chip-best">Mouse / touch best: ${pointerBest}</span>` : ""}
         </div>
       </div>
     `;

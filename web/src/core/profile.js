@@ -14,7 +14,10 @@ function defaultProfile() {
     ship: "viper", // asteroids hangar pick — see games/asteroids/fleet.js
     createdAt: new Date().toISOString(),
     stats: {},
-    practiceStats: {}, // mouse/touch runs; never mixed with hand leaderboards or badges
+    practiceStats: {}, // mouse/touch runs; kept for existing local profiles
+    practiceBadges: {},
+    practiceCounters: {},
+    practiceDaily: { ...DEFAULT_DAILY },
     badges: {},    // { [badgeId]: earnedAtISO } — see core/badges.js
     counters: {},  // { records } — personal bests broken
     daily: { ...DEFAULT_DAILY },
@@ -29,9 +32,10 @@ export function getProfile() {
     if (!raw) return defaultProfile();
     const p = asRecord(JSON.parse(raw));
     if (p.schemaVersion !== SCHEMA_VERSION) return defaultProfile();
-    for (const key of ["stats", "practiceStats", "badges", "counters"]) p[key] = asRecord(p[key]);
+    for (const key of ["stats", "practiceStats", "badges", "counters", "practiceBadges", "practiceCounters"]) p[key] = asRecord(p[key]);
     if (!p.ship) p.ship = "viper"; // backfill profiles saved before the hangar existed
     p.daily = { ...DEFAULT_DAILY, ...asRecord(p.daily) };
+    p.practiceDaily = { ...DEFAULT_DAILY, ...asRecord(p.practiceDaily) };
     p.settings = { ...DEFAULT_SETTINGS, ...asRecord(p.settings) };
     return p;
   } catch {

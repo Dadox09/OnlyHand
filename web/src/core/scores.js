@@ -2,47 +2,36 @@ import { getProfile, saveProfile } from "./profile.js";
 import { submitScore } from "./backend.js";
 import { syncBadges } from "./badges.js";
 
-// opts.submitAs — cloud game_id override (daily runs post to "<id>-daily"
-//                 so they never pollute the all-time board)
-// opts.cloud — false for practice/fallback controllers; keeps official boards fair
-// opts.practice — store in practiceStats and skip badges/counters/official totals
+// opts.practice — store mouse/touch progression separately from hand progression
+// opts.daily — post to the separate UTC daily leaderboard
 // opts.apply(p) — mutate extra profile counters (e.g. asteroids run stats)
 //                 before badges are synced, inside the same save
+export const scoreGameId = (gameId, mode = "camera", daily = false) =>
+  `${gameId}${daily ? "-daily" : ""}${mode === "pointer" ? "-pointer" : ""}`;
+
 export function recordPlay(gameId, score, durationSeconds = 0, opts = {}) {
   // Cloud submit runs in parallel; local stats never wait on the network.
   // The promise is returned so callers can wait for it before fetching the
   // global leaderboard (ensures this run's score is included).
-  const submitted = opts.cloud === false
-    ? Promise.resolve(false)
-    : submitScore(opts.submitAs ?? gameId, score).catch(() => false);
+  const submitted = submitScore(scoreGameId(gameId, opts.practice ? "pointer" : "camera", opts.daily), score).catch(() => false);
   const p = getProfile();
-  if (opts.practice) {
-    p.practiceStats = p.practiceStats ?? {};
-    const prev = p.practiceStats[gameId] ?? { best: 0, plays: 0, totalScore: 0, lastPlayed: null };
-    p.practiceStats[gameId] = {
-      best: Math.max(prev.best, score),
-      plays: prev.plays + 1,
-      totalScore: prev.totalScore + score,
-      lastPlayed: new Date().toISOString(),
-    };
-    p.practicePlaytime = (p.practicePlaytime ?? 0) + durationSeconds;
-    saveProfile(p);
-    return { submitted, newBadges: [] };
-  }
-  const prev = p.stats[gameId] ?? { best: 0, plays: 0, totalScore: 0, lastPlayed: null };
-  p.stats[gameId] = {
+  const statsKey = opts.practice ? "practiceStats" : "stats";
+  const timeKey = opts.practice ? "practicePlaytime" : "totalPlaytime";
+  const countersKey = opts.practice ? "practiceCounters" : "counters";
+  const prev = p[statsKey][gameId] ?? { best: 0, plays: 0, totalScore: 0, lastPlayed: null };
+  p[statsKey][gameId] = {
     best: Math.max(prev.best, score),
     plays: prev.plays + 1,
     totalScore: prev.totalScore + score,
     lastPlayed: new Date().toISOString(),
   };
-  p.totalPlaytime = (p.totalPlaytime ?? 0) + durationSeconds;
-  p.counters = p.counters ?? {};
+  p[timeKey] = (p[timeKey] ?? 0) + durationSeconds;
+  p[countersKey] = p[countersKey] ?? {};
   if (score > prev.best && prev.plays > 0) {
-    p.counters.records = (p.counters.records ?? 0) + 1;
+    p[countersKey].records = (p[countersKey].records ?? 0) + 1;
   }
   opts.apply?.(p);
-  const newBadges = syncBadges(p);
+  const newBadges = syncBadges(p, opts.practice ? "pointer" : "camera");
   saveProfile(p);
   return { submitted, newBadges };
 }
@@ -65,21 +54,23 @@ export function getPracticeStats(gameId) {
 
 const utcDay = (date = new Date()) => date.toISOString().slice(0, 10);
 
-export function updateDailyProgress(profile, date = new Date()) {
+export function updateDailyProgress(profile, date = new Date(), mode = "camera") {
   const today = utcDay(date);
-  const daily = profile.daily ?? { lastDay: null, streak: 0, bestStreak: 0 };
+  const key = mode === "pointer" ? "practiceDaily" : "daily";
+  const daily = profile[key] ?? { lastDay: null, streak: 0, bestStreak: 0 };
   if (daily.lastDay === today) return daily;
   const yesterday = new Date(date);
   yesterday.setUTCDate(yesterday.getUTCDate() - 1);
   daily.streak = daily.lastDay === utcDay(yesterday) ? daily.streak + 1 : 1;
   daily.lastDay = today;
   daily.bestStreak = Math.max(daily.bestStreak || 0, daily.streak);
-  profile.daily = daily;
+  profile[key] = daily;
   return daily;
 }
 
-export function getDailyProgress() {
-  const daily = getProfile().daily ?? { lastDay: null, streak: 0, bestStreak: 0 };
+export function getDailyProgress(mode = "camera") {
+  const p = getProfile();
+  const daily = (mode === "pointer" ? p.practiceDaily : p.daily) ?? { lastDay: null, streak: 0, bestStreak: 0 };
   // A streak remains alive during the day immediately after the last play.
   if (!daily.lastDay) return daily;
   const now = new Date();
@@ -91,7 +82,7 @@ export function getDailyProgress() {
   return daily;
 }
 
-// House "ghost" rivals so the TOP HANDS board reads like an arcade cabinet
+// House "ghost" rivals so the local demo board reads like an arcade cabinet
 // even before you've climbed it. The player's own best is merged in live.
 const HOUSE_RIVALS = {
   pong:      [{ name: "Nova",  avatar: "⚡", score: 87 },  { name: "Rex",   avatar: "🐉", score: 35 }],
@@ -103,15 +94,15 @@ const HOUSE_RIVALS = {
   asteroids: [{ name: "Nova",  avatar: "⚡", score: 60 },  { name: "Rex",   avatar: "🐉", score: 28 }],
 };
 
-// Build a small TOP HANDS leaderboard: house rivals + the player's best
+// Build a small local leaderboard: house rivals + the player's best in this mode
 // (or this run's score, whichever is higher), sorted, top `limit`.
-export function getLeaderboard(gameId, score = 0, limit = 3, bestOverride = null) {
+export function getLeaderboard(gameId, score = 0, limit = 3, mode = "camera") {
   const p = getProfile();
   const rivals = HOUSE_RIVALS[gameId] ?? HOUSE_RIVALS.pong;
   const you = {
     name: p.name,
     avatar: p.avatar,
-    score: Math.max(bestOverride ?? getBest(gameId), score),
+    score: Math.max(mode === "pointer" ? getPracticeBest(gameId) : getBest(gameId), score),
     you: true,
   };
   return [...rivals.map((r) => ({ ...r })), you]

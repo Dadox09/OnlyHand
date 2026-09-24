@@ -10,9 +10,9 @@ import { visibleGames } from "../games/registry.js";
 // XP = every point scored + a flat bonus per finished run.
 const XP_PER_PLAY = 25;
 
-export function getXP(p = getProfile()) {
+export function getXP(p = getProfile(), mode = "camera") {
   let xp = 0;
-  for (const s of Object.values(p.stats)) {
+  for (const s of Object.values(mode === "pointer" ? p.practiceStats ?? {} : p.stats)) {
     xp += (s.totalScore ?? 0) + (s.plays ?? 0) * XP_PER_PLAY;
   }
   return xp;
@@ -22,8 +22,8 @@ export function getXP(p = getProfile()) {
 // → L2 at 100, L3 at 300, L4 at 600, L5 at 1000 …
 const xpForLevel = (level) => (100 * level * (level - 1)) / 2;
 
-export function getLevel(p = getProfile()) {
-  const xp = getXP(p);
+export function getLevel(p = getProfile(), mode = "camera") {
+  const xp = getXP(p, mode);
   let level = 1;
   while (xp >= xpForLevel(level + 1)) level++;
   const floor = xpForLevel(level);
@@ -87,10 +87,18 @@ export const BADGES = [
 ].filter((badge) => !badge.gameId || visibleGameIds.has(badge.gameId));
 
 // Full badge list with live progress + earned state, for the profile view.
-export function getBadges(p = getProfile()) {
-  const earned = p.badges ?? {};
+const modeProfile = (p, mode) => mode === "pointer" ? {
+  ...p,
+  stats: p.practiceStats ?? {},
+  counters: p.practiceCounters ?? {},
+  totalPlaytime: p.practicePlaytime ?? 0,
+} : p;
+
+export function getBadges(p = getProfile(), mode = "camera") {
+  const earned = mode === "pointer" ? p.practiceBadges ?? {} : p.badges ?? {};
+  const progress = modeProfile(p, mode);
   return BADGES.map((b) => {
-    const [cur, goal] = b.progress(p);
+    const [cur, goal] = b.progress(progress);
     return {
       ...b,
       cur: Math.min(cur, goal),
@@ -105,14 +113,16 @@ export function getBadges(p = getProfile()) {
 // Persist newly completed badges on the given (mutable) profile.
 // Returns the defs unlocked by this call — caller shows the celebration.
 // The caller is responsible for saveProfile().
-export function syncBadges(p) {
-  p.badges = p.badges ?? {};
+export function syncBadges(p, mode = "camera") {
+  const key = mode === "pointer" ? "practiceBadges" : "badges";
+  p[key] = p[key] ?? {};
+  const progress = modeProfile(p, mode);
   const fresh = [];
   for (const b of BADGES) {
-    if (p.badges[b.id]) continue;
-    const [cur, goal] = b.progress(p);
+    if (p[key][b.id]) continue;
+    const [cur, goal] = b.progress(progress);
     if (cur >= goal) {
-      p.badges[b.id] = new Date().toISOString();
+      p[key][b.id] = new Date().toISOString();
       fresh.push(b);
     }
   }

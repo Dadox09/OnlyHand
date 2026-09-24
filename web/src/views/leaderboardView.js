@@ -3,8 +3,7 @@
 // back to the local house board. Top 3 render as a podium.
 import { scoreGames as games } from "../games/registry.js";
 import { getProfile } from "../core/profile.js";
-import { getLeaderboard, getBest } from "../core/scores.js";
-import { getLevel } from "../core/badges.js";
+import { getLeaderboard, getBest, getPracticeBest, scoreGameId } from "../core/scores.js";
 import { icon } from "../core/icon.js";
 import { startHandCursor, stopHandCursor } from "../core/handCursor.js";
 import { isOnline, fetchLeaderboard, fetchMyRank } from "../core/backend.js";
@@ -16,27 +15,32 @@ const esc = (s) => String(s).replace(/[&<>"']/g, (c) =>
 const MEDALS = ["🥇", "🥈", "🥉"];
 
 let activeTab = null;
+let activeMode = "camera";
 let loadToken = 0;
 
 export function mount(app, { params } = {}) {
   const profile = getProfile();
-  const lvl = getLevel(profile);
   activeTab = games.some((g) => g.id === params?.id) ? params.id : games[0].id;
+  activeMode = params?.mode === "pointer" ? "pointer" : "camera";
 
   app.innerHTML = `
     <nav>
       <a class="logo" href="#/hub">ONLY<span class="lit">HAND</span></a>
       <a href="#/hub" aria-label="Back to games">${icon("arrow-left", { size: 14 })}<span class="nav-label">Hub</span></a>
-      <a href="#/profile" aria-label="Player profile">${profile.avatar} <span class="nav-label">${esc(profile.name)} · LV ${lvl.level}</span></a>
+      <a href="#/profile" aria-label="Player profile">${profile.avatar} <span class="nav-label">${esc(profile.name)}</span></a>
     </nav>
     <div class="lb-wrap">
       <div class="page-header oh-fade-up">
         <h1>${icon("trophy", { size: 22 })} HALL OF FAME</h1>
-        <p class="subtitle" id="board-source">All-time top hands · ${isOnline() ? "loading global standings" : "local demo standings"}</p>
+        <p class="subtitle" id="board-source">Loading standings…</p>
+      </div>
+      <div class="lb-tabs lb-mode-tabs" aria-label="Control mode">
+        <button class="lb-tab${activeMode === "camera" ? " active" : ""}" type="button" data-mode="camera" aria-pressed="${activeMode === "camera"}">${icon("hand", { size: 16 })} Hands</button>
+        <button class="lb-tab${activeMode === "pointer" ? " active" : ""}" type="button" data-mode="pointer" aria-pressed="${activeMode === "pointer"}">${icon("pointer", { size: 16 })} Mouse / touch</button>
       </div>
       <div class="lb-tabs oh-fade-up" id="lb-tabs">
         ${games.map((g) => `
-          <button class="lb-tab${g.id === activeTab ? " active" : ""}" data-game="${g.id}">
+          <button class="lb-tab${g.id === activeTab ? " active" : ""}" data-game="${g.id}" type="button" aria-pressed="${g.id === activeTab}">
             <span class="ic">${g.icon}</span><span class="nm">${g.name}</span>
           </button>`).join("")}
       </div>
@@ -48,8 +52,20 @@ export function mount(app, { params } = {}) {
     const tab = e.target.closest(".lb-tab");
     if (!tab || tab.dataset.game === activeTab) return;
     activeTab = tab.dataset.game;
-    app.querySelectorAll(".lb-tab").forEach((t) =>
-      t.classList.toggle("active", t.dataset.game === activeTab));
+    app.querySelectorAll("[data-game]").forEach((t) => {
+      t.classList.toggle("active", t.dataset.game === activeTab);
+      t.setAttribute("aria-pressed", String(t.dataset.game === activeTab));
+    });
+    renderBoard(app);
+  });
+  app.querySelector(".lb-mode-tabs").addEventListener("click", (e) => {
+    const tab = e.target.closest("[data-mode]");
+    if (!tab || tab.dataset.mode === activeMode) return;
+    activeMode = tab.dataset.mode;
+    app.querySelectorAll("[data-mode]").forEach((button) => {
+      button.classList.toggle("active", button === tab);
+      button.setAttribute("aria-pressed", String(button === tab));
+    });
     renderBoard(app);
   });
 
@@ -88,6 +104,9 @@ const listRow = (r, rank) => `
 
 async function renderBoard(app) {
   const gameId = activeTab;
+  const mode = activeMode;
+  const cloudId = scoreGameId(gameId, mode);
+  const modeLabel = mode === "pointer" ? "mouse / touch" : "hands";
   const board = app.querySelector("#lb-board");
   if (!board) return;
   const token = ++loadToken;
@@ -99,8 +118,8 @@ async function renderBoard(app) {
   if (isOnline()) {
     try {
       [rows, myRank] = await Promise.all([
-        fetchLeaderboard(gameId, 10),
-        fetchMyRank(gameId),
+        fetchLeaderboard(cloudId, 10),
+        fetchMyRank(cloudId),
       ]);
     } catch (error) {
       console.warn("[leaderboard] global standings unavailable:", error);
@@ -109,14 +128,14 @@ async function renderBoard(app) {
   if (token !== loadToken || !board.isConnected) return; // stale tab switch
   const fallback = rows === null;
   app.querySelector("#board-source").textContent = fallback
-    ? `All-time top hands · ${isOnline() ? "local demo (global unavailable)" : "local demo standings"}`
-    : "All-time top hands · global casual standings";
-  if (fallback) rows = getLeaderboard(gameId, 0, 10);
+    ? `All-time ${modeLabel} · ${isOnline() ? "local demo (global unavailable)" : "local demo standings"}`
+    : `All-time ${modeLabel} · global casual standings`;
+  if (fallback) rows = getLeaderboard(gameId, 0, 10, mode);
 
   const podium = rows.slice(0, 3);
   const rest = rows.slice(3);
   const youOnBoard = rows.some((r) => r.you);
-  const best = getBest(gameId);
+  const best = mode === "pointer" ? getPracticeBest(gameId) : getBest(gameId);
 
   board.innerHTML = `
     <div class="lb-podium">

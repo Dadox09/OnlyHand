@@ -46,19 +46,6 @@
 .profile-personal .btn { min-height: 44px; }
 .profile-since { margin: 0.65rem 0 0; color: var(--text-muted); font-size: var(--text-sub); }
 .profile-saved { display: block; min-height: 1.2em; color: var(--accent); font-size: var(--text-sub); }
-.profile-header .level-card {
-  flex: 0 1 250px;
-  min-width: min(100%, 220px);
-  margin-left: auto;
-  padding: 1rem;
-  border: 1px solid var(--border-hover);
-  border-radius: var(--radius-box);
-  background: rgba(8, 10, 16, 0.74);
-}
-.profile-header .level-line { justify-content: space-between; }
-.profile-header .level-line .lv { font-size: 1.2rem; }
-.profile-header .level-bar { height: 8px; margin: 0.35rem 0; }
-.level-next { color: var(--text-muted); font: 700 0.68rem var(--font-display); letter-spacing: 0.09em; }
 .avatar-picker { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1rem; padding-top: 1rem; border-top: var(--border-default); }
 .avatar-picker[hidden] { display: none; }
 
@@ -77,6 +64,10 @@
 .profile-overview strong { color: var(--text); font: 900 clamp(1.25rem, 2.5vw, 1.9rem) var(--font-display); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .profile-overview small { color: var(--text-muted); font-size: 0.7em; }
 .profile-overview > div:first-child strong { color: var(--accent); }
+.profile-mode .profile-overview { margin-bottom: 0.75rem; }
+.profile-mode > .level-bar { height: 8px; margin-bottom: 1.5rem; }
+.profile-subhead { margin: 1.5rem 0 0.8rem; font: 700 0.85rem var(--font-display); }
+.profile-mode .profile-section-head .btn { min-height: 44px; }
 
 .profile-grid > section {
   min-width: 0;
@@ -105,13 +96,10 @@
 .stat-game { display: flex; align-items: center; gap: 0.55rem; font: 700 0.75rem var(--font-display); }
 .stat-game span { font-size: 1.25rem; }
 .stat-best { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; margin-top: 1rem; }
-.stat-best span, .stat-practice > span { color: var(--text-muted); font: 700 0.68rem var(--font-display); letter-spacing: 0.08em; }
+.stat-best span { color: var(--text-muted); font: 700 0.68rem var(--font-display); letter-spacing: 0.08em; }
 .stat-best strong { color: var(--accent); font: 900 1.7rem var(--font-display); font-variant-numeric: tabular-nums; }
 .stat-detail { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.25rem 0.5rem; margin-top: 0.35rem; color: var(--text-muted); font-size: var(--text-tag); }
 .stat-empty { margin-top: auto; padding: 1rem 0 0.5rem; color: var(--text-muted); font-size: var(--text-sub); }
-.stat-practice { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.3rem 0.55rem; margin-top: auto; padding-top: 0.8rem; border-top: var(--border-default); }
-.stat-practice strong { margin-left: auto; color: var(--text); font-size: var(--text-sub); }
-.stat-practice small { flex-basis: 100%; color: var(--text-muted); font-size: var(--text-tag); }
 
 .profile-wrap .badge-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); }
 .profile-wrap .badge-card { min-height: 104px; padding: 0.9rem; }
@@ -178,7 +166,6 @@
 #delete-status:empty { display: none; }
 
 @media (max-width: 700px) {
-  .profile-header .level-card { flex-basis: 100%; margin-left: 0; }
   .profile-section-head { align-items: start; }
 }
 @media (max-width: 520px) {

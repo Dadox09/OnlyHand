@@ -154,7 +154,7 @@
 .daily-copy h2 { margin: 0.35rem 0 0.2rem; font-family: var(--font-display); font-size: clamp(0.95rem, 2vw, 1.25rem); letter-spacing: 0.04em; }
 .daily-copy p { margin: 0; color: var(--text-muted); font-size: var(--text-sub); }
 .daily-meta { display: flex; align-items: flex-end; flex-direction: column; gap: 0.3rem; white-space: nowrap; }
-.daily-streak { color: #fb923c; font-size: var(--text-sub); font-weight: 700; }
+.daily-streak { color: #fb923c; font-size: var(--text-sub); font-weight: 700; white-space: normal; text-align: right; }
 .daily-reset { color: var(--text-faint); font-size: var(--text-tag); font-variant-numeric: tabular-nums; }
 .daily-play { color: var(--accent); font-family: var(--font-display); font-size: 0.65rem; font-weight: var(--weight-bold); letter-spacing: 0.08em; }
 

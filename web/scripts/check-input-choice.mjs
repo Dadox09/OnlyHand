@@ -13,6 +13,7 @@ function element() {
     handlers: {}, style: {},
     addEventListener(name, handler) { this.handlers[name] = handler; },
     removeEventListener(name) { delete this.handlers[name]; },
+    setAttribute() {},
     querySelector: (selector) => {
       if (!elements.has(selector)) elements.set(selector, element());
       return elements.get(selector);
@@ -32,7 +33,8 @@ const host = vm.createContext({
   document: { createElement: element, getElementById: (id) => elements.get(`#${id}`) },
   ResizeObserver: class { observe() {} disconnect() {} },
   getStream: () => ({}), getStats: () => null, getBest: () => 0,
-  readChallenge: () => null, icon: () => "", setupCanvas: noop, track: noop,
+  isAudioMuted: () => false, isOnline: () => true,
+  readChallenge: () => null, icon: () => "", setupCanvas: noop, portraitGameSize: noop, track: noop,
   stopPointerInput: noop, stopHandCursor: noop,
   navigate: () => assert.fail("Unexpected navigation"), sessions,
 });

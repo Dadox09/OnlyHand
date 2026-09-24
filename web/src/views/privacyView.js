@@ -41,8 +41,8 @@ export function mount(app) {
           When Supabase is active, its access and refresh tokens are also saved in this browser's
           <code>localStorage</code> to keep your anonymous cloud account available on later visits.
           If the online leaderboard is enabled, saving your tag creates an anonymous Supabase
-          account and sends the tag and avatar before your first game. Eligible solo camera-mode runs also send
-          the game and score. Supabase stores the submission time, an anonymous account ID, profile
+          account and sends the tag and avatar before your first game. Solo runs in either control mode also send
+          the game, control mode and score. Supabase stores the submission time, an anonymous account ID, profile
           creation and update times, and every submitted score. No email or video is sent.
           Authentication and API records may also include connection details such as your IP
           address and browser information.
@@ -51,7 +51,7 @@ export function mount(app) {
         </p>
         <p>
           Rankings are casual: client-submitted scores are not independently verified. The
-          leaderboard publicly shows player tags, avatars, anonymous IDs and best scores.
+          separate hands and mouse/touch leaderboards publicly show player tags, avatars, anonymous IDs and best scores.
           The current Supabase project is in Ireland. Anonymous accounts, profiles and scores
           are kept until you request deletion; a monthly job is scheduled to remove accounts with no
           cloud profile or score update for 12 months. Clearing browser storage alone does not remove

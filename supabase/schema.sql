@@ -32,7 +32,7 @@ create policy "users update own profile"
 create table if not exists public.scores (
   id         bigint generated always as identity primary key,
   user_id    uuid not null references public.profiles (id) on delete cascade,
-  game_id    text not null check (game_id in ('pong', 'breakout', 'snake', 'slash', 'beat', 'jelly', 'asteroids', 'asteroids-daily')),
+  game_id    text not null check (game_id in ('pong', 'breakout', 'snake', 'slash', 'beat', 'jelly', 'asteroids', 'asteroids-daily', 'pong-pointer', 'breakout-pointer', 'snake-pointer', 'slash-pointer', 'beat-pointer', 'jelly-pointer', 'asteroids-pointer', 'asteroids-daily-pointer')),
   score      integer not null check (score >= 0 and score <= 100000),
   created_at timestamptz not null default now()
 );
@@ -88,7 +88,7 @@ create trigger scores_rate_limit
 -- existed — safe to re-run.
 alter table public.scores drop constraint if exists scores_game_id_check;
 alter table public.scores add constraint scores_game_id_check
-  check (game_id in ('pong', 'breakout', 'snake', 'slash', 'beat', 'jelly', 'asteroids', 'asteroids-daily'));
+  check (game_id in ('pong', 'breakout', 'snake', 'slash', 'beat', 'jelly', 'asteroids', 'asteroids-daily', 'pong-pointer', 'breakout-pointer', 'snake-pointer', 'slash-pointer', 'beat-pointer', 'jelly-pointer', 'asteroids-pointer', 'asteroids-daily-pointer'));
 
 -- ── Leaderboard view: best score per player per game ───────────
 create or replace view public.leaderboard as

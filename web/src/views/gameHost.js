@@ -2,7 +2,7 @@ import { games } from "../games/registry.js";
 import { navigate } from "../router.js";
 import { getCameraVideo, initCamera, stopCamera } from "../core/camera.js";
 import { startHandInput, stopHandInput, startPointerInput, stopPointerInput, onHandUpdate, handState, mapToActiveBox } from "../input/handInput.js";
-import { recordPlay, getBest, getStats, getPracticeBest, getPracticeStats, getLeaderboard, updateDailyProgress, getDailyProgress } from "../core/scores.js";
+import { recordPlay, scoreGameId, getBest, getStats, getPracticeBest, getPracticeStats, getLeaderboard, updateDailyProgress, getDailyProgress } from "../core/scores.js";
 import { icon } from "../core/icon.js";
 import { setupCanvas, portraitGameSize, sfx, isAudioMuted, setAudioMuted } from "../core/gameKit.js";
 import { startHandCursor, stopHandCursor } from "../core/handCursor.js";
@@ -156,8 +156,13 @@ export async function mount(app, { params }) {
     showPointerCard(app.querySelector("#cam-panel"));
     startPointerInput(app.querySelector("#game-canvas"), { fistButton: app.querySelector("#touch-bomb") });
     if (paused && autoPaused) setPaused(false);
+    if (activeGame) {
+      activeGame.unmount?.();
+      activeGame = null;
+      startGame(app); // a run cannot earn points in two controller modes
+    }
     if (!onlineRoom) {
-      app.querySelector("#run-stat-label").textContent = "Practice best";
+      app.querySelector("#run-stat-label").textContent = "Mouse / touch best";
       app.querySelector("#run-stat-value").textContent = getPracticeBest(meta.id);
       app.querySelector("#run-stat-detail").textContent = "Mouse / touch run";
     }
@@ -189,11 +194,11 @@ function showInputChoice(app, generation, error = "") {
   overlay.innerHTML = `
     <div class="go-panel input-choice-panel">
       <div class="go-title">CHOOSE YOUR CONTROLLER</div>
-      <p class="input-choice-copy">Hand tracking is the full OnlyHand experience. Mouse or touch lets you try instantly without camera access.</p>
+      <p class="input-choice-copy">Both modes have their own XP, badges and leaderboards. Choose how you want to play.</p>
       ${error ? `<div class="input-choice-error">${esc(error)}</div>` : ""}
       <div class="input-choice-actions">
-        <button class="btn btn-accent" id="use-camera">${icon("hand", { size: 16 })} Use my hand</button>
-        <button class="btn" id="use-pointer">${icon("pointer", { size: 16 })} Try mouse / touch</button>
+        <button class="btn" id="use-camera">${icon("hand", { size: 16 })} Play with hands</button>
+        <button class="btn" id="use-pointer">${icon("pointer", { size: 16 })} Play mouse / touch</button>
       </div>
       <div class="go-hint">Camera processing stays on this device · no video is uploaded</div>
       <p class="choice-privacy"><a href="#/privacy" target="_blank" rel="noopener">Privacy details</a></p>
@@ -259,9 +264,9 @@ async function startPointerSession(app, generation) {
   showPointerCard(panel);
   if (!challenge) {
     const practice = getPracticeStats(meta.id);
-    app.querySelector("#run-stat-label").innerHTML = `${icon("pointer", { size: 11 })} Practice best`;
+    app.querySelector("#run-stat-label").innerHTML = `${icon("pointer", { size: 11 })} Mouse / touch best`;
     app.querySelector("#run-stat-value").textContent = getPracticeBest(meta.id);
-    app.querySelector("#run-stat-detail").textContent = practice ? `${practice.plays} practice plays` : "first practice run";
+    app.querySelector("#run-stat-detail").textContent = practice ? `${practice.plays} mouse / touch runs` : "first mouse / touch run";
   }
   wireInputFeedback(app);
   startPointerInput(canvas, { fistButton: app.querySelector("#touch-bomb") });
@@ -472,7 +477,7 @@ function showPauseOverlay(auto) {
 function showHangar(app) {
   const wrap = app.querySelector("#canvas-wrap");
   const profile = getProfile();
-  const level = getLevel(profile).level;
+  const level = Math.max(getLevel(profile).level, getLevel(profile, "pointer").level);
   let current = profile.ship || DEFAULT_SHIP;
   // never launch a locked ship (e.g. synced profile from another device)
   const curDef = PLAYER_SHIPS.find((s) => s.id === current);
@@ -572,11 +577,9 @@ async function startGame(app, generation = mountGeneration) {
       const previousBest = inputMode === "pointer" ? getPracticeBest(meta.id) : getBest(meta.id);
       const { submitted, newBadges } = recordPlay(
         meta.id, score, Math.round((Date.now() - startTime) / 1000), {
-          cloud: inputMode === "camera",
           practice: inputMode === "pointer",
-          // daily runs live on their own cloud board, never the all-time one
-          submitAs: runStats?.daily ? `${meta.id}-daily` : undefined,
-          apply: runStats ? (p) => applyRunCounters(p, runStats) : undefined,
+          daily: !!runStats?.daily,
+          apply: runStats ? (p) => applyRunCounters(p, runStats, inputMode) : undefined,
         });
       activeGame?.unmount?.();
       activeGame = null;
@@ -685,13 +688,14 @@ function showCreatorConsent() {
 
 // Asteroids end-of-run report → profile counters feeding the dedicated
 // badges (Warlord Slayer / Untouchable / Fleet Admiral).
-function applyRunCounters(p, rs) {
-  const c = (p.counters = p.counters ?? {});
+function applyRunCounters(p, rs, mode) {
+  const key = mode === "pointer" ? "practiceCounters" : "counters";
+  const c = (p[key] = p[key] ?? {});
   c.warlordKills = (c.warlordKills ?? 0) + (rs.kills?.carriers ?? 0);
   c.flawlessBosses = (c.flawlessBosses ?? 0) + (rs.flawlessBosses ?? 0);
   c.shipsFlown = c.shipsFlown ?? {};
   if (rs.ship) c.shipsFlown[rs.ship] = true;
-  if (rs.daily) updateDailyProgress(p);
+  if (rs.daily) updateDailyProgress(p, new Date(), mode);
 }
 
 const boardRows = (rows) => rows.map((r, i) => `
@@ -703,9 +707,9 @@ const boardRows = (rows) => rows.map((r, i) => `
   </div>
 `).join("");
 
-const houseBoard = (score, title = "TOP HANDS", practice = false) => `
+const houseBoard = (score, title = "LOCAL DEMO", mode = "camera") => `
   <div class="board-head">${icon("trophy", { size: 13 })} ${title}</div>
-  ${boardRows(getLeaderboard(meta.id, score, 3, practice ? getPracticeBest(meta.id) : null))}
+  ${boardRows(getLeaderboard(meta.id, score, 3, mode))}
 `;
 
 // Asteroids run report → ACCURACY / MAX COMBO / SECTOR tiles + kill line
@@ -731,12 +735,12 @@ function runStatsHtml(rs) {
 function showGameOver(app, score, submitted, newBadges = [], runStats = null, clipResult = null, previousBest = 0) {
   const best = inputMode === "pointer" ? getPracticeBest(meta.id) : getBest(meta.id);
   const isRecord = score > previousBest && score > 0;
-  const officialRun = inputMode === "camera";
-  const online = isOnline() && officialRun;
+  const mode = inputMode === "pointer" ? "pointer" : "camera";
+  const online = isOnline();
   const daily = !!runStats?.daily;
-  const boardTitle = daily ? "TODAY'S RUN · CASUAL" : "TOP HANDS · GLOBAL CASUAL";
+  const boardTitle = `${daily ? "TODAY'S RUN" : "ALL-TIME"} · ${mode === "pointer" ? "MOUSE / TOUCH" : "HANDS"}`;
   const challengeWon = challenge && score > challenge.score;
-  const dailyProgress = daily ? getDailyProgress() : null;
+  const dailyProgress = daily ? getDailyProgress(mode) : null;
   const profile = getProfile();
   if (clipButton) clipButton.hidden = true;
 
@@ -750,8 +754,8 @@ function showGameOver(app, score, submitted, newBadges = [], runStats = null, cl
       <div class="go-score">${score}</div>
       <div class="go-best">
         ${isRecord
-          ? `${icon("zap", { size: 14 })} New ${officialRun ? "personal" : "practice"} best!`
-          : `${officialRun ? "Personal" : "Practice"} best · ${best}`}
+          ? `${icon("zap", { size: 14 })} New ${mode === "pointer" ? "mouse / touch" : "hands"} best!`
+          : `${mode === "pointer" ? "Mouse / touch" : "Hands"} best · ${best}`}
       </div>
       ${challenge ? `
         <div class="challenge-result ${challengeWon ? "won" : "lost"}">
@@ -761,7 +765,7 @@ function showGameOver(app, score, submitted, newBadges = [], runStats = null, cl
             : `${challenge.score - score + 1} more to beat ${esc(challenge.challenger)}.`}</span>
         </div>` : ""}
       ${dailyProgress ? `<div class="daily-result">${icon("flame", { size: 14 })} ${dailyProgress.streak} day streak · best ${dailyProgress.bestStreak}</div>` : ""}
-      ${officialRun ? "" : `<div class="practice-result">${icon("pointer", { size: 13 })} POINTER PRACTICE · global boards require hand control</div>`}
+      <div class="practice-result">${icon(mode === "pointer" ? "pointer" : "hand", { size: 13 })} ${mode === "pointer" ? "MOUSE / TOUCH" : "HANDS"} · own XP and leaderboard</div>
       ${runStats ? runStatsHtml(runStats) : ""}
       ${newBadges.length ? `
         <div class="go-badges">
@@ -775,9 +779,9 @@ function showGameOver(app, score, submitted, newBadges = [], runStats = null, cl
         ${online ? `
           <div class="board-head">${icon("trophy", { size: 13 })} ${boardTitle}</div>
           <div class="board-row"><span class="rank">…</span><span class="nm">Loading…</span></div>
-        ` : houseBoard(score, officialRun ? "LOCAL DEMO" : "POINTER PRACTICE · LOCAL DEMO", !officialRun)}
+        ` : houseBoard(score, `${boardTitle} · LOCAL DEMO`, mode)}
       </div>
-      <a class="go-board-link" href="#/board/${meta.id}">${icon("trophy", { size: 12 })} Hall of Fame</a>
+      <a class="go-board-link" href="#/board/${meta.id}/${mode}">${icon("trophy", { size: 12 })} ${mode === "pointer" ? "Mouse / touch" : "Hands"} leaderboard</a>
       ${score > 0 || clipResult ? `
         <div class="viral-actions">
           ${score > 0 ? `
@@ -861,14 +865,14 @@ function showGameOver(app, score, submitted, newBadges = [], runStats = null, cl
   // included, then fetch. House board only as offline/error fallback.
   // Daily runs read the day-scoped board instead of the all-time one.
   if (online) {
-    const gameId = meta.id;
+    const gameId = scoreGameId(meta.id, mode, daily);
     (async () => {
       await submitted;
       let rows = null;
       let rank = null;
       try {
         [rows, rank] = daily
-          ? [await fetchDailyBoard(`${gameId}-daily`, 5), null]
+          ? [await fetchDailyBoard(gameId, 5), null]
           : await Promise.all([
             fetchLeaderboard(gameId, 5),
             fetchMyRank(gameId),
@@ -879,7 +883,7 @@ function showGameOver(app, score, submitted, newBadges = [], runStats = null, cl
       const boardEl = overlay.querySelector(".board");
       if (!boardEl || !boardEl.isConnected) return;
       if (rows === null) {
-        boardEl.innerHTML = houseBoard(score, "LOCAL DEMO · GLOBAL UNAVAILABLE");
+        boardEl.innerHTML = houseBoard(score, `${boardTitle} · LOCAL DEMO`, mode);
         return;
       }
       boardEl.innerHTML = `

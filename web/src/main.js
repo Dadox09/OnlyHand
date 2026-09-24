@@ -62,6 +62,11 @@ route("/board/:id", ({ params }) => {
   mountBoard(app, { params });
 });
 
+route("/board/:id/:mode", ({ params }) => {
+  unmountAll();
+  mountBoard(app, { params });
+});
+
 route("/privacy", () => {
   unmountAll();
   mountPrivacy(app);
