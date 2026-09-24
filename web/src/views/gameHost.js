@@ -342,7 +342,7 @@ function showPongChoice(app, generation) {
   overlay.innerHTML = `
     <div class="go-panel pong-choice-panel">
       <div class="go-title">${orb ? "ORB RUSH" : "HAND PONG"}</div>
-      <p class="input-choice-copy">${orb ? "Race a friend to capture orbs in a 60-second online duel. Stay inside an orb to claim it; pinch to boost." : "Play the classic solo run or challenge one friend to a live match. First to 7 wins."}</p>
+      <p class="input-choice-copy">${orb ? "Race a friend to capture orbs in a 60-second online duel. Stay inside an orb to claim it; pinch to boost." : "Play the classic solo run or challenge a friend. Online: first to 7 wins; hit the mystery orb for ridiculous perks."}</p>
       ${orb ? "" : `<button class="btn btn-accent" id="pong-solo">Solo vs AI</button>`}
       ${isOnline() ? `
         <div class="pong-choice-divider">ONLINE 1 VS 1</div>

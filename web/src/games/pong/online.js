@@ -1,10 +1,10 @@
 import { NEON, setupCanvas, createFixedStep, drawHudText, hudFont, sfx } from "../../core/gameKit.js";
 import { openPongChannel, leavePongLobby } from "../../core/backend.js";
-import { W, H, PADDLE_H, PADDLE_W, LEFT_X, RIGHT_X, BALL_R, createMatch, stepMatch, sampleMatch } from "./onlinePhysics.js";
+import { W, H, PADDLE_H, PADDLE_W, LEFT_X, RIGHT_X, BALL_R, createMatch, stepMatch, sampleMatch, paddleHeight } from "./onlinePhysics.js";
 import { navigate } from "../../router.js";
 import { startHandCursor, stopHandCursor } from "../../core/handCursor.js";
 
-const clamp = (n) => Math.max(0, Math.min(H - PADDLE_H, n));
+const clamp = (n, height = PADDLE_H) => Math.max(0, Math.min(H - height, n));
 
 export default {
   async mount({ canvas, onHandUpdate, handState, room }) {
@@ -37,7 +37,8 @@ export default {
     wrap.appendChild(overlay);
     const unsubscribe = onHandUpdate((s) => {
       if (!s.isDetected) return;
-      localY = clamp(s.y * H - PADDLE_H / 2);
+      const height = paddleHeight(model, isHost ? 0 : 1);
+      localY = clamp(s.y * H - height / 2, height);
       localSmash = !!s.pinch;
     });
     if (handState.isDetected) localY = clamp(handState.y * H - PADDLE_H / 2);
@@ -134,11 +135,21 @@ export default {
         const m = payload.model;
         if (!m || !Number.isFinite(m.left) || !Number.isFinite(m.right)
           || !Number.isFinite(m.ball?.x) || !Number.isFinite(m.ball?.y)
+          || !Number.isFinite(m.ball?.vx) || !Number.isFinite(m.ball?.vy)
+          || ![null, 0, 1].includes(m.ball?.lastHit)
+          || !Number.isInteger(m.ball?.wobble) || m.ball.wobble < 0 || m.ball.wobble > 180
           || !Array.isArray(m.scores) || m.scores.length !== 2
           || !m.scores.every((n) => Number.isInteger(n) && n >= 0 && n <= 7)
+          || !Array.isArray(m.perks?.grow) || !Array.isArray(m.perks?.shrink)
+          || ![m.perks.grow, m.perks.shrink].every((a) => a.length === 2 && a.every((n) => Number.isInteger(n) && n >= 0 && n <= 360))
+          || (m.orb && (!Number.isFinite(m.orb.x) || !Number.isFinite(m.orb.y) || !Number.isFinite(m.orb.vy)
+            || !Number.isInteger(m.orb.ttl) || m.orb.ttl < 1 || m.orb.ttl > 480))
+          || (m.banner && (typeof m.banner.text !== "string" || m.banner.text.length > 40
+            || !Number.isInteger(m.banner.frames) || m.banner.frames < 1 || m.banner.frames > 150))
           || ![null, 0, 1].includes(m.winner)) return;
         lastSeq = payload.seq;
         const restarted = model.winner !== null && m.winner === null;
+        if (m.banner?.text?.includes(":") && m.banner.text !== model.banner?.text) sfx.powerup();
         if (restarted || m.scores.some((score, i) => score !== model.scores[i])) snapshots.length = 0;
         snapshots.push({ at: performance.now(), model: m });
         if (snapshots.length > 4) snapshots.shift();
@@ -168,6 +179,7 @@ export default {
       if (isHost) {
         const event = stepMatch(model, localY, remoteY, localSmash, remoteSmash);
         if (event === "hit") sfx.hit();
+        if (event === "perk") sfx.powerup();
         if (event === "point" || event === "win") sfx.score();
         if (++frame % 3 === 0 || event) sendState();
         if (event === "win") showOverlay("finished");
@@ -184,19 +196,27 @@ export default {
       ctx.setLineDash([8, 10]);
       ctx.beginPath(); ctx.moveTo(W / 2, 0); ctx.lineTo(W / 2, H); ctx.stroke();
       ctx.setLineDash([]);
-      for (const [x, y, color] of [
-        [LEFT_X, isHost ? localY : display.left, NEON.accent],
-        [RIGHT_X, isHost ? display.right : localY, NEON.cyan],
+      for (const [x, y, height, color] of [
+        [LEFT_X, isHost ? localY : display.left, paddleHeight(display, 0), NEON.accent],
+        [RIGHT_X, isHost ? display.right : localY, paddleHeight(display, 1), NEON.cyan],
       ]) {
         ctx.fillStyle = color;
         ctx.shadowColor = color;
         ctx.shadowBlur = 18;
-        ctx.beginPath(); ctx.roundRect(x, y, PADDLE_W, PADDLE_H, 6); ctx.fill();
+        ctx.beginPath(); ctx.roundRect(x, clamp(y, height), PADDLE_W, height, 6); ctx.fill();
       }
       ctx.shadowBlur = 0;
+      if (display.orb) {
+        ctx.fillStyle = NEON.magenta;
+        ctx.shadowColor = NEON.magenta;
+        ctx.shadowBlur = 22;
+        ctx.beginPath(); ctx.arc(display.orb.x, display.orb.y, 17, 0, Math.PI * 2); ctx.fill();
+        ctx.shadowBlur = 0;
+        drawHudText(ctx, "?", display.orb.x, display.orb.y + 7, { size: 22, align: "center", color: "#fff" });
+      }
       const b = display.ball;
-      ctx.fillStyle = "#fff";
-      ctx.shadowColor = NEON.cyan;
+      ctx.fillStyle = b.wobble > 0 ? NEON.warn : "#fff";
+      ctx.shadowColor = b.wobble > 0 ? NEON.warn : NEON.cyan;
       ctx.shadowBlur = 20;
       ctx.beginPath(); ctx.arc(b.x, b.y, BALL_R, 0, Math.PI * 2); ctx.fill();
       ctx.shadowBlur = 0;
@@ -207,6 +227,17 @@ export default {
       ctx.textAlign = "center";
       ctx.fillText(isHost ? "YOU" : "FRIEND", 90, 32);
       ctx.fillText(isHost ? "FRIEND" : "YOU", W - 90, 32);
+      for (const side of [0, 1]) {
+        const effects = [];
+        if (model.perks.grow[side] > 0) effects.push("BIG HANDS");
+        if (model.perks.shrink[side] > 0) effects.push("TINY PADDLE");
+        if (effects.length) drawHudText(ctx, effects.join(" + "), side ? W - 90 : 90, H - 22,
+          { size: 12, align: "center", color: side ? NEON.cyan : NEON.accent });
+      }
+      if (model.banner) drawHudText(ctx, model.banner.text, W / 2, H - 24,
+        { size: 16, align: "center", color: NEON.magenta });
+      else if (peerOnline && model.winner === null) drawHudText(ctx, "Hit the ? orb for a surprise perk", W / 2, H - 24,
+        { size: 12, align: "center", color: NEON.muted });
       if (model.serve > 0 && peerOnline && model.winner === null) {
         drawHudText(ctx, "READY", W / 2, H / 2 - 35, { size: 20, align: "center" });
       }

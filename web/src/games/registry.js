@@ -26,6 +26,7 @@ export const games = [
       { icon: "pinch", gesture: "PINCH", action: "boost capture" },
     ],
     requires: ["hand", "mouse / touch", "online"],
+    hidden: true,
     load: () => import("./orb-rush/online.js"),
   },
   {
