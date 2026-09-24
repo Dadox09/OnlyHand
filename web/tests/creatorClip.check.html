@@ -1,0 +1,26 @@
+<!doctype html><html><body>WAITING<!-- Run via `npm run dev`, then open /tests/creatorClip.check.html in Chrome. --><script>window.addEventListener("error", e => document.body.firstChild.textContent = `FAIL ${e.message}`); window.addEventListener("unhandledrejection", e => document.body.firstChild.textContent = `FAIL ${e.reason}`);</script><script type="module">
+import { createCreatorClip } from "/src/core/creatorClip.js";
+import { WebmFile } from "@fix-webm-duration/parser";
+document.body.firstChild.textContent = "IMPORTED";
+const gameCanvas = document.createElement("canvas");
+gameCanvas.width = 320;
+gameCanvas.height = 180;
+gameCanvas.getContext("2d").fillRect(0, 0, 320, 180);
+const clip = createCreatorClip({ gameCanvas, cameraVideo: null, game: { id: "test", icon: "", name: "Test" }, profile: {} });
+if (!clip.start()) throw new Error("Recorder did not start");
+setTimeout(async () => {
+  const blob = await clip.finish(123);
+  const webm = await WebmFile.fromBlob(blob);
+  const info = webm.getSectionById(0x8538067).getSectionById(0x549a966);
+  const duration = info.getSectionById(0x489)?.getValue();
+  const url = URL.createObjectURL(blob);
+  const video = document.createElement("video");
+  const browserDuration = await new Promise(resolve => {
+    video.onloadedmetadata = () => resolve(video.duration);
+    video.onerror = () => resolve(null);
+    video.src = url;
+  });
+  URL.revokeObjectURL(url);
+  document.body.firstChild.textContent = `${duration > 1000 && duration < 60000 && browserDuration > 1 && browserDuration < 60 ? "PASS" : "FAIL"} ${JSON.stringify({ duration, browserDuration, type: blob.type, size: blob.size })}`;
+}, 1200);
+</script></body></html>

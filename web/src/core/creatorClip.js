@@ -1,3 +1,5 @@
+import { fixWebmDuration } from "@fix-webm-duration/fix";
+
 const WIDTH = 720;
 const HEIGHT = 1280;
 const MAX_MS = 30000;
@@ -38,6 +40,13 @@ function drawCover(ctx, source, x, y, width, height, mirrored = false) {
   ctx.restore();
 }
 
+function drawContain(ctx, source, x, y, width, height) {
+  const scale = Math.min(width / source.width, height / source.height);
+  const w = source.width * scale;
+  const h = source.height * scale;
+  ctx.drawImage(source, x + (width - w) / 2, y + (height - h) / 2, w, h);
+}
+
 function makeBackground() {
   const canvas = document.createElement("canvas");
   canvas.width = WIDTH;
@@ -74,6 +83,7 @@ export function createCreatorClip({ gameCanvas, cameraVideo, game, profile, onSt
   let maxTimer = 0;
   let endTimer = 0;
   let startedAt = 0;
+  let stoppedAt = 0;
   let finalScore = null;
   let cancelled = false;
   let blob = null;
@@ -87,6 +97,9 @@ export function createCreatorClip({ gameCanvas, cameraVideo, game, profile, onSt
 
   const drawFrame = () => {
     ctx.drawImage(background, 0, 0);
+    const gameHeight = gameCanvas?.height > gameCanvas?.width ? 560 : 470;
+    const cameraY = 132 + gameHeight;
+    const cameraHeight = 1112 - cameraY;
 
     ctx.textAlign = "center";
     ctx.fillStyle = "#ffffff";
@@ -97,21 +110,21 @@ export function createCreatorClip({ gameCanvas, cameraVideo, game, profile, onSt
     ctx.fillText(`${game.icon} ${game.name.toUpperCase()} · NO CONTROLLER`, WIDTH / 2, 91);
 
     ctx.fillStyle = "#020407";
-    ctx.fillRect(0, 116, WIDTH, 450);
-    if (gameCanvas?.width) ctx.drawImage(gameCanvas, 0, 116, WIDTH, 450);
+    ctx.fillRect(0, 116, WIDTH, gameHeight);
+    if (gameCanvas?.width && gameCanvas?.height) drawContain(ctx, gameCanvas, 0, 116, WIDTH, gameHeight);
     ctx.strokeStyle = "rgba(74,222,128,.7)";
     ctx.lineWidth = 4;
-    ctx.strokeRect(2, 118, WIDTH - 4, 446);
+    ctx.strokeRect(2, 118, WIDTH - 4, gameHeight - 4);
 
     ctx.fillStyle = "#020407";
-    ctx.fillRect(0, 586, WIDTH, 540);
-    if (cameraVideo?.readyState >= 2) drawCover(ctx, cameraVideo, 0, 586, WIDTH, 540, true);
+    ctx.fillRect(0, cameraY, WIDTH, cameraHeight);
+    if (cameraVideo?.readyState >= 2) drawCover(ctx, cameraVideo, 0, cameraY, WIDTH, cameraHeight, true);
     ctx.fillStyle = "rgba(0,0,0,.55)";
-    ctx.fillRect(18, 604, 150, 42);
+    ctx.fillRect(18, cameraY + 18, 150, 42);
     ctx.fillStyle = "#4ade80";
     ctx.font = "800 19px Orbitron, Arial, sans-serif";
     ctx.textAlign = "left";
-    ctx.fillText("● HAND CAM", 32, 632);
+    ctx.fillText("● HAND CAM", 32, cameraY + 46);
 
     ctx.textAlign = "center";
     ctx.fillStyle = "#ffffff";
@@ -121,7 +134,7 @@ export function createCreatorClip({ gameCanvas, cameraVideo, game, profile, onSt
     ctx.fillText("HAND", 418, 1186);
     ctx.fillStyle = "#94a3b8";
     ctx.font = "700 19px Arial, sans-serif";
-    ctx.fillText(`${profile.avatar || "🎮"} ${profile.name || "Player"} · TRY TO BEAT THIS RUN`, WIDTH / 2, 1224);
+    ctx.fillText(`${profile.avatar || "🎮"} ${profile.name || "Player"} · TRY TO BEAT THIS RUN`, WIDTH / 2, 1224, WIDTH - 48);
     ctx.fillStyle = "#64748b";
     ctx.font = "600 17px Arial, sans-serif";
     ctx.fillText(location.host || "only-hand-two.vercel.app", WIDTH / 2, 1256);
@@ -139,7 +152,7 @@ export function createCreatorClip({ gameCanvas, cameraVideo, game, profile, onSt
       ctx.shadowColor = "rgba(74,222,128,.75)";
       ctx.shadowBlur = 28;
       ctx.font = "900 180px Orbitron, Arial, sans-serif";
-      ctx.fillText(String(finalScore), WIDTH / 2, 715);
+      ctx.fillText(String(finalScore), WIDTH / 2, 715, WIDTH - 80);
       ctx.shadowBlur = 0;
       ctx.fillStyle = "#ffffff";
       ctx.font = "900 52px Orbitron, Arial, sans-serif";
@@ -160,7 +173,10 @@ export function createCreatorClip({ gameCanvas, cameraVideo, game, profile, onSt
     clearTimeout(endTimer);
     clearInterval(progressTimer);
     cancelAnimationFrame(raf);
-    if (recorder?.state === "recording") recorder.stop();
+    if (recorder?.state === "recording") {
+      stoppedAt = performance.now();
+      recorder.stop();
+    }
   };
 
   const start = () => {
@@ -168,6 +184,7 @@ export function createCreatorClip({ gameCanvas, cameraVideo, game, profile, onSt
     chunks = [];
     cancelled = false;
     finalScore = null;
+    stoppedAt = 0;
     const options = mimeType ? { mimeType, videoBitsPerSecond: 5_000_000 } : { videoBitsPerSecond: 5_000_000 };
     try {
       recorder = new MediaRecorder(stream, options);
@@ -176,26 +193,31 @@ export function createCreatorClip({ gameCanvas, cameraVideo, game, profile, onSt
     }
     recorder.ondataavailable = (event) => { if (event.data?.size) chunks.push(event.data); };
     recorder.onerror = () => {
+      cancelled = true;
       setState("error");
       resolveResult(null);
       stopNow();
     };
-    recorder.onstop = () => {
+    recorder.onstop = async () => {
       stream.getTracks().forEach((track) => track.stop());
       if (cancelled) {
         resolveResult(null);
         return;
       }
-      blob = new Blob(chunks, { type: recorder.mimeType || mimeType || "video/webm" });
+      const raw = new Blob(chunks, { type: recorder.mimeType || mimeType || "video/webm" });
+      blob = raw.type.startsWith("video/webm") && raw.size
+        ? await fixWebmDuration(raw, Math.max(1, Math.round((stoppedAt || performance.now()) - startedAt)), { logger: false })
+        : raw;
+      if (cancelled) { resolveResult(null); return; }
       setState(blob.size ? "ready" : "error");
       resolveResult(blob.size ? blob : null);
     };
     recorder.start(250);
-    startedAt = Date.now();
+    startedAt = performance.now();
     setState("recording");
     drawFrame();
     progressTimer = setInterval(() => {
-      onProgress?.(Math.max(0, Math.ceil((MAX_MS - (Date.now() - startedAt)) / 1000)));
+      onProgress?.(Math.max(0, Math.ceil((MAX_MS - (performance.now() - startedAt)) / 1000)));
     }, 250);
     maxTimer = setTimeout(() => finish(), MAX_MS);
     return true;
@@ -209,7 +231,7 @@ export function createCreatorClip({ gameCanvas, cameraVideo, game, profile, onSt
     if (score !== null) {
       finalScore = Math.max(0, Math.floor(Number(score) || 0));
       setState("finishing");
-      endTimer = setTimeout(stopNow, END_SLATE_MS);
+      endTimer = setTimeout(stopNow, Math.min(END_SLATE_MS, Math.max(0, MAX_MS - (performance.now() - startedAt))));
     } else {
       setState("finishing");
       stopNow();
