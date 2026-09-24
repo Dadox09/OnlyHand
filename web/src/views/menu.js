@@ -29,7 +29,10 @@ export async function mount(app) {
           <span class="hero-kicker"><span class="oh-dot"></span> ONLYHAND · GESTURE ARCADE</span>
           <h1>THE ARCADE<br><span>IS IN YOUR HANDS.</span></h1>
           <p class="subtitle">Point to move. Pinch to play. No controller required.</p>
-          <button class="hero-random" id="random-game" type="button">${icon("zap", { size: 16 })} SURPRISE ME</button>
+          <div class="hero-actions">
+            <button class="hero-random" id="random-game" type="button">${icon("zap", { size: 16 })} SURPRISE ME</button>
+            <a class="hero-random hero-profile" href="#/profile">${icon("user", { size: 16 })} MY PROFILE</a>
+          </div>
         </div>
         <div class="hero-visual" aria-hidden="true">
           <span class="hero-visual-core"><img src="/icon-512.png" alt="" width="74" height="74"></span>
