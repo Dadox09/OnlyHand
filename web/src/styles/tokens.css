@@ -99,14 +99,20 @@ body {
   min-height: 100dvh;
 }
 
-/* ambient vignette */
+/* shared arcade backdrop */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(120% 100% at 50% 0%, transparent 40%, rgba(2, 4, 8, 0.55) 100%);
+  background:
+    radial-gradient(120% 100% at 50% 0%, transparent 40%, rgba(2, 4, 8, 0.55) 100%),
+    url('/arcade-space-background.jpg') center / cover no-repeat;
   z-index: 0;
+}
+
+@media (max-width: 700px) {
+  body::before { background-position: center, 12% center; }
 }
 
 #app {

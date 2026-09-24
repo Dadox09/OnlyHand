@@ -100,13 +100,11 @@
   place-items: center;
   width: 74px;
   height: 74px;
-  border: 1px solid rgba(74, 222, 128, 0.6);
   border-radius: 22px;
-  background: linear-gradient(145deg, rgba(74, 222, 128, 0.2), rgba(16, 20, 28, 0.92));
-  color: var(--accent);
   box-shadow: var(--glow-accent);
   transform: rotate(-8deg);
 }
+.hero-visual-core img { display: block; width: 100%; height: 100%; border-radius: inherit; }
 .hero-coordinate {
   position: absolute;
   padding: 0.35rem 0.5rem;
@@ -213,7 +211,6 @@
   .hero-random { width: min(100%, 230px); }
   .hero-visual { position: absolute; right: -0.6rem; bottom: -1rem; width: 142px; margin: 0; opacity: 0.5; }
   .hero-visual-core { width: 54px; height: 54px; border-radius: 16px; }
-  .hero-visual-core svg { width: 28px; height: 28px; }
   .hero-coordinate { font-size: 0.42rem; }
   .catalogue-head { align-items: flex-start; flex-direction: column; gap: 0.35rem; }
   .daily-drop { order: 1; }

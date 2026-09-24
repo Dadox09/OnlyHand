@@ -18,7 +18,7 @@ export async function mount(app) {
 
   app.innerHTML = `
     <nav>
-      <a class="logo" href="#/hub">ONLY<span class="lit">HAND</span></a>
+      <a class="logo" href="#/hub"><img src="/icon-192.png" alt="" width="32" height="32"><span>ONLY<span class="lit">HAND</span></span></a>
       <a href="#/board" aria-label="Hall of Fame">${icon("trophy", { size: 14 })}<span class="nav-label">Hall of Fame</span></a>
       <button class="nav-install" id="install-app" aria-label="Install OnlyHand" hidden>${icon("download", { size: 14 })}<span class="nav-label">Install</span></button>
       <a href="#/profile" aria-label="Player profile">${profile.avatar} <span class="nav-label" id="player-name"></span> ${icon("chevron-right", { size: 14 })}</a>
@@ -32,7 +32,7 @@ export async function mount(app) {
           <button class="hero-random" id="random-game" type="button">${icon("zap", { size: 16 })} SURPRISE ME</button>
         </div>
         <div class="hero-visual" aria-hidden="true">
-          <span class="hero-visual-core">${icon("hand", { size: 38 })}</span>
+          <span class="hero-visual-core"><img src="/icon-512.png" alt="" width="74" height="74"></span>
           <span class="hero-coordinate hero-coordinate--top">POINT TO MOVE</span>
           <span class="hero-coordinate hero-coordinate--bottom">PINCH TO PLAY</span>
         </div>

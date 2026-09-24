@@ -24,6 +24,7 @@ function render(app) {
   const lvl = getLevel(profile);
   const badges = getBadges(profile);
   const unlockedCount = badges.filter((b) => b.unlocked).length;
+  const handRuns = Object.values(profile.stats).reduce((total, stat) => total + (stat.plays ?? 0), 0);
 
   app.innerHTML = `
     <nav>
@@ -31,49 +32,67 @@ function render(app) {
       <a href="#/board" aria-label="Hall of Fame">${icon("trophy", { size: 14 })}<span class="nav-label">Hall of Fame</span></a>
       <a href="#/hub" class="active" aria-label="Back to games">${icon("arrow-left", { size: 14 })}<span class="nav-label">Back</span></a>
     </nav>
-    <div class="profile-wrap">
+    <main class="profile-wrap">
       <div class="profile-grid oh-stagger">
 
-        <div class="profile-header oh-fade-up">
-          <button class="avatar lg selected" id="avatar-btn" title="Change avatar">${profile.avatar}</button>
-          <div>
-            <div class="form-row">
-              <input class="input" id="name-input" maxlength="24" />
-              <button class="btn btn-accent" id="save-name">${icon("check", { size: 15 })} Save</button>
-            </div>
-            <p class="subtitle" style="margin-top:0.45rem">Playing since ${new Date(profile.createdAt).toLocaleDateString()}</p>
+        <header class="profile-header oh-fade-up">
+          <div class="profile-heading">
+            <span class="profile-kicker">${icon("user", { size: 14 })} PLAYER PROFILE</span>
+            <h1>Your arcade record</h1>
+            <p>Make it yours. Track every hand-controlled run.</p>
           </div>
-          <div class="level-card">
-            <div class="level-line">
-              <span class="lv">LV ${lvl.level}</span>
-              <span class="xp">${lvl.intoLevel} / ${lvl.span} XP</span>
+          <div class="profile-identity">
+            <div class="avatar-control">
+              <button class="avatar lg selected" id="avatar-btn" type="button" aria-label="Change avatar" aria-expanded="false" aria-controls="avatar-picker"></button>
+              <span>CHANGE AVATAR</span>
             </div>
-            <div class="level-bar"><div class="fill" style="width:${Math.round(lvl.pct * 100)}%"></div></div>
+            <div class="profile-personal">
+              <form class="form-row" id="name-form">
+                <label class="profile-field-label" for="name-input">PLAYER NAME</label>
+                <input class="input" id="name-input" maxlength="24" autocomplete="nickname" />
+                <button class="btn btn-accent" id="save-name" type="submit">${icon("check", { size: 15 })} Save</button>
+              </form>
+              <p class="profile-since">Playing since ${new Date(profile.createdAt).toLocaleDateString()}</p>
+              <span class="profile-saved" id="name-status" role="status"></span>
+            </div>
+            <div class="level-card">
+              <div class="level-line">
+                <span class="lv">LV ${lvl.level}</span>
+                <span class="xp">${lvl.intoLevel} / ${lvl.span} XP</span>
+              </div>
+              <div class="level-bar" role="progressbar" aria-label="Progress to next level" aria-valuenow="${lvl.intoLevel}" aria-valuemin="0" aria-valuemax="${lvl.span}"><div class="fill" style="width:${Math.round(lvl.pct * 100)}%"></div></div>
+              <span class="level-next">NEXT UP · LEVEL ${lvl.level + 1}</span>
+            </div>
           </div>
-        </div>
+          <div class="avatar-picker oh-pop" id="avatar-picker" aria-label="Choose avatar" hidden>
+            ${AVATARS.map((e) => `<button class="avatar sm${e === profile.avatar ? " selected" : ""}" type="button" aria-label="Avatar ${e}" aria-pressed="${e === profile.avatar}" data-emoji="${e}">${e}</button>`).join("")}
+          </div>
+        </header>
 
-        <div class="avatar-picker oh-pop" id="avatar-picker" hidden>
-          ${AVATARS.map((e) => `<button class="avatar sm${e === profile.avatar ? " selected" : ""}" data-emoji="${e}">${e}</button>`).join("")}
+        <div class="profile-overview oh-fade-up" role="group" aria-label="Player overview">
+          <div><span>HAND RUNS</span><strong>${handRuns}</strong></div>
+          <div><span>BADGES EARNED</span><strong>${unlockedCount}<small> / ${badges.length}</small></strong></div>
+          <div><span>TOTAL XP</span><strong>${lvl.xp}</strong></div>
         </div>
 
         <section class="oh-fade-up">
-          <h2 class="section-head">${icon("trophy", { size: 13 })} GAME STATS</h2>
+          <div class="profile-section-head"><div><span class="profile-kicker">01 · THE SCOREBOARD</span><h2>${icon("trophy", { size: 20 })} Game stats</h2></div><p>Personal bests from hand play, with practice tracked separately.</p></div>
           <div class="stats-grid" id="stats-grid"></div>
         </section>
 
         <section class="oh-fade-up">
-          <h2 class="section-head">${icon("shield-check", { size: 13 })} BADGES · ${unlockedCount}/${badges.length}</h2>
+          <div class="profile-section-head"><div><span class="profile-kicker">02 · THE COLLECTION</span><h2>${icon("shield-check", { size: 20 })} Badges <small>${unlockedCount}/${badges.length}</small></h2></div><p>Unlock milestones as you play.</p></div>
           <div class="badge-grid" id="badge-grid"></div>
         </section>
 
         <section class="oh-fade-up">
-          <h2 class="section-head">${icon("rocket", { size: 13 })} HANGAR · ASTEROIDS SHIP</h2>
+          <div class="profile-section-head"><div><span class="profile-kicker">03 · YOUR LOADOUT</span><h2>${icon("rocket", { size: 20 })} Asteroids hangar</h2></div><p>Choose the ship for your next Asteroids run.</p></div>
           <div class="hangar-grid" id="hangar-grid">
             ${PLAYER_SHIPS.map((s) => {
               const locked = !isShipUnlocked(s, lvl.level);
               return `
               <button class="ship-card${s.id === (profile.ship || "viper") ? " selected" : ""}${locked ? " locked" : ""}"
-                      data-ship="${s.id}" ${locked ? `data-locked="1"` : ""}>
+                      type="button" data-ship="${s.id}" aria-pressed="${s.id === (profile.ship || "viper")}" ${locked ? `data-locked="1" aria-disabled="true"` : ""}>
                 <span class="ship-thumb" aria-hidden="true" style="background-image:url('${s.sprite}');--ship-pos:${4 + s.sheet * 24}%"></span>
                 <span class="ship-name">${s.name}</span>
                 <span class="ship-desc">${locked ? `${icon("lock", { size: 11 })} Unlocks at LV ${s.unlock}` : `${s.desc} · <b>${s.perk}</b>`}</span>
@@ -83,7 +102,7 @@ function render(app) {
         </section>
 
         <section class="oh-fade-up">
-          <h2 class="section-head">${icon("settings", { size: 13 })} SETTINGS</h2>
+          <div class="profile-section-head"><div><span class="profile-kicker">04 · PREFERENCES</span><h2>${icon("settings", { size: 20 })} Settings</h2></div><p>Adjust how hand tracking appears while you play.</p></div>
           <div class="settings-list">
             <label class="switch">
               <input type="checkbox" id="mirror" ${profile.settings.mirrorWebcam ? "checked" : ""} />
@@ -96,15 +115,16 @@ function render(app) {
               Show hand landmarks
             </label>
           </div>
-          <p><button class="btn btn-ghost" id="delete-data">Delete my profile and scores</button></p>
+          <div class="profile-danger"><div><strong>Delete profile</strong><p>Remove your local profile and, if connected, your cloud account and scores.</p></div><button class="btn btn-ghost" id="delete-data" type="button">Delete my profile and scores</button></div>
           <p id="delete-status" role="status"></p>
         </section>
 
       </div>
-    </div>
+    </main>
   `;
 
   app.querySelector("#name-input").value = profile.name;
+  app.querySelector("#avatar-btn").textContent = profile.avatar;
 
   // Stats per game
   const grid = app.querySelector("#stats-grid");
@@ -114,14 +134,13 @@ function render(app) {
     const card = document.createElement("div");
     card.className = "stat-card";
     card.innerHTML = `
-      <div class="label">${g.icon} ${g.name}</div>
+      <div class="stat-game"><span aria-hidden="true">${g.icon}</span><strong>${g.name}</strong></div>
       ${s
-        ? `<div class="value">${s.best}</div>
-           <div class="label">Hand runs · ${s.plays} plays · total ${s.totalScore}</div>`
-        : `<div class="empty">No hand runs yet</div>`}
+        ? `<div class="stat-best"><span>HAND BEST</span><strong>${s.best}</strong></div>
+           <div class="stat-detail"><span>${s.plays} hand runs</span><span>${s.totalScore} total points</span></div>`
+        : `<div class="stat-empty">No hand runs yet</div>`}
       ${practice ? `
-        <div class="label">Mouse / touch practice · best ${practice.best}</div>
-        <div class="label">${practice.plays} plays · total ${practice.totalScore}</div>` : ""}
+        <div class="stat-practice"><span>MOUSE / TOUCH PRACTICE</span><strong>Best ${practice.best}</strong><small>${practice.plays} plays · ${practice.totalScore} total points</small></div>` : ""}
     `;
     grid.appendChild(card);
   }
@@ -150,15 +169,22 @@ function render(app) {
   // Avatar picker
   const avatarBtn = app.querySelector("#avatar-btn");
   const picker = app.querySelector("#avatar-picker");
-  avatarBtn.addEventListener("click", () => { picker.hidden = !picker.hidden; });
+  avatarBtn.addEventListener("click", () => {
+    picker.hidden = !picker.hidden;
+    avatarBtn.setAttribute("aria-expanded", String(!picker.hidden));
+  });
   picker.querySelectorAll("[data-emoji]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const emoji = btn.dataset.emoji;
       updateProfile({ avatar: emoji });
       syncProfile().catch(() => {});
       avatarBtn.textContent = emoji;
-      picker.querySelectorAll("[data-emoji]").forEach((b) => b.classList.toggle("selected", b === btn));
+      picker.querySelectorAll("[data-emoji]").forEach((b) => {
+        b.classList.toggle("selected", b === btn);
+        b.setAttribute("aria-pressed", String(b === btn));
+      });
       picker.hidden = true;
+      avatarBtn.setAttribute("aria-expanded", "false");
     });
   });
 
@@ -168,15 +194,23 @@ function render(app) {
       if (btn.dataset.locked) return;
       updateProfile({ ship: btn.dataset.ship });
       syncProfile().catch(() => {});
-      app.querySelectorAll("[data-ship]").forEach((b) => b.classList.toggle("selected", b === btn));
+      app.querySelectorAll("[data-ship]").forEach((b) => {
+        b.classList.toggle("selected", b === btn);
+        b.setAttribute("aria-pressed", String(b === btn));
+      });
     });
   });
 
   // Name save
-  app.querySelector("#save-name").addEventListener("click", () => {
+  app.querySelector("#name-form").addEventListener("submit", (event) => {
+    event.preventDefault();
     const name = app.querySelector("#name-input").value.trim() || "Player";
     updateProfile({ name, named: true });
     syncProfile().catch(() => {});
+    app.querySelector("#name-status").textContent = "Saved on this device";
+  });
+  app.querySelector("#name-input").addEventListener("input", () => {
+    app.querySelector("#name-status").textContent = "";
   });
 
   // Settings toggles
