@@ -140,8 +140,9 @@ export default {
           || !Number.isInteger(m.ball?.wobble) || m.ball.wobble < 0 || m.ball.wobble > 180
           || !Array.isArray(m.scores) || m.scores.length !== 2
           || !m.scores.every((n) => Number.isInteger(n) && n >= 0 && n <= 7)
-          || !Array.isArray(m.perks?.grow) || !Array.isArray(m.perks?.shrink)
-          || ![m.perks.grow, m.perks.shrink].every((a) => a.length === 2 && a.every((n) => Number.isInteger(n) && n >= 0 && n <= 360))
+          || ![m.perks?.grow, m.perks?.shrink, m.perks?.crit, m.perks?.curve].every((a) => Array.isArray(a) && a.length === 2 && a.every((n) => Number.isInteger(n) && n >= 0 && n <= 360))
+          || !Array.isArray(m.perks?.shield) || m.perks.shield.length !== 2
+          || !m.perks.shield.every((n) => Number.isInteger(n) && n >= 0 && n <= 2)
           || (m.orb && (!Number.isFinite(m.orb.x) || !Number.isFinite(m.orb.y) || !Number.isFinite(m.orb.vy)
             || !Number.isInteger(m.orb.ttl) || m.orb.ttl < 1 || m.orb.ttl > 480))
           || (m.banner && (typeof m.banner.text !== "string" || m.banner.text.length > 40
@@ -179,7 +180,8 @@ export default {
       if (isHost) {
         const event = stepMatch(model, localY, remoteY, localSmash, remoteSmash);
         if (event === "hit") sfx.hit();
-        if (event === "perk") sfx.powerup();
+        if (event === "critical") sfx.shoot();
+        if (event === "perk" || event === "shield") sfx.powerup();
         if (event === "point" || event === "win") sfx.score();
         if (++frame % 3 === 0 || event) sendState();
         if (event === "win") showOverlay("finished");
@@ -231,8 +233,11 @@ export default {
         const effects = [];
         if (model.perks.grow[side] > 0) effects.push("BIG HANDS");
         if (model.perks.shrink[side] > 0) effects.push("TINY PADDLE");
-        if (effects.length) drawHudText(ctx, effects.join(" + "), side ? W - 90 : 90, H - 22,
-          { size: 12, align: "center", color: side ? NEON.cyan : NEON.accent });
+        if (model.perks.shield[side] > 0) effects.push(`SHIELD x${model.perks.shield[side]}`);
+        if (model.perks.crit[side] > 0) effects.push("CRIT BOOST");
+        if (model.perks.curve[side] > 0) effects.push("CURVE SHOT");
+        effects.forEach((effect, i) => drawHudText(ctx, effect, side ? W - 95 : 95, H - 22 - i * 18,
+          { size: 11, align: "center", color: side ? NEON.cyan : NEON.accent }));
       }
       if (model.banner) drawHudText(ctx, model.banner.text, W / 2, H - 24,
         { size: 16, align: "center", color: NEON.magenta });

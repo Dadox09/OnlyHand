@@ -6,6 +6,8 @@ export const LEFT_X = 30;
 export const RIGHT_X = W - LEFT_X - PADDLE_W;
 export const BALL_R = 9;
 const ORB_R = 17;
+const PERK_NAMES = ["BIG HANDS", "TINY RIVAL", "BANANA BALL", "ROCKET BALL", "SHIELD", "CRIT BOOST", "CURVE SHOT"];
+const newPerks = () => ({ grow: [0, 0], shrink: [0, 0], shield: [0, 0], crit: [0, 0], curve: [0, 0] });
 
 export function paddleHeight(m, side) {
   return PADDLE_H * (m.perks.grow[side] > 0 ? 1.5 : 1) * (m.perks.shrink[side] > 0 ? 0.6 : 1);
@@ -22,7 +24,7 @@ export function createMatch() {
     winner: null,
     orb: null,
     orbCooldown: 180,
-    perks: { grow: [0, 0], shrink: [0, 0] },
+    perks: newPerks(),
     banner: null,
   };
 }
@@ -49,7 +51,7 @@ export function sampleMatch(snapshots, at) {
 
 export function stepMatch(m, leftTarget, rightTarget, leftSmash = false, rightSmash = false) {
   if (m.winner !== null) return null;
-  for (const effect of [m.perks.grow, m.perks.shrink]) {
+  for (const effect of [m.perks.grow, m.perks.shrink, m.perks.crit, m.perks.curve]) {
     for (let side = 0; side < 2; side++) if (effect[side] > 0) effect[side]--;
   }
   m.left = clamp(leftTarget, 0, H - paddleHeight(m, 0));
@@ -66,7 +68,7 @@ export function stepMatch(m, leftTarget, rightTarget, leftSmash = false, rightSm
   const b = m.ball;
   if (m.serve > 0) {
     if (--m.serve === 0) {
-      b.vx = 6.5 * m.direction;
+      b.vx = 8.5 * m.direction;
       b.vy = (Math.random() * 2 - 1) * 3;
     }
     return null;
@@ -89,11 +91,15 @@ export function stepMatch(m, leftTarget, rightTarget, leftSmash = false, rightSm
     const t = clamp(((o.x - oldX) * spanX + (o.y - oldY) * spanY) / (spanX * spanX + spanY * spanY), 0, 1);
     if (Math.hypot(oldX + spanX * t - o.x, oldY + spanY * t - o.y) < BALL_R + ORB_R) {
       const owner = b.lastHit;
-      const perk = Math.floor(Math.random() * 3);
+      const perk = Math.floor(Math.random() * PERK_NAMES.length);
       if (perk === 0) m.perks.grow[owner] = 360;
       else if (perk === 1) m.perks.shrink[1 - owner] = 300;
-      else b.wobble = 180;
-      m.banner = { text: `${owner === 0 ? "LEFT" : "RIGHT"}: ${["BIG HANDS", "TINY RIVAL", "BANANA BALL"][perk]}!`, frames: 150 };
+      else if (perk === 2) b.wobble = 180;
+      else if (perk === 3) b.vx = Math.sign(b.vx) * Math.min(20, Math.abs(b.vx) * 1.4);
+      else if (perk === 4) m.perks.shield[owner] = Math.min(2, m.perks.shield[owner] + 1);
+      else if (perk === 5) m.perks.crit[owner] = 360;
+      else m.perks.curve[owner] = 360;
+      m.banner = { text: `${owner === 0 ? "LEFT" : "RIGHT"}: ${PERK_NAMES[perk]}!`, frames: 150 };
       m.orb = null;
       m.orbCooldown = 420;
       event = "perk";
@@ -105,26 +111,39 @@ export function stepMatch(m, leftTarget, rightTarget, leftSmash = false, rightSm
     if (atY < paddle - BALL_R || atY > paddle + height + BALL_R) return false;
     b.x = plane;
     b.y = atY;
-    b.vx = side * Math.min(16, (Math.abs(b.vx) + 0.35) * (smash ? 1.3 : 1));
-    b.vy = clamp((atY - paddle - height / 2) * 0.11, -8, 8);
+    const critical = Math.random() < (m.perks.crit[owner] > 0 ? 0.3 : 0.1);
+    b.vx = side * Math.min(20, (Math.abs(b.vx) + 0.35) * (smash ? 1.3 : 1) * (critical ? 1.35 : 1));
+    b.vy = clamp((atY - paddle - height / 2) * (m.perks.curve[owner] > 0 ? 0.17 : 0.11), -9, 9);
     b.lastHit = owner;
-    return true;
+    if (critical) m.banner = { text: `${owner === 0 ? "LEFT" : "RIGHT"}: CRITICAL HIT!`, frames: 90 };
+    return critical ? "critical" : "hit";
   };
   if (b.vx < 0 && oldX >= LEFT_X + PADDLE_W + BALL_R && b.x <= LEFT_X + PADDLE_W + BALL_R) {
-    if (bounce(LEFT_X + PADDLE_W + BALL_R, m.left, paddleHeight(m, 0), 1, leftSmash, 0)) return "hit";
+    const hit = bounce(LEFT_X + PADDLE_W + BALL_R, m.left, paddleHeight(m, 0), 1, leftSmash, 0);
+    if (hit) return hit;
   }
   if (b.vx > 0 && oldX <= RIGHT_X - BALL_R && b.x >= RIGHT_X - BALL_R) {
-    if (bounce(RIGHT_X - BALL_R, m.right, paddleHeight(m, 1), -1, rightSmash, 1)) return "hit";
+    const hit = bounce(RIGHT_X - BALL_R, m.right, paddleHeight(m, 1), -1, rightSmash, 1);
+    if (hit) return hit;
   }
   if (b.x < -BALL_R || b.x > W + BALL_R) {
     const scorer = b.x < 0 ? 1 : 0;
+    const defender = 1 - scorer;
+    if (m.perks.shield[defender] > 0) {
+      m.perks.shield[defender]--;
+      m.ball = { x: W / 2, y: H / 2, vx: 0, vy: 0, lastHit: null, wobble: 0 };
+      m.serve = 30;
+      m.direction = defender === 0 ? 1 : -1;
+      m.banner = { text: `${defender === 0 ? "LEFT" : "RIGHT"}: SHIELD SAVE!`, frames: 90 };
+      return "shield";
+    }
     m.scores[scorer]++;
     m.direction = scorer === 0 ? 1 : -1;
     m.ball = { x: W / 2, y: H / 2, vx: 0, vy: 0, lastHit: null, wobble: 0 };
     m.serve = 75;
     m.orb = null;
     m.orbCooldown = 180;
-    m.perks = { grow: [0, 0], shrink: [0, 0] };
+    m.perks = newPerks();
     m.banner = null;
     if (m.scores[scorer] === 7) m.winner = scorer;
     return m.winner !== null ? "win" : "point";

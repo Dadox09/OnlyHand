@@ -12,7 +12,7 @@ const PADDLE_X = 30;
 let AI_X = W - 30 - PADDLE_W;
 const BALL_R = 9;
 
-const SERVE_SPEED = 6.5;
+const SERVE_SPEED = 8.5;
 const MAX_SPEED = 15;        // |vx| cap on normal returns
 const SMASH_MAX = 19;        // pinch smash may exceed the normal cap
 const MAX_VY = 9;
@@ -26,6 +26,8 @@ const GROW_FRAMES = 8 * 60;
 const SLOW_FRAMES = 4 * 60;
 const GHOST_FRAMES = 6 * 60;
 const SHRINK_FRAMES = 8 * 60;
+const FREEZE_FRAMES = 4 * 60;
+const CRIT_FRAMES = 6 * 60;
 
 // Long rallies tire the AI: past this many player returns its aim noise grows
 // each return, so no tier can stonewall forever.
@@ -53,15 +55,20 @@ const TIERS = [
 ];
 
 const ORB_DEFS = {
-  GROW:   { label: "W", color: NEON.cyan,    weight: 0.16 },
-  SLOW:   { label: "S", color: NEON.magenta, weight: 0.16 },
-  MULTI:  { label: "M", color: NEON.accent,  weight: 0.22 },
-  SHRINK: { label: "−", color: NEON.warn,    weight: 0.18 },
-  GHOST:  { label: "?", color: "#60a5fa",    weight: 0.16 },
-  HEART:  { label: "+", color: NEON.danger,  weight: 0.12 },
+  GROW:   { label: "W", color: NEON.cyan,    weight: 0.10 },
+  SLOW:   { label: "S", color: NEON.magenta, weight: 0.09 },
+  MULTI:  { label: "M", color: NEON.accent,  weight: 0.14 },
+  SHRINK: { label: "−", color: NEON.warn,    weight: 0.10 },
+  GHOST:  { label: "?", color: "#60a5fa",    weight: 0.09 },
+  HEART:  { label: "+", color: NEON.danger,  weight: 0.08 },
+  BOOST:  { label: "B", color: "#f97316",    weight: 0.11 },
+  FREEZE: { label: "F", color: "#93c5fd",    weight: 0.10 },
+  SHIELD: { label: "◇", color: "#facc15",    weight: 0.08 },
+  BONUS:  { label: "$", color: NEON.accent,  weight: 0.06 },
+  CRIT:   { label: "!", color: "#fb7185",    weight: 0.05 },
 };
 
-function pickOrbType() {
+export function pickOrbType() {
   let r = Math.random();
   for (const [type, d] of Object.entries(ORB_DEFS)) {
     if ((r -= d.weight) <= 0) return type;
@@ -126,6 +133,9 @@ export default {
       slowFrames: 0,
       ghostFrames: 0,
       shrinkFrames: 0,
+      freezeFrames: 0,
+      critFrames: 0,
+      shield: 0,
       odLevel: 0,
       popups: [],
       banner: null,           // { text, color, t }
@@ -250,6 +260,26 @@ export default {
             popup("+25", o.x, o.y, NEON.accent);
           }
           break;
+        case "BOOST":
+          b.vx = Math.sign(b.vx) * Math.min(SMASH_MAX * odBoost(), Math.abs(b.vx) * 1.4);
+          popup("ROCKET BALL", o.x, o.y, "#f97316");
+          break;
+        case "FREEZE":
+          state.freezeFrames = FREEZE_FRAMES;
+          popup("AI FROZEN", o.x, o.y, "#93c5fd");
+          break;
+        case "SHIELD":
+          state.shield = Math.min(2, state.shield + 1);
+          popup("SHIELD +", o.x, o.y, "#facc15");
+          break;
+        case "BONUS":
+          state.score += 100;
+          popup("+100 BONUS", o.x, o.y, NEON.accent);
+          break;
+        case "CRIT":
+          state.critFrames = CRIT_FRAMES;
+          popup("CRIT BOOST", o.x, o.y, "#fb7185");
+          break;
       }
     }
 
@@ -277,6 +307,13 @@ export default {
 
     // Last ball escaped on the player's side.
     function loseLife(y) {
+      if (state.shield > 0) {
+        state.shield--;
+        sfx.powerup();
+        popup("SHIELD SAVE!", 90, y, "#facc15", 18);
+        startServe(-1);
+        return;
+      }
       state.lives -= 1;
       sfx.explode();
       shake.add(0.5);
@@ -324,6 +361,8 @@ export default {
       if (state.slowFrames > 0) state.slowFrames -= 1;
       if (state.ghostFrames > 0) state.ghostFrames -= 1;
       if (state.shrinkFrames > 0) state.shrinkFrames -= 1;
+      if (state.freezeFrames > 0) state.freezeFrames -= 1;
+      if (state.critFrames > 0) state.critFrames -= 1;
 
       if (!countdown.done || state.dying) return;
 
@@ -424,23 +463,26 @@ export default {
             b.y = yAt;
             let sp = Math.min(Math.abs(b.vx) * 1.05 + 0.15, MAX_SPEED * odBoost());
             if (smash) sp = Math.min(sp * 1.45, SMASH_MAX * odBoost());
+            const critical = Math.random() < (state.critFrames > 0 ? 0.3 : 0.1);
+            if (critical) sp = Math.min(sp * 1.35, SMASH_MAX * odBoost());
             b.vx = sp;
             const rel = (yAt - (state.paddleY + pH / 2)) / (pH / 2);
             b.vy = Math.max(-MAX_VY, Math.min(MAX_VY, rel * 4 + pvy * 0.4));
             state.combo += 1;
             state.bestCombo = Math.max(state.bestCombo, state.combo);
-            const gain = 2 + state.combo + (smash ? 8 : 0);
+            const gain = (2 + state.combo + (smash ? 8 : 0)) * (critical ? 2 : 1);
             state.score += gain;
             b.lastHit = "player";
-            resampleAiNoise(smash, b);
+            resampleAiNoise(smash || critical, b);
             sfx.hit();
-            shake.add(smash ? 0.3 : 0.12);
-            flash.trigger(smash ? "#ffffff" : NEON.accent, smash ? 0.12 : 0.06);
+            shake.add(critical ? 0.4 : smash ? 0.3 : 0.12);
+            flash.trigger(critical ? "#fb7185" : smash ? "#ffffff" : NEON.accent, critical || smash ? 0.12 : 0.06);
             particles.burst(pPlane, yAt, {
               count: smash ? 24 : 14, color: smash ? "#ffffff" : NEON.accent,
               speed: smash ? 6 : 4, life: 35, size: 3, angle: 0, spread: Math.PI * 0.9,
             });
-            popup(smash ? "SMASH!" : `+${gain}`, pPlane + 30, yAt, smash ? "#ffffff" : NEON.accent, smash ? 18 : 13);
+            popup(critical ? `CRITICAL! +${gain}` : smash ? "SMASH!" : `+${gain}`, pPlane + 30, yAt,
+              critical ? "#fb7185" : smash ? "#ffffff" : NEON.accent, critical || smash ? 18 : 13);
           }
         }
 
@@ -515,7 +557,8 @@ export default {
       if (threat) aiTarget = predictY(threat) + state.aiNoise - aH / 2;
       aiTarget = Math.max(0, Math.min(H - aH, aiTarget));
       const dy = aiTarget - state.aiY;
-      state.aiY += Math.max(-t.speed, Math.min(t.speed, dy * 0.2));
+      const aiSpeed = state.freezeFrames > 0 ? t.speed * 0.35 : t.speed;
+      state.aiY += Math.max(-aiSpeed, Math.min(aiSpeed, dy * 0.2));
     }
 
     function draw() {
@@ -670,6 +713,9 @@ export default {
       if (state.slowFrames > 0) fx.push(`SLOW ${Math.ceil(state.slowFrames / 60)}s`);
       if (state.ghostFrames > 0) fx.push(`GHOST ${Math.ceil(state.ghostFrames / 60)}s`);
       if (state.shrinkFrames > 0) fx.push(`AI− ${Math.ceil(state.shrinkFrames / 60)}s`);
+      if (state.freezeFrames > 0) fx.push(`FREEZE ${Math.ceil(state.freezeFrames / 60)}s`);
+      if (state.critFrames > 0) fx.push(`CRIT ${Math.ceil(state.critFrames / 60)}s`);
+      if (state.shield > 0) fx.push(`SHIELD x${state.shield}`);
       if (fx.length) {
         drawHudText(ctx, fx.join(" · "), 20, 52, { size: 10, color: NEON.muted });
       }
