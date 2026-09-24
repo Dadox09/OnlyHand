@@ -69,6 +69,7 @@
   opacity: 0.85;
   transition: opacity 0.2s;
 }
+.card-preview-pixel { image-rendering: pixelated; }
 .game-card:hover .card-preview,
 .game-card.hand-hover .card-preview { opacity: 1; }
 .card-preview-wrap .icon {

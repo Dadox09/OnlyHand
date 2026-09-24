@@ -138,12 +138,16 @@ export async function mount(app) {
   const grid = app.querySelector("#game-grid");
   for (const g of games) {
     const best = getBest(g.id);
+    const preview = g.id === "asteroids" ? "asteroids/card-preview" : g.id === "pong" ? "pong-card-preview" : null;
     const card = document.createElement("a");
     card.className = "game-card oh-fade-up";
     card.href = `#/games/${g.id}`;
     card.innerHTML = `
       <div class="card-preview-wrap">
-        <canvas class="card-preview" aria-hidden="true"></canvas>
+        ${preview ? `<picture>
+          <source media="(prefers-reduced-motion: reduce)" srcset="/assets/${preview}-still.png">
+          <img class="card-preview card-preview-pixel" src="/assets/${preview}.gif" alt="" width="320" height="140">
+        </picture>` : `<canvas class="card-preview" aria-hidden="true"></canvas>`}
         <span class="icon" aria-hidden="true">${g.icon}</span>
         <span class="card-category">${g.category}</span>
       </div>
@@ -160,7 +164,7 @@ export async function mount(app) {
       </div>
     `;
     grid.appendChild(card);
-    attachCardPreview(card.querySelector(".card-preview"), g.id);
+    if (!preview) attachCardPreview(card.querySelector("canvas.card-preview"), g.id);
   }
 
   startHandCursor();
